@@ -32,17 +32,20 @@ from stt_metric import STTMetric
 from stt_bi_graphemes_util import generate_bi_graphemes_dictionary
 from stt_bucketing_module import STTBucketingModule
 from stt_io_bucketingiter import BucketSTTIter
+
 sys.path.insert(0, "../../python")
 
 # os.environ['MXNET_ENGINE_TYPE'] = "NaiveEngine"
 os.environ['MXNET_ENGINE_TYPE'] = "ThreadedEnginePerDevice"
 os.environ['MXNET_ENABLE_GPU_P2P'] = "0"
 
+
 class WHCS:
     width = 0
     height = 0
     channel = 0
     stride = 0
+
 
 class ConfigLogger(object):
     def __init__(self, log):
@@ -57,6 +60,7 @@ class ConfigLogger(object):
         line = data.strip()
         self.__log.info(line)
 
+
 def load_labelutil(labelUtil, is_bi_graphemes, language="en"):
     if language == "en":
         if is_bi_graphemes:
@@ -69,7 +73,6 @@ def load_labelutil(labelUtil, is_bi_graphemes, language="en"):
             labelUtil.load_unicode_set("resources/unicodemap_en_baidu.csv")
     else:
         raise Exception("Error: Language Type: %s" % language)
-
 
 
 def load_data(args):
@@ -100,9 +103,10 @@ def load_data(args):
         datagen.load_train_data(data_json, max_duration=max_duration)
         datagen.load_validation_data(val_json, max_duration=max_duration)
         if is_bi_graphemes:
-            if not os.path.isfile("resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
+            if not os.path.isfile(
+                    "resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
                 load_labelutil(labelUtil=labelUtil, is_bi_graphemes=False, language=language)
-                generate_bi_graphemes_dictionary(datagen.train_texts+datagen.val_texts)
+                generate_bi_graphemes_dictionary(datagen.train_texts + datagen.val_texts)
         load_labelutil(labelUtil=labelUtil, is_bi_graphemes=is_bi_graphemes, language=language)
         args.config.set('arch', 'n_classes', str(labelUtil.get_count()))
 
@@ -313,7 +317,7 @@ if __name__ == '__main__':
                 sym_gen=model_loaded,
                 default_bucket_key=data_train.default_bucket_key,
                 context=contexts
-                )
+            )
         else:
             data_names = [x[0] for x in data_train.provide_data]
             label_names = [x[0] for x in data_train.provide_label]
@@ -339,7 +343,7 @@ if __name__ == '__main__':
                 sym_gen=model_loaded,
                 default_bucket_key=data_train.default_bucket_key,
                 context=contexts
-                )
+            )
 
             model.bind(data_shapes=data_train.provide_data,
                        label_shapes=data_train.provide_label,
@@ -357,7 +361,7 @@ if __name__ == '__main__':
                 model_loaded.forward(data_batch, is_train=False)
                 model_loaded.update_metric(eval_metric, data_batch.label)
         else:
-            #model_loaded.score(eval_data=data_train, num_batch=None,
+            # model_loaded.score(eval_data=data_train, num_batch=None,
             #                   eval_metric=eval_metric, reset=True)
             for nbatch, data_batch in enumerate(data_train):
                 model_loaded.forward(data_batch, is_train=False)

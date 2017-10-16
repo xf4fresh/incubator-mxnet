@@ -32,7 +32,8 @@ GRUModel = namedtuple("GRUModel", ["rnn_exec", "symbol",
                                    "param_blocks"])
 
 
-def gru(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., is_batchnorm=False, gamma=None, beta=None, name=None):
+def gru(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., is_batchnorm=False, gamma=None, beta=None,
+        name=None):
     """
     GRU Cell symbol
     Reference:
@@ -80,7 +81,7 @@ def gru(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., is_
     return GRUState(h=next_h)
 
 
-def gru_unroll(net, num_gru_layer, seq_len,  num_hidden_gru_list, dropout=0., is_batchnorm=False, prefix="",
+def gru_unroll(net, num_gru_layer, seq_len, num_hidden_gru_list, dropout=0., is_batchnorm=False, prefix="",
                direction="forward", is_bucketing=False):
     if num_gru_layer > 0:
         param_cells = []

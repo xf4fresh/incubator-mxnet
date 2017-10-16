@@ -46,7 +46,6 @@ class LabelUtil:
                 self.byIndex[int(r[1])] = r[0]
                 self.count += 1
 
-
     def to_unicode(self, src, index):
         # 1 byte
         code1 = int(ord(src[index + 0]))
@@ -96,18 +95,17 @@ class LabelUtil:
             exit(-1)
 
     def convert_bi_graphemes_to_num(self, word):
-            label_num = []
+        label_num = []
 
-            for char in word:
-                # skip word
-                if char == "":
-                    pass
-                else:
-                    label_num.append(int(self.byChar[char]))
+        for char in word:
+            # skip word
+            if char == "":
+                pass
+            else:
+                label_num.append(int(self.byChar[char]))
 
-            # tuple typecast: read only, faster
-            return tuple(label_num)
-
+        # tuple typecast: read only, faster
+        return tuple(label_num)
 
     def convert_num_to_word(self, num_list):
         try:

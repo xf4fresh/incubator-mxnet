@@ -18,6 +18,7 @@
 from __future__ import print_function
 import mxnet as mx
 import sys
+
 sys.path.insert(0, "../../python")
 
 import bisect
@@ -88,12 +89,14 @@ class BucketSTTIter(mx.io.DataIter):
         self.trainDataIter = iter(self.trainDataList)
         self.is_first_epoch = True
 
-        data_lengths = [int(d*100) for d in durations]
+        data_lengths = [int(d * 100) for d in durations]
         if len(buckets) == 0:
             buckets = [i for i, j in enumerate(np.bincount(data_lengths))
                        if j >= batch_size]
         if len(buckets) == 0:
-            raise Exception('There is no valid buckets. It may occured by large batch_size for each buckets. max bincount:%d batch_size:%d' % (max(np.bincount(data_lengths)), batch_size))
+            raise Exception(
+                'There is no valid buckets. It may occured by large batch_size for each buckets. max bincount:%d batch_size:%d' % (
+                max(np.bincount(data_lengths)), batch_size))
         buckets.sort()
         ndiscard = 0
         self.data = [[] for _ in buckets]
@@ -104,7 +107,7 @@ class BucketSTTIter(mx.io.DataIter):
                 continue
             self.data[buck].append(self.trainDataList[i])
         if ndiscard != 0:
-            print("WARNING: discarded %d sentences longer than the largest bucket."% ndiscard)
+            print("WARNING: discarded %d sentences longer than the largest bucket." % ndiscard)
 
         self.buckets = buckets
         self.nddata = []
@@ -116,11 +119,11 @@ class BucketSTTIter(mx.io.DataIter):
             self.idx.extend([(i, j) for j in range(0, len(buck) - batch_size + 1, batch_size)])
         self.curr_idx = 0
 
-        self.provide_data = [('data', (self.batch_size, self.default_bucket_key , width * height))] + init_states
+        self.provide_data = [('data', (self.batch_size, self.default_bucket_key, width * height))] + init_states
         self.provide_label = [('label', (self.batch_size, self.maxLabelLength))]
-        self.save_feature_as_csvfile=save_feature_as_csvfile
+        self.save_feature_as_csvfile = save_feature_as_csvfile
 
-        #self.reset()
+        # self.reset()
 
     def reset(self):
         """Resets the iterator to the beginning of the data."""
@@ -138,7 +141,7 @@ class BucketSTTIter(mx.io.DataIter):
 
         audio_paths = []
         texts = []
-        for duration, audio_path, text in self.data[i][j:j+self.batch_size]:
+        for duration, audio_path, text in self.data[i][j:j + self.batch_size]:
             audio_paths.append(audio_path)
             texts.append(text)
 

@@ -28,6 +28,7 @@ from label_util import LabelUtil
 from stt_bi_graphemes_util import generate_bi_graphemes_label
 from multiprocessing import cpu_count, Process, Manager
 
+
 class DataGenerator(object):
     def __init__(self, save_dir, model_name, step=10, window=20, max_freq=8000, desc_file=None):
         """
@@ -40,7 +41,7 @@ class DataGenerator(object):
                 labels and paths to the audio files. If this is None, then
                 load metadata right away
         """
-        #calc_feat_dim returns int(0.001*window*max_freq)+1
+        # calc_feat_dim returns int(0.001*window*max_freq)+1
         super(DataGenerator, self).__init__()
         # feat_dim=0.001*20*8000+1=161
         self.feat_dim = calc_feat_dim(window, max_freq)
@@ -51,7 +52,7 @@ class DataGenerator(object):
         self.max_input_length = 0
         self.max_length_list_in_batch = []
         # 1d 161 length of array filled with random value
-        #[0.0, 1.0)
+        # [0.0, 1.0)
         self.rng = random.Random()
         if desc_file is not None:
             self.load_metadata_from_desc_file(desc_file)
@@ -76,7 +77,7 @@ class DataGenerator(object):
             save_feature_as_csvfile=save_feature_as_csvfile)
 
     def load_metadata_from_desc_file(self, desc_file, partition='train',
-                                     max_duration=16.0,):
+                                     max_duration=16.0, ):
         """ Read metadata from the description file
             (possibly takes long, depending on the filesize)
         Params:
@@ -176,12 +177,13 @@ class DataGenerator(object):
         Returns:
             dict: See below for contents
         """
-        assert len(audio_paths) == len(texts),\
+        assert len(audio_paths) == len(texts), \
             "Inputs and outputs to the network must be of the same number"
         # Features is a list of (timesteps, feature_dim) arrays
         # Calculate the features for each audio clip, as the log of the
         # Fourier Transform of the audio
-        features = [self.featurize(a, overwrite=overwrite, save_feature_as_csvfile=save_feature_as_csvfile) for a in audio_paths]
+        features = [self.featurize(a, overwrite=overwrite, save_feature_as_csvfile=save_feature_as_csvfile) for a in
+                    audio_paths]
         input_lengths = [f.shape[0] for f in features]
         feature_dim = features[0].shape[1]
         mb_size = len(features)
@@ -260,7 +262,8 @@ class DataGenerator(object):
         return_dict = manager.dict()
         jobs = []
         for threadIndex in range(cpu_count()):
-            proc = Process(target=self.preprocess_sample_normalize, args=(threadIndex, audio_paths, overwrite, return_dict))
+            proc = Process(target=self.preprocess_sample_normalize,
+                           args=(threadIndex, audio_paths, overwrite, return_dict))
             jobs.append(proc)
             proc.start()
         for proc in jobs:

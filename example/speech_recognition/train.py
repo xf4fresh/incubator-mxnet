@@ -22,11 +22,10 @@ import os.path
 import mxnet as mx
 from config_util import get_checkpoint_path, parse_contexts
 from stt_metric import STTMetric
-#tensorboard setting
+# tensorboard setting
 from tensorboard import SummaryWriter
 import json
 from stt_bucketing_module import STTBucketingModule
-
 
 
 def get_initializer(args):
@@ -36,10 +35,12 @@ def get_initializer(args):
         return mx.initializer.Xavier(magnitude=init_scale, factor_type=args.config.get('train', 'factor_type'))
     return init_type(init_scale)
 
+
 class SimpleLRScheduler(mx.lr_scheduler.LRScheduler):
     """A simple lr schedule that simply return `dynamic_lr`. We will set `dynamic_lr`
     dynamically based on performance on the validation set.
     """
+
     def __init__(self, learning_rate=0.001):
         super(SimpleLRScheduler, self).__init__()
         self.learning_rate = learning_rate
@@ -55,7 +56,7 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
     log = LogUtil().getlogger()
     mkpath(os.path.dirname(get_checkpoint_path(args)))
 
-    #seq_len = args.config.get('arch', 'max_t_count')
+    # seq_len = args.config.get('arch', 'max_t_count')
     batch_size = args.config.getint('common', 'batch_size')
     save_checkpoint_every_n_epoch = args.config.getint('common', 'save_checkpoint_every_n_epoch')
     save_checkpoint_every_n_batch = args.config.getint('common', 'save_checkpoint_every_n_batch')
@@ -64,9 +65,11 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
 
     contexts = parse_contexts(args)
     num_gpu = len(contexts)
-    eval_metric = STTMetric(batch_size=batch_size, num_gpu=num_gpu, is_logging=enable_logging_validation_metric,is_epoch_end=True)
+    eval_metric = STTMetric(batch_size=batch_size, num_gpu=num_gpu, is_logging=enable_logging_validation_metric,
+                            is_epoch_end=True)
     # tensorboard setting
-    loss_metric = STTMetric(batch_size=batch_size, num_gpu=num_gpu, is_logging=enable_logging_train_metric,is_epoch_end=False)
+    loss_metric = STTMetric(batch_size=batch_size, num_gpu=num_gpu, is_logging=enable_logging_train_metric,
+                            is_epoch_end=False)
 
     optimizer = args.config.get('optimizer', 'optimizer')
     learning_rate = args.config.getfloat('train', 'learning_rate')
@@ -80,7 +83,7 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
     show_every = args.config.getint('train', 'show_every')
     optimizer_params_dictionary = json.loads(args.config.get('optimizer', 'optimizer_params_dictionary'))
     kvstore_option = args.config.get('common', 'kvstore_option')
-    n_epoch=begin_epoch
+    n_epoch = begin_epoch
     is_bucketing = args.config.getboolean('arch', 'is_bucketing')
 
     if clip_gradient == 0:
@@ -106,12 +109,11 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         module = model
     else:
         module.bind(data_shapes=data_train.provide_data,
-                label_shapes=data_train.provide_label,
-                for_training=True)
+                    label_shapes=data_train.provide_label,
+                    for_training=True)
 
     if begin_epoch == 0 and mode == 'train':
         module.init_params(initializer=get_initializer(args))
-
 
     lr_scheduler = SimpleLRScheduler(learning_rate=learning_rate)
 
@@ -124,6 +126,7 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
                               optimizer=optimizer,
                               optimizer_params=optimizer_params,
                               force_init=force_init)
+
     if mode == "train":
         reset_optimizer(force_init=True)
     else:
@@ -131,7 +134,7 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         data_train.reset()
         data_train.is_first_epoch = True
 
-    #tensorboard setting
+    # tensorboard setting
     tblog_dir = args.config.get('common', 'tensorboard_log_dir')
     summary_writer = SummaryWriter(tblog_dir)
 
@@ -147,10 +150,12 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
             # tensorboard setting
             if (nbatch + 1) % show_every == 0:
                 module.update_metric(loss_metric, data_batch.label)
-            #summary_writer.add_scalar('loss batch', loss_metric.get_batch_loss(), nbatch)
-            if (nbatch+1) % save_checkpoint_every_n_batch == 0:
+            # summary_writer.add_scalar('loss batch', loss_metric.get_batch_loss(), nbatch)
+            if (nbatch + 1) % save_checkpoint_every_n_batch == 0:
                 log.info('Epoch[%d] Batch[%d] SAVE CHECKPOINT', n_epoch, nbatch)
-                module.save_checkpoint(prefix=get_checkpoint_path(args)+"n_epoch"+str(n_epoch)+"n_batch", epoch=(int((nbatch+1)/save_checkpoint_every_n_batch)-1), save_optimizer_states=save_optimizer_states)
+                module.save_checkpoint(prefix=get_checkpoint_path(args) + "n_epoch" + str(n_epoch) + "n_batch",
+                                       epoch=(int((nbatch + 1) / save_checkpoint_every_n_batch) - 1),
+                                       save_optimizer_states=save_optimizer_states)
         # commented for Libri_sample data set to see only train cer
         log.info('---------validation---------')
         data_val.reset()
@@ -178,10 +183,11 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         # save checkpoints
         if n_epoch % save_checkpoint_every_n_epoch == 0:
             log.info('Epoch[%d] SAVE CHECKPOINT', n_epoch)
-            module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch, save_optimizer_states=save_optimizer_states)
+            module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch,
+                                   save_optimizer_states=save_optimizer_states)
 
         n_epoch += 1
 
-        lr_scheduler.learning_rate=learning_rate/learning_rate_annealing
+        lr_scheduler.learning_rate = learning_rate / learning_rate_annealing
 
     log.info('FINISH')

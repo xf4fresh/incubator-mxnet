@@ -111,9 +111,13 @@ class STTIter(mx.io.DataIter):
                 audio_paths.append(audio_path)
                 texts.append(text)
             if self.is_first_epoch:
-                data_set = self.datagen.prepare_minibatch(audio_paths, texts, overwrite=True, is_bi_graphemes=self.is_bi_graphemes, save_feature_as_csvfile=self.save_feature_as_csvfile)
+                data_set = self.datagen.prepare_minibatch(audio_paths, texts, overwrite=True,
+                                                          is_bi_graphemes=self.is_bi_graphemes,
+                                                          save_feature_as_csvfile=self.save_feature_as_csvfile)
             else:
-                data_set = self.datagen.prepare_minibatch(audio_paths, texts, overwrite=False, is_bi_graphemes=self.is_bi_graphemes, save_feature_as_csvfile=self.save_feature_as_csvfile)
+                data_set = self.datagen.prepare_minibatch(audio_paths, texts, overwrite=False,
+                                                          is_bi_graphemes=self.is_bi_graphemes,
+                                                          save_feature_as_csvfile=self.save_feature_as_csvfile)
 
             data_all = [mx.nd.array(data_set['x'])] + self.init_state_arrays
             label_all = [mx.nd.array(data_set['y'])]

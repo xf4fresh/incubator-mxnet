@@ -33,7 +33,8 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "param_blocks"])
 
 
-def vanilla_lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, is_batchnorm=False, gamma=None, beta=None, name=None):
+def vanilla_lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, is_batchnorm=False, gamma=None, beta=None,
+                 name=None):
     """LSTM Cell symbol"""
     i2h = mx.sym.FullyConnected(data=indata,
                                 weight=param.i2h_weight,

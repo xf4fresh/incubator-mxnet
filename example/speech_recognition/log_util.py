@@ -50,8 +50,8 @@ class LogUtil(object):
             file_max_bytes = 10 * 1024 * 1024
 
             file_handler = logging.handlers.RotatingFileHandler(filename='./log/' + self._filename,
-                                                               maxBytes=file_max_bytes,
-                                                               backupCount=10)
+                                                                maxBytes=file_max_bytes,
+                                                                backupCount=10)
             file_formatter = logging.Formatter('[%(levelname)8s][%(asctime)s.%(msecs)03d] %(message)s',
                                                datefmt='%Y/%m/%d %H:%M:%S')
             file_handler.setFormatter(file_formatter)

@@ -17,6 +17,7 @@
 
 import logging as log
 
+
 class Singleton:
     def __init__(self, decrated):
         log.debug("Singleton Init %s" % decrated)
@@ -39,15 +40,14 @@ class Singleton:
 
 
 class SingletonInstane:
-  __instance = None
+    __instance = None
 
-  @classmethod
-  def __getInstance(cls):
-    return cls.__instance
+    @classmethod
+    def __getInstance(cls):
+        return cls.__instance
 
-  @classmethod
-  def instance(cls, *args, **kargs):
-    cls.__instance = cls(*args, **kargs)
-    cls.instance = cls.__getInstance
-    return cls.__instance
-
+    @classmethod
+    def instance(cls, *args, **kargs):
+        cls.__instance = cls(*args, **kargs)
+        cls.instance = cls.__getInstance
+        return cls.__instance

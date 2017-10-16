@@ -45,7 +45,8 @@ def fc(net,
         if no_bias:
             net = mx.sym.FullyConnected(data=net, num_hidden=num_hidden, weight=weight, no_bias=no_bias, name=name)
         else:
-            net = mx.sym.FullyConnected(data=net, num_hidden=num_hidden, weight=weight, bias=bias, no_bias=no_bias, name=name)
+            net = mx.sym.FullyConnected(data=net, num_hidden=num_hidden, weight=weight, bias=bias, no_bias=no_bias,
+                                        name=name)
     # activation
     if act_type is not None:
         net = mx.sym.Activation(data=net, act_type=act_type, name="%s_activation" % name)

@@ -24,12 +24,13 @@ def split_every(n, label):
     if index <= len(label) - 1 <= index + n - 1:
         yield label[index:len(label)]
         index = index + n
-    while index+n-1 <= len(label)-1:
-        yield label[index:index+n]
+    while index + n - 1 <= len(label) - 1:
+        yield label[index:index + n]
         index = index + n
-        if index <= len(label)-1 <= index+n-1:
+        if index <= len(label) - 1 <= index + n - 1:
             yield label[index:len(label)]
-            index=index+n
+            index = index + n
+
 
 def generate_bi_graphemes_label(label):
     label_bi_graphemes = []
@@ -42,6 +43,7 @@ def generate_bi_graphemes_label(label):
             label_bi_graphemes.append(" ")
     return label_bi_graphemes
 
+
 def generate_bi_graphemes_dictionary(label_list):
     freqs = Counter()
     for label in label_list:
@@ -51,11 +53,10 @@ def generate_bi_graphemes_dictionary(label_list):
                 if len(pair) == 2:
                     freqs[pair] += 1
 
-
     with open('resources/unicodemap_en_baidu_bi_graphemes.csv', 'w') as bigram_label:
-        bigramwriter = csv.writer(bigram_label, delimiter = ',')
+        bigramwriter = csv.writer(bigram_label, delimiter=',')
         baidu_labels = list('\' abcdefghijklmnopqrstuvwxyz')
         for index, key in enumerate(baidu_labels):
-            bigramwriter.writerow((key, index+1))
+            bigramwriter.writerow((key, index + 1))
         for index, key in enumerate(freqs.keys()):
-            bigramwriter.writerow((key, index+len(baidu_labels)+1))
+            bigramwriter.writerow((key, index + len(baidu_labels) + 1))

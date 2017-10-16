@@ -123,8 +123,8 @@ def arch(args, seq_len=None):
                        no_bias=is_batchnorm,
                        name='conv1')
             if is_batchnorm:
-               # batch norm normalizes axis 1
-               net = batchnorm(net, name="conv1_batchnorm")
+                # batch norm normalizes axis 1
+                net = batchnorm(net, name="conv1_batchnorm")
 
             net = conv(net=net,
                        channels=channel_num,

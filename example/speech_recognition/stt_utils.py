@@ -23,7 +23,6 @@ import numpy as np
 import soundfile
 from numpy.lib.stride_tricks import as_strided
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -148,4 +147,3 @@ def spectrogram_from_file(filename, step=10, window=20, max_freq=None,
             return res
     else:
         return np.loadtxt(csvfilename)
-
