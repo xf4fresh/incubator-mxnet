@@ -1,20 +1,3 @@
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-
 import json
 import os
 import sys
@@ -143,12 +126,10 @@ def load_data(args):
     # sort file paths by its duration in ascending order to implement sortaGrad
     if mode == "train" or mode == "load":
         max_t_count = datagen.get_max_seq_length(partition="train")
-        max_label_length = \
-            datagen.get_max_label_length(partition="train", is_bi_graphemes=is_bi_graphemes)
+        max_label_length = datagen.get_max_label_length(partition="train", is_bi_graphemes=is_bi_graphemes)
     elif mode == "predict":
         max_t_count = datagen.get_max_seq_length(partition="test")
-        max_label_length = \
-            datagen.get_max_label_length(partition="test", is_bi_graphemes=is_bi_graphemes)
+        max_label_length = datagen.get_max_label_length(partition="test", is_bi_graphemes=is_bi_graphemes)
 
     args.config.set('arch', 'max_t_count', str(max_t_count))
     args.config.set('arch', 'max_label_length', str(max_label_length))
@@ -160,61 +141,31 @@ def load_data(args):
     save_feature_as_csvfile = args.config.getboolean('train', 'save_feature_as_csvfile')
     if is_bucketing:
         buckets = json.loads(args.config.get('arch', 'buckets'))
-        data_loaded = BucketSTTIter(partition="train",
-                                    count=datagen.count,
-                                    datagen=datagen,
-                                    batch_size=batch_size,
-                                    num_label=max_label_length,
-                                    init_states=init_states,
-                                    seq_length=max_t_count,
-                                    width=whcs.width,
-                                    height=whcs.height,
-                                    sort_by_duration=sort_by_duration,
-                                    is_bi_graphemes=is_bi_graphemes,
-                                    buckets=buckets,
-                                    save_feature_as_csvfile=save_feature_as_csvfile)
+        data_loaded = BucketSTTIter(
+            partition="train", count=datagen.count, datagen=datagen, batch_size=batch_size, num_label=max_label_length,
+            init_states=init_states, seq_length=max_t_count, width=whcs.width, height=whcs.height,
+            sort_by_duration=sort_by_duration, is_bi_graphemes=is_bi_graphemes, buckets=buckets,
+            save_feature_as_csvfile=save_feature_as_csvfile)
     else:
-        data_loaded = STTIter(partition="train",
-                              count=datagen.count,
-                              datagen=datagen,
-                              batch_size=batch_size,
-                              num_label=max_label_length,
-                              init_states=init_states,
-                              seq_length=max_t_count,
-                              width=whcs.width,
-                              height=whcs.height,
-                              sort_by_duration=sort_by_duration,
-                              is_bi_graphemes=is_bi_graphemes,
-                              save_feature_as_csvfile=save_feature_as_csvfile)
+        data_loaded = STTIter(
+            partition="train", count=datagen.count, datagen=datagen, batch_size=batch_size, num_label=max_label_length,
+            init_states=init_states, seq_length=max_t_count, width=whcs.width, height=whcs.height,
+            sort_by_duration=sort_by_duration, is_bi_graphemes=is_bi_graphemes,
+            save_feature_as_csvfile=save_feature_as_csvfile)
 
     if mode == 'train' or mode == 'load':
         if is_bucketing:
-            validation_loaded = BucketSTTIter(partition="validation",
-                                              count=datagen.val_count,
-                                              datagen=datagen,
-                                              batch_size=batch_size,
-                                              num_label=max_label_length,
-                                              init_states=init_states,
-                                              seq_length=max_t_count,
-                                              width=whcs.width,
-                                              height=whcs.height,
-                                              sort_by_duration=False,
-                                              is_bi_graphemes=is_bi_graphemes,
-                                              buckets=buckets,
-                                              save_feature_as_csvfile=save_feature_as_csvfile)
+            validation_loaded = BucketSTTIter(
+                partition="validation", count=datagen.val_count, datagen=datagen, batch_size=batch_size,
+                num_label=max_label_length, init_states=init_states, seq_length=max_t_count,
+                width=whcs.width, height=whcs.height, sort_by_duration=False, is_bi_graphemes=is_bi_graphemes,
+                buckets=buckets, save_feature_as_csvfile=save_feature_as_csvfile)
         else:
-            validation_loaded = STTIter(partition="validation",
-                                        count=datagen.val_count,
-                                        datagen=datagen,
-                                        batch_size=batch_size,
-                                        num_label=max_label_length,
-                                        init_states=init_states,
-                                        seq_length=max_t_count,
-                                        width=whcs.width,
-                                        height=whcs.height,
-                                        sort_by_duration=False,
-                                        is_bi_graphemes=is_bi_graphemes,
-                                        save_feature_as_csvfile=save_feature_as_csvfile)
+            validation_loaded = STTIter(
+                partition="validation", count=datagen.val_count, datagen=datagen, batch_size=batch_size,
+                num_label=max_label_length, init_states=init_states, seq_length=max_t_count, width=whcs.width,
+                height=whcs.height, sort_by_duration=False, is_bi_graphemes=is_bi_graphemes,
+                save_feature_as_csvfile=save_feature_as_csvfile)
         return data_loaded, validation_loaded, args
     elif mode == 'predict':
         return data_loaded, args
@@ -251,9 +202,8 @@ def load_model(args, contexts, data_train):
             label_names = [x[0] for x in data_train.provide_label]
 
             model_loaded = mx.module.Module.load(
-                prefix=model_path, epoch=model_num_epoch, context=contexts,
-                data_names=data_names, label_names=label_names,
-                load_optimizer_states=load_optimizer_states)
+                prefix=model_path, epoch=model_num_epoch, context=contexts, data_names=data_names,
+                label_names=label_names, load_optimizer_states=load_optimizer_states)
         if is_start_from_batch:
             import re
             model_num_epoch = int(re.findall('\d+', model_file)[0])
@@ -263,8 +213,7 @@ def load_model(args, contexts, data_train):
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
-        raise Exception('cfg file path must be provided. ' +
-                        'ex)python main.py --configfile examplecfg.cfg')
+        raise Exception('cfg file path must be provided. ex)python main.py --configfile example.cfg')
     args = parse_args(sys.argv[1])
     # set parameters from cfg file
     # give random seed
@@ -286,11 +235,9 @@ if __name__ == '__main__':
     mode = args.config.get('common', 'mode')
     if mode not in ['train', 'predict', 'load']:
         raise Exception(
-            'Define mode in the cfg file first. ' +
-            'train or predict or load can be the candidate for the mode.')
+            'Define mode in the cfg file first. train or predict or load can be the candidate for the mode.')
 
     # get meta file where character to number conversions are defined
-
     contexts = parse_contexts(args)
     num_gpu = len(contexts)
     batch_size = args.config.getint('common', 'batch_size')
@@ -313,16 +260,12 @@ if __name__ == '__main__':
     # if mode is 'train', it trains the model
     if mode == 'train':
         if is_bucketing:
-            module = STTBucketingModule(
-                sym_gen=model_loaded,
-                default_bucket_key=data_train.default_bucket_key,
-                context=contexts
-            )
+            module = STTBucketingModule(sym_gen=model_loaded,
+                                        default_bucket_key=data_train.default_bucket_key, context=contexts)
         else:
             data_names = [x[0] for x in data_train.provide_data]
             label_names = [x[0] for x in data_train.provide_label]
-            module = mx.mod.Module(model_loaded, context=contexts,
-                                   data_names=data_names, label_names=label_names)
+            module = mx.mod.Module(model_loaded, context=contexts, data_names=data_names, label_names=label_names)
         do_training(args=args, module=module, data_train=data_train, data_val=data_val)
     # if mode is 'load', it loads model from the checkpoint and continues the training.
     elif mode == 'load':
@@ -340,14 +283,9 @@ if __name__ == '__main__':
 
             model_path = 'checkpoints/' + str(model_name[:-5])
             model = STTBucketingModule(
-                sym_gen=model_loaded,
-                default_bucket_key=data_train.default_bucket_key,
-                context=contexts
-            )
+                sym_gen=model_loaded, default_bucket_key=data_train.default_bucket_key, context=contexts)
 
-            model.bind(data_shapes=data_train.provide_data,
-                       label_shapes=data_train.provide_label,
-                       for_training=True)
+            model.bind(data_shapes=data_train.provide_data, label_shapes=data_train.provide_label, for_training=True)
             _, arg_params, aux_params = mx.model.load_checkpoint(model_path, model_num_epoch)
             model.set_params(arg_params, aux_params)
             model_loaded = model
@@ -368,5 +306,4 @@ if __name__ == '__main__':
                 model_loaded.update_metric(eval_metric, data_batch.label)
     else:
         raise Exception(
-            'Define mode in the cfg file first. ' +
-            'train or predict or load can be the candidate for the mode')
+            'Define mode in the cfg file first. train or predict or load can be the candidate for the mode')

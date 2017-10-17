@@ -39,12 +39,8 @@ def get_label(buf, num_lable):
 
 class BucketSTTIter(mx.io.DataIter):
     def __init__(self, count, datagen, batch_size, num_label, init_states, seq_length, width, height,
-                 sort_by_duration=True,
-                 is_bi_graphemes=False,
-                 partition="train",
-                 buckets=[],
-                 save_feature_as_csvfile=False
-                 ):
+                 sort_by_duration=True, is_bi_graphemes=False, partition="train",
+                 buckets=[], save_feature_as_csvfile=False):
         super(BucketSTTIter, self).__init__()
 
         self.maxLabelLength = num_label
@@ -77,9 +73,7 @@ class BucketSTTIter(mx.io.DataIter):
                             "Must be train/validation/test")
         # if sortagrad
         if sort_by_duration:
-            durations, audio_paths, texts = datagen.sort_by_duration(durations,
-                                                                     audio_paths,
-                                                                     texts)
+            durations, audio_paths, texts = datagen.sort_by_duration(durations, audio_paths, texts)
         else:
             durations = durations
             audio_paths = audio_paths
@@ -147,13 +141,11 @@ class BucketSTTIter(mx.io.DataIter):
 
         if self.is_first_epoch:
             data_set = self.datagen.prepare_minibatch(audio_paths, texts, overwrite=True,
-                                                      is_bi_graphemes=self.is_bi_graphemes,
-                                                      seq_length=self.buckets[i],
+                                                      is_bi_graphemes=self.is_bi_graphemes, seq_length=self.buckets[i],
                                                       save_feature_as_csvfile=self.save_feature_as_csvfile)
         else:
             data_set = self.datagen.prepare_minibatch(audio_paths, texts, overwrite=False,
-                                                      is_bi_graphemes=self.is_bi_graphemes,
-                                                      seq_length=self.buckets[i],
+                                                      is_bi_graphemes=self.is_bi_graphemes, seq_length=self.buckets[i],
                                                       save_feature_as_csvfile=self.save_feature_as_csvfile)
 
         data_all = [mx.nd.array(data_set['x'])] + self.init_state_arrays
@@ -163,6 +155,4 @@ class BucketSTTIter(mx.io.DataIter):
         provide_data = [('data', (self.batch_size, self.buckets[i], self.width * self.height))] + self.init_states
 
         return mx.io.DataBatch(data_all, label_all, pad=0,
-                               bucket_key=self.buckets[i],
-                               provide_data=provide_data,
-                               provide_label=self.provide_label)
+                               bucket_key=self.buckets[i], provide_data=provide_data, provide_label=self.provide_label)

@@ -35,11 +35,9 @@ class DataGenerator(object):
         Params:
             step (int): Step size in milliseconds between windows
             window (int): FFT window size in milliseconds
-            max_freq (int): Only FFT bins corresponding to frequencies between
-                [0, max_freq] are returned
+            max_freq (int): Only FFT bins corresponding to frequencies between [0, max_freq] are returned
             desc_file (str, optional): Path to a JSON-line file that contains
-                labels and paths to the audio files. If this is None, then
-                load metadata right away
+                labels and paths to the audio files. If this is None, then load metadata right away
         """
         # calc_feat_dim returns int(0.001*window*max_freq)+1
         super(DataGenerator, self).__init__()
@@ -72,20 +70,17 @@ class DataGenerator(object):
             audio_clip(str): Path to the audio clip
         """
         return spectrogram_from_file(
-            audio_clip, step=self.step, window=self.window,
-            max_freq=self.max_freq, overwrite=overwrite,
-            save_feature_as_csvfile=save_feature_as_csvfile)
+            audio_clip, step=self.step, window=self.window, max_freq=self.max_freq,
+            overwrite=overwrite, save_feature_as_csvfile=save_feature_as_csvfile)
 
     def load_metadata_from_desc_file(self, desc_file, partition='train',
                                      max_duration=16.0, ):
         """ Read metadata from the description file
             (possibly takes long, depending on the filesize)
         Params:
-            desc_file (str):  Path to a JSON-line file that contains labels and
-                paths to the audio files
+            desc_file (str):  Path to a JSON-line file that contains labels and paths to the audio files
             partition (str): One of 'train', 'validation' or 'test'
-            max_duration (float): In seconds, the maximum duration of
-                utterances to train or test on
+            max_duration (float): In seconds, the maximum duration of utterances to train or test on
         """
         logger = LogUtil().getlogger()
         logger.info('Reading description file: {} for partition: {}'
@@ -123,8 +118,7 @@ class DataGenerator(object):
             self.test_durations = durations
             self.test_texts = texts
         else:
-            raise Exception("Invalid partition to load metadata. "
-                            "Must be train/validation/test")
+            raise Exception("Invalid partition to load metadata. Must be train/validation/test")
 
     def load_train_data(self, desc_file, max_duration):
         self.load_metadata_from_desc_file(desc_file, 'train', max_duration=max_duration)
@@ -145,8 +139,7 @@ class DataGenerator(object):
         elif partition == 'test':
             texts = self.train_texts
         else:
-            raise Exception("Invalid partition to load metadata. "
-                            "Must be train/validation/test")
+            raise Exception("Invalid partition to load metadata. Must be train/validation/test")
         if is_bi_graphemes:
             self.max_label_length = max([len(generate_bi_graphemes_label(text)) for text in texts])
         else:
@@ -161,8 +154,7 @@ class DataGenerator(object):
             audio_paths = self.train_audio_paths
             durations = self.train_durations
         else:
-            raise Exception("Invalid partition to load metadata. "
-                            "Must be train/validation/test")
+            raise Exception("Invalid partition to load metadata. Must be train/validation/test")
         max_duration_indexes = durations.index(max(durations))
         max_seq_length = self.featurize(audio_paths[max_duration_indexes]).shape[0]
         self.max_seq_length = max_seq_length
@@ -177,13 +169,12 @@ class DataGenerator(object):
         Returns:
             dict: See below for contents
         """
-        assert len(audio_paths) == len(texts), \
-            "Inputs and outputs to the network must be of the same number"
+        assert len(audio_paths) == len(texts), "Inputs and outputs to the network must be of the same number"
         # Features is a list of (timesteps, feature_dim) arrays
         # Calculate the features for each audio clip, as the log of the
         # Fourier Transform of the audio
-        features = [self.featurize(a, overwrite=overwrite, save_feature_as_csvfile=save_feature_as_csvfile) for a in
-                    audio_paths]
+        features = [self.featurize(a, overwrite=overwrite, save_feature_as_csvfile=save_feature_as_csvfile)
+                    for a in audio_paths]
         input_lengths = [f.shape[0] for f in features]
         feature_dim = features[0].shape[1]
         mb_size = len(features)
@@ -216,12 +207,10 @@ class DataGenerator(object):
         }
 
     def iterate_test(self, minibatch_size=16):
-        return self.iterate(self.test_audio_paths, self.test_texts,
-                            minibatch_size)
+        return self.iterate(self.test_audio_paths, self.test_texts, minibatch_size)
 
     def iterate_validation(self, minibatch_size=16):
-        return self.iterate(self.val_audio_paths, self.val_texts,
-                            minibatch_size)
+        return self.iterate(self.val_audio_paths, self.val_texts, minibatch_size)
 
     def preprocess_sample_normalize(self, threadIndex, audio_paths, overwrite, return_dict):
         if len(audio_paths) > 0:
@@ -275,8 +264,6 @@ class DataGenerator(object):
 
         self.feats_mean = feat / float(count)
         self.feats_std = np.sqrt(feat_squared / float(count) - np.square(self.feats_mean))
-        np.savetxt(
-            generate_file_path(self.save_dir, self.model_name, 'feats_mean'), self.feats_mean)
-        np.savetxt(
-            generate_file_path(self.save_dir, self.model_name, 'feats_std'), self.feats_std)
+        np.savetxt(generate_file_path(self.save_dir, self.model_name, 'feats_mean'), self.feats_mean)
+        np.savetxt(generate_file_path(self.save_dir, self.model_name, 'feats_std'), self.feats_std)
         log.info("End calculating mean and std from samples")

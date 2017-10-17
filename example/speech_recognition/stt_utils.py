@@ -56,14 +56,12 @@ def conv_output_length(input_length, filter_size, border_mode, stride,
 def spectrogram(samples, fft_length=256, sample_rate=2, hop_length=128):
     """
     Compute the spectrogram for a real signal.
-    The parameters follow the naming convention of
-    matplotlib.mlab.specgram
+    The parameters follow the naming convention of matplotlib.mlab.specgram
     Args:
         samples (1D array): input audio signal
         fft_length (int): number of elements in fft window
         sample_rate (scalar): sample rate
-        hop_length (int): hop length (relative offset between neighboring
-            fft windows).
+        hop_length (int): hop length (relative offset between neighboring fft windows).
     Returns:
         x (2D array): spectrogram [frequency x time]
         freq (1D array): frequency of each row in x
@@ -77,9 +75,7 @@ def spectrogram(samples, fft_length=256, sample_rate=2, hop_length=128):
     window = np.hanning(fft_length)[:, None]
     window_norm = np.sum(window ** 2)
 
-    # The scaling below follows the convention of
-    # matplotlib.mlab.specgram which is the same as
-    # matlabs specgram.
+    # The scaling below follows the convention of matplotlib.mlab.specgram which is the same as matlabs specgram.
     scale = window_norm * sample_rate
 
     trunc = (len(samples) - fft_length) % hop_length
@@ -94,7 +90,8 @@ def spectrogram(samples, fft_length=256, sample_rate=2, hop_length=128):
     assert np.all(x[:, 1] == samples[hop_length:(hop_length + fft_length)])
 
     # broadcast window, compute fft over columns and square mod
-    # This function computes the one-dimensional n-point discrete Fourier Transform (DFT) of a real-valued array by means of an efficient algorithm called the Fast Fourier Transform (FFT).
+    # This function computes the one-dimensional n-point discrete Fourier Transform (DFT) of a real-valued array
+    # by means of an efficient algorithm called the Fast Fourier Transform (FFT).
     x = np.fft.rfft(x * window, axis=0)
     x = np.absolute(x) ** 2
 
@@ -114,8 +111,7 @@ def spectrogram_from_file(filename, step=10, window=20, max_freq=None,
         filename (str): Path to the audio file
         step (int): Step size in milliseconds between windows
         window (int): FFT window size in milliseconds
-        max_freq (int): Only FFT bins corresponding to frequencies between
-            [0, max_freq] are returned
+        max_freq (int): Only FFT bins corresponding to frequencies between [0, max_freq] are returned
         eps (float): Small value to ensure numerical stability (for ln(x))
     """
 
@@ -129,16 +125,13 @@ def spectrogram_from_file(filename, step=10, window=20, max_freq=None,
             if max_freq is None:
                 max_freq = sample_rate / 2
             if max_freq > sample_rate / 2:
-                raise ValueError("max_freq must not be greater than half of "
-                                 " sample rate")
+                raise ValueError("max_freq must not be greater than half of sample rate")
             if step > window:
                 raise ValueError("step size must not be greater than window size")
             hop_length = int(0.001 * step * sample_rate)
             fft_length = int(0.001 * window * sample_rate)
 
-            pxx, freqs = spectrogram(
-                audio, fft_length=fft_length, sample_rate=sample_rate,
-                hop_length=hop_length)
+            pxx, freqs = spectrogram(audio, fft_length=fft_length, sample_rate=sample_rate, hop_length=hop_length)
 
             ind = np.where(freqs <= max_freq)[0][-1] + 1
             res = np.transpose(np.log(pxx[:ind, :] + eps))

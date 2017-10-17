@@ -47,9 +47,7 @@ class SimpleBatch(object):
 
 class STTIter(mx.io.DataIter):
     def __init__(self, count, datagen, batch_size, num_label, init_states, seq_length, width, height,
-                 sort_by_duration=True,
-                 is_bi_graphemes=False, partition="train",
-                 save_feature_as_csvfile=False):
+                 sort_by_duration=True, is_bi_graphemes=False, partition="train", save_feature_as_csvfile=False):
         super(STTIter, self).__init__()
         self.batch_size = batch_size
         self.num_label = num_label
@@ -74,13 +72,10 @@ class STTIter(mx.io.DataIter):
             audio_paths = datagen.test_audio_paths
             texts = datagen.test_texts
         else:
-            raise Exception("Invalid partition to load metadata. "
-                            "Must be train/validation/test")
+            raise Exception("Invalid partition to load metadata. Must be train/validation/test")
         # if sortagrad
         if sort_by_duration:
-            durations, audio_paths, texts = datagen.sort_by_duration(durations,
-                                                                     audio_paths,
-                                                                     texts)
+            durations, audio_paths, texts = datagen.sort_by_duration(durations, audio_paths, texts)
         else:
             durations = durations
             audio_paths = audio_paths

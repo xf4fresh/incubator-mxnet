@@ -95,22 +95,15 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
 
         model_path = 'checkpoints/' + str(model_name[:-5])
         symbol, data_names, label_names = module(1600)
-        model = STTBucketingModule(
-            sym_gen=module,
-            default_bucket_key=data_train.default_bucket_key,
-            context=contexts)
+        model = STTBucketingModule(sym_gen=module, default_bucket_key=data_train.default_bucket_key, context=contexts)
         data_train.reset()
 
-        model.bind(data_shapes=data_train.provide_data,
-                   label_shapes=data_train.provide_label,
-                   for_training=True)
+        model.bind(data_shapes=data_train.provide_data, label_shapes=data_train.provide_label, for_training=True)
         _, arg_params, aux_params = mx.model.load_checkpoint(model_path, model_num_epoch)
         model.set_params(arg_params, aux_params)
         module = model
     else:
-        module.bind(data_shapes=data_train.provide_data,
-                    label_shapes=data_train.provide_label,
-                    for_training=True)
+        module.bind(data_shapes=data_train.provide_data, label_shapes=data_train.provide_label, for_training=True)
 
     if begin_epoch == 0 and mode == 'train':
         module.init_params(initializer=get_initializer(args))
@@ -118,13 +111,9 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
     lr_scheduler = SimpleLRScheduler(learning_rate=learning_rate)
 
     def reset_optimizer(force_init=False):
-        optimizer_params = {'lr_scheduler': lr_scheduler,
-                            'clip_gradient': clip_gradient,
-                            'wd': weight_decay}
+        optimizer_params = {'lr_scheduler': lr_scheduler, 'clip_gradient': clip_gradient, 'wd': weight_decay}
         optimizer_params.update(optimizer_params_dictionary)
-        module.init_optimizer(kvstore=kvstore_option,
-                              optimizer=optimizer,
-                              optimizer_params=optimizer_params,
+        module.init_optimizer(kvstore=kvstore_option, optimizer=optimizer, optimizer_params=optimizer_params,
                               force_init=force_init)
 
     if mode == "train":
@@ -139,7 +128,6 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
     summary_writer = SummaryWriter(tblog_dir)
 
     while True:
-
         if n_epoch >= num_epoch:
             break
         loss_metric.reset()
@@ -183,8 +171,7 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         # save checkpoints
         if n_epoch % save_checkpoint_every_n_epoch == 0:
             log.info('Epoch[%d] SAVE CHECKPOINT', n_epoch)
-            module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch,
-                                   save_optimizer_states=save_optimizer_states)
+            module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch, save_optimizer_states=save_optimizer_states)
 
         n_epoch += 1
 
