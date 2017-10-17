@@ -1121,8 +1121,7 @@ def test_gru():
 
 
 def test_bidirectional():
-    fused = mx.rnn.FusedRNNCell(100, num_layers=2, mode='gru', prefix='',
-            bidirectional=True)
+    fused = mx.rnn.FusedRNNCell(100, num_layers=2, mode='gru', prefix='', bidirectional=True)
 
     stack = mx.rnn.SequentialRNNCell()
     stack.add(mx.rnn.BidirectionalCell(
@@ -1137,11 +1136,12 @@ def test_bidirectional():
     check_rnn_consistency(fused, stack)
     check_rnn_consistency(stack, fused)
 
+
 def test_unfuse():
     for mode in ['rnn_tanh', 'rnn_relu', 'lstm', 'gru']:
         fused = mx.rnn.FusedRNNCell(
             100, num_layers=2, mode=mode,
-            prefix='test_%s'%mode,
+            prefix='test_%s' % mode,
             bidirectional=True,
             dropout=0.5)
 
@@ -1149,6 +1149,7 @@ def test_unfuse():
 
         check_rnn_consistency(fused, stack)
         check_rnn_consistency(stack, fused)
+
 
 def test_psroipooling_with_type():
     np.random.seed(1234)
@@ -1173,6 +1174,7 @@ def test_psroipooling_with_type():
 
     check_consistency(sym, ctx_list, grad_req={'psroipool_data': 'write',
                                                'psroipool_rois': 'null'}, arg_params=arg_params)
+
 
 def test_deformable_psroipooling_with_type():
     np.random.seed(1234)
@@ -1207,6 +1209,7 @@ def test_deformable_psroipooling_with_type():
                                                'deformable_psroipool_rois': 'null',
                                                'deformable_psroipool_trans': 'write'}, arg_params=arg_params)
 
+
 def test_deformable_convolution_with_type():
     np.random.seed(1234)
     sym = mx.sym.contrib.DeformableConvolution(num_filter=3, kernel=(3,3), name='deformable_conv')
@@ -1236,6 +1239,8 @@ def test_deformable_convolution_with_type():
                                                'deformable_conv_offset': 'write',
                                                'deformable_conv_weight': 'write',
                                                'deformable_conv_bias': 'null'}, tol=tol)
+
+
 def test_deformable_convolution_options():
     # 2D convolution
 
@@ -1311,6 +1316,7 @@ def test_deformable_convolution_options():
     sym = mx.sym.contrib.DeformableConvolution(num_filter=4, kernel=(3,3), num_deformable_group=2,
                                                name='deformable_conv')
 
+
 def test_residual_fused():
     cell = mx.rnn.ResidualCell(
             mx.rnn.FusedRNNCell(50, num_layers=3, mode='lstm',
@@ -1329,6 +1335,7 @@ def test_residual_fused():
                            rnn_parameters=mx.nd.zeros((61200,), ctx=mx.gpu(0)))
     expected_outputs = np.ones((10, 2, 50))+5
     assert np.array_equal(outputs[0].asnumpy(), expected_outputs)
+
 
 def check_rnn_layer(layer):
     layer.collect_params().initialize(ctx=[mx.cpu(0), mx.gpu(0)])
@@ -1359,6 +1366,7 @@ def test_rnn_layer():
 def test_sequence_reverse():
     check_sequence_reverse(mx.gpu(0))
 
+
 @unittest.skip("Test fails intermittently. Temporarily disabled until fixed. Tracked at https://github.com/apache/incubator-mxnet/issues/8211")
 def test_autograd_save_memory():
     x = mx.nd.zeros((128, 512, 512), ctx=mx.gpu(0))
@@ -1369,6 +1377,7 @@ def test_autograd_save_memory():
             x = x + 1
             x.wait_to_read()
     x.backward()
+
 
 def test_gluon_ctc_consistency():
     loss = mx.gluon.loss.CTCLoss()

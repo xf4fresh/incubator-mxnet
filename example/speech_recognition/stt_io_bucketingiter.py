@@ -18,12 +18,12 @@
 from __future__ import print_function
 import mxnet as mx
 import sys
+import random
+import numpy as np
 
 sys.path.insert(0, "../../python")
 
 import bisect
-import random
-import numpy as np
 
 BATCH_SIZE = 1
 SEQ_LENGTH = 0

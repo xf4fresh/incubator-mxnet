@@ -1,23 +1,4 @@
-# Licensed to the Apache Software Foundation (ASF) under one
-# or more contributor license agreements.  See the NOTICE file
-# distributed with this work for additional information
-# regarding copyright ownership.  The ASF licenses this file
-# to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance
-# with the License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
 
-# pylint: disable=C0111, too-many-statements, too-many-locals
-# pylint: too-many-arguments,too-many-instance-attributes,too-many-locals,redefined-outer-name,fixme
-# pylint: disable=superfluous-parens, no-member, invalid-name
 """
 architecture file for deep speech 2 model
 """
@@ -109,6 +90,7 @@ def arch(args, seq_len=None):
             num_rear_fc_layers = args.config.getint("arch", "num_rear_fc_layers")
             num_hidden_rear_fc_list = json.loads(args.config.get("arch", "num_hidden_rear_fc_list"))
             act_type_rear_fc_list = json.loads(args.config.get("arch", "act_type_rear_fc_list"))
+
             # model symbol generation
             # input preparation
             data = mx.sym.Variable('data')
@@ -168,8 +150,7 @@ def arch(args, seq_len=None):
             seq_len_after_conv_layer1 = int(
                 math.floor((seq_len - conv_layer1_filter_dim[0]) / conv_layer1_stride[0])) + 1
             seq_len_after_conv_layer2 = int(
-                math.floor((seq_len_after_conv_layer1 - conv_layer2_filter_dim[0])
-                           / conv_layer2_stride[0])) + 1
+                math.floor((seq_len_after_conv_layer1 - conv_layer2_filter_dim[0]) / conv_layer2_stride[0])) + 1
 
             args.config.set('arch', 'max_t_count', str(seq_len_after_conv_layer2))
         else:

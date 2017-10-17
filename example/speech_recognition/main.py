@@ -1,15 +1,16 @@
 import json
 import os
 import sys
+import numpy as np
+import mxnet as mx
 from collections import namedtuple
 from datetime import datetime
+
 from config_util import parse_args, parse_contexts, generate_file_path
 from train import do_training
-import mxnet as mx
 from stt_io_iter import STTIter
 from label_util import LabelUtil
 from log_util import LogUtil
-import numpy as np
 from stt_datagenerator import DataGenerator
 from stt_metric import STTMetric
 from stt_bi_graphemes_util import generate_bi_graphemes_dictionary
@@ -86,12 +87,11 @@ def load_data(args):
         datagen.load_train_data(data_json, max_duration=max_duration)
         datagen.load_validation_data(val_json, max_duration=max_duration)
         if is_bi_graphemes:
-            if not os.path.isfile(
-                    "resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
+            if not os.path.isfile("resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
                 load_labelutil(labelUtil=labelUtil, is_bi_graphemes=False, language=language)
                 generate_bi_graphemes_dictionary(datagen.train_texts + datagen.val_texts)
         load_labelutil(labelUtil=labelUtil, is_bi_graphemes=is_bi_graphemes, language=language)
-        args.config.set('arch', 'n_classes', str(labelUtil.get_count()))
+        args.config.set('arch', 'n_classes', str(labelUtil.get_count()))  # set arch/n_classes
 
         if mode == "train":
             if overwrite_meta_files:
@@ -135,7 +135,7 @@ def load_data(args):
     args.config.set('arch', 'max_label_length', str(max_label_length))
     from importlib import import_module
     prepare_data_template = import_module(args.config.get('arch', 'arch_file'))
-    init_states = prepare_data_template.prepare_data(args)
+    init_states = prepare_data_template.prepare_data(args)  # call arch_deepspeech.py
     sort_by_duration = (mode == "train")
     is_bucketing = args.config.getboolean('arch', 'is_bucketing')
     save_feature_as_csvfile = args.config.getboolean('train', 'save_feature_as_csvfile')
@@ -182,7 +182,7 @@ def load_model(args, contexts, data_train):
     is_bucketing = args.config.getboolean('arch', 'is_bucketing')
 
     if mode == 'train':
-        if is_bucketing:
+        if is_bucketing:  # call arch_deepspeech.py
             bucketing_arch = symbol_template.BucketingArch(args)
             model_loaded = bucketing_arch.get_sym_gen()
         else:
@@ -260,8 +260,8 @@ if __name__ == '__main__':
     # if mode is 'train', it trains the model
     if mode == 'train':
         if is_bucketing:
-            module = STTBucketingModule(sym_gen=model_loaded,
-                                        default_bucket_key=data_train.default_bucket_key, context=contexts)
+            module = STTBucketingModule(sym_gen=model_loaded, context=contexts,
+                                        default_bucket_key=data_train.default_bucket_key)
         else:
             data_names = [x[0] for x in data_train.provide_data]
             label_names = [x[0] for x in data_train.provide_label]
