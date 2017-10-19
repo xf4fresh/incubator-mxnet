@@ -121,9 +121,5 @@ def sequence_fc(net,
             net = hidden_all
         return net
     else:
-        raise Exception("length doesn't met - num_layer:",
-                        num_layer, ",len(num_hidden_list):",
-                        len(num_hidden_list),
-                        ",len(act_type_list):",
-                        len(act_type_list)
-                        )
+        raise Exception("length doesn't met - num_layer:", num_layer, ",len(num_hidden_list):", len(num_hidden_list),
+                        ",len(act_type_list):", len(act_type_list))

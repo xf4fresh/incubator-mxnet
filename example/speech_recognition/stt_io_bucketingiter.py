@@ -55,6 +55,7 @@ class BucketSTTIter(mx.io.DataIter):
         self.datagen = datagen
         self.label = None
         self.is_bi_graphemes = is_bi_graphemes
+
         # self.partition = datagen.partition
         if partition == 'train':
             durations = datagen.train_durations
@@ -69,9 +70,8 @@ class BucketSTTIter(mx.io.DataIter):
             audio_paths = datagen.test_audio_paths
             texts = datagen.test_texts
         else:
-            raise Exception("Invalid partition to load metadata. "
-                            "Must be train/validation/test")
-        # if sortagrad
+            raise Exception("Invalid partition to load metadata. Must be train/validation/test")
+        # if sort-agrad
         if sort_by_duration:
             durations, audio_paths, texts = datagen.sort_by_duration(durations, audio_paths, texts)
         else:
@@ -85,15 +85,14 @@ class BucketSTTIter(mx.io.DataIter):
 
         data_lengths = [int(d * 100) for d in durations]
         if len(buckets) == 0:
-            buckets = [i for i, j in enumerate(np.bincount(data_lengths))
-                       if j >= batch_size]
+            buckets = [i for i, j in enumerate(np.bincount(data_lengths)) if j >= batch_size]
         if len(buckets) == 0:
             raise Exception(
-                'There is no valid buckets. It may occured by large batch_size for each buckets. max bincount:%d batch_size:%d' % (
-                max(np.bincount(data_lengths)), batch_size))
+                'There is no valid buckets. It may occured by large batch_size for each buckets. max bincount:%d '
+                'batch_size:%d' % (max(np.bincount(data_lengths)), batch_size))
         buckets.sort()
         ndiscard = 0
-        self.data = [[] for _ in buckets]
+        self.data = [[] for _ in buckets]  # put in data[i] if duration is small than buckets[i],great than buckets[i-1]
         for i, sent in enumerate(data_lengths):
             buck = bisect.bisect_left(buckets, sent)
             if buck == len(buckets):
@@ -106,9 +105,9 @@ class BucketSTTIter(mx.io.DataIter):
         self.buckets = buckets
         self.nddata = []
         self.ndlabel = []
-        self.default_bucket_key = max(buckets)
+        self.default_bucket_key = max(buckets)  # max duration in buckets
 
-        self.idx = []
+        self.idx = []  # [(i,j), ...]: i is index of bucket belong to, j is index in this bucket(start index of batch)
         for i, buck in enumerate(self.data):
             self.idx.extend([(i, j) for j in range(0, len(buck) - batch_size + 1, batch_size)])
         self.curr_idx = 0
@@ -128,10 +127,12 @@ class BucketSTTIter(mx.io.DataIter):
 
     def next(self):
         """Returns the next batch of data."""
-        if self.curr_idx == len(self.idx):
+
+        if self.curr_idx == len(self.idx):  # if iterate over all the batch
             raise StopIteration
+
         i, j = self.idx[self.curr_idx]
-        self.curr_idx += 1
+        self.curr_idx += 1  # curr_idx is index of batch which will be iterated
 
         audio_paths = []
         texts = []

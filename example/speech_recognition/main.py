@@ -8,14 +8,14 @@ from datetime import datetime
 
 from config_util import parse_args, parse_contexts, generate_file_path
 from train import do_training
-from stt_io_iter import STTIter
 from label_util import LabelUtil
 from log_util import LogUtil
-from stt_datagenerator import DataGenerator
+from stt_io_iter import STTIter
 from stt_metric import STTMetric
-from stt_bi_graphemes_util import generate_bi_graphemes_dictionary
+from stt_datagenerator import DataGenerator
 from stt_bucketing_module import STTBucketingModule
 from stt_io_bucketingiter import BucketSTTIter
+from stt_bi_graphemes_util import generate_bi_graphemes_dictionary
 
 sys.path.insert(0, "../../python")
 
@@ -83,9 +83,12 @@ def load_data(args):
     if mode == "train" or mode == "load":
         data_json = args.config.get('data', 'train_json')
         val_json = args.config.get('data', 'val_json')
+
+        # call DataGenerator
         datagen = DataGenerator(save_dir=save_dir, model_name=model_name)
         datagen.load_train_data(data_json, max_duration=max_duration)
         datagen.load_validation_data(val_json, max_duration=max_duration)
+
         if is_bi_graphemes:
             if not os.path.isfile("resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
                 load_labelutil(labelUtil=labelUtil, is_bi_graphemes=False, language=language)
@@ -244,10 +247,13 @@ if __name__ == '__main__':
     # check the number of gpus is positive divisor of the batch size for data parallel
     if batch_size % num_gpu != 0:
         raise Exception('num_gpu should be positive divisor of batch_size')
+
+    # load data
     if mode == "train" or mode == "load":
         data_train, data_val, args = load_data(args)
     elif mode == "predict":
         data_train, args = load_data(args)
+
     is_batchnorm = args.config.getboolean('arch', 'is_batchnorm')
     is_bucketing = args.config.getboolean('arch', 'is_bucketing')
 

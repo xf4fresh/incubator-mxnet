@@ -54,18 +54,17 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
     loss_metric = STTMetric(batch_size=batch_size, num_gpu=num_gpu, is_logging=enable_logging_train_metric,
                             is_epoch_end=False)
 
-    optimizer = args.config.get('optimizer', 'optimizer')
+    mode = args.config.get('common', 'mode')
+    kvstore_option = args.config.get('common', 'kvstore_option')
     learning_rate = args.config.getfloat('train', 'learning_rate')
     learning_rate_annealing = args.config.getfloat('train', 'learning_rate_annealing')
-
-    mode = args.config.get('common', 'mode')
+    show_every = args.config.getint('train', 'show_every')
     num_epoch = args.config.getint('train', 'num_epoch')
+    save_optimizer_states = args.config.getboolean('train', 'save_optimizer_states')
+    optimizer = args.config.get('optimizer', 'optimizer')
     clip_gradient = args.config.getfloat('optimizer', 'clip_gradient')
     weight_decay = args.config.getfloat('optimizer', 'weight_decay')
-    save_optimizer_states = args.config.getboolean('train', 'save_optimizer_states')
-    show_every = args.config.getint('train', 'show_every')
     optimizer_params_dictionary = json.loads(args.config.get('optimizer', 'optimizer_params_dictionary'))
-    kvstore_option = args.config.get('common', 'kvstore_option')
     n_epoch = begin_epoch
     is_bucketing = args.config.getboolean('arch', 'is_bucketing')
 
@@ -86,6 +85,8 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         model.set_params(arg_params, aux_params)
         module = model
     else:
+        """ Binds the symbols to construct executors. 
+        This is necessary before one can perform computation with the module."""
         module.bind(data_shapes=data_train.provide_data, label_shapes=data_train.provide_label, for_training=True)
 
     if begin_epoch == 0 and mode == 'train':
@@ -96,6 +97,7 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
     def reset_optimizer(force_init=False):
         optimizer_params = {'lr_scheduler': lr_scheduler, 'clip_gradient': clip_gradient, 'wd': weight_decay}
         optimizer_params.update(optimizer_params_dictionary)
+        """Installs and initializes optimizers."""
         module.init_optimizer(kvstore=kvstore_option, optimizer=optimizer, optimizer_params=optimizer_params,
                               force_init=force_init)
 
@@ -118,15 +120,18 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         for nbatch, data_batch in enumerate(data_train):
             module.forward_backward(data_batch)
             module.update()
+
             # tensorboard setting
             if (nbatch + 1) % show_every == 0:
                 module.update_metric(loss_metric, data_batch.label)
+
             # summary_writer.add_scalar('loss batch', loss_metric.get_batch_loss(), nbatch)
             if (nbatch + 1) % save_checkpoint_every_n_batch == 0:
                 log.info('Epoch[%d] Batch[%d] SAVE CHECKPOINT', n_epoch, nbatch)
                 module.save_checkpoint(prefix=get_checkpoint_path(args) + "n_epoch" + str(n_epoch) + "n_batch",
                                        epoch=(int((nbatch + 1) / save_checkpoint_every_n_batch) - 1),
                                        save_optimizer_states=save_optimizer_states)
+
         # commented for Libri_sample data set to see only train cer
         log.info('---------validation---------')
         data_val.reset()
@@ -157,7 +162,6 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
             module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch, save_optimizer_states=save_optimizer_states)
 
         n_epoch += 1
-
         lr_scheduler.learning_rate = learning_rate / learning_rate_annealing
 
     log.info('FINISH')

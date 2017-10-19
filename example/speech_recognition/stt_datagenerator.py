@@ -73,8 +73,7 @@ class DataGenerator(object):
             audio_clip, step=self.step, window=self.window, max_freq=self.max_freq,
             overwrite=overwrite, save_feature_as_csvfile=save_feature_as_csvfile)
 
-    def load_metadata_from_desc_file(self, desc_file, partition='train',
-                                     max_duration=16.0, ):
+    def load_metadata_from_desc_file(self, desc_file, partition='train', max_duration=16.0, ):
         """ Read metadata from the description file
             (possibly takes long, depending on the filesize)
         Params:
@@ -83,8 +82,7 @@ class DataGenerator(object):
             max_duration (float): In seconds, the maximum duration of utterances to train or test on
         """
         logger = LogUtil().getlogger()
-        logger.info('Reading description file: {} for partition: {}'
-                    .format(desc_file, partition))
+        logger.info('Reading description file: {} for partition: {}'.format(desc_file, partition))
         audio_paths, durations, texts = [], [], []
         with open(desc_file) as json_line_file:
             for line_num, json_line in enumerate(json_line_file):
@@ -97,10 +95,8 @@ class DataGenerator(object):
                     texts.append(spec['text'])
                 except Exception as e:
                     # Change to (KeyError, ValueError) or
-                    # (KeyError,json.decoder.JSONDecodeError), depending on
-                    # json module version
-                    logger.warn('Error reading line #{}: {}'
-                                .format(line_num, json_line))
+                    # (KeyError,json.decoder.JSONDecodeError), depending on json module version
+                    logger.warn('Error reading line #{}: {}'.format(line_num, json_line))
                     logger.warn(str(e))
 
         if partition == 'train':

@@ -148,9 +148,11 @@ def arch(args, seq_len=None):
             if seq_len is None:
                 seq_len = args.config.getint('arch', 'max_t_count')
             seq_len_after_conv_layer1 = int(
-                math.floor((seq_len - conv_layer1_filter_dim[0]) / conv_layer1_stride[0])) + 1
+                math.floor((seq_len - conv_layer1_filter_dim[0]) / conv_layer1_stride[0])
+            ) + 1
             seq_len_after_conv_layer2 = int(
-                math.floor((seq_len_after_conv_layer1 - conv_layer2_filter_dim[0]) / conv_layer2_stride[0])) + 1
+                math.floor((seq_len_after_conv_layer1 - conv_layer2_filter_dim[0]) / conv_layer2_stride[0])
+            ) + 1
 
             args.config.set('arch', 'max_t_count', str(seq_len_after_conv_layer2))
         else:
