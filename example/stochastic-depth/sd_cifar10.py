@@ -29,7 +29,7 @@
 #   Conv->BN->ReLU->Conv->BN (->ReLU also applied to skip connection).
 # - We did not try to match with the same initialization, learning rate scheduling, etc.
 #
-#--------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------
 # A sample from the running log (We achieved ~9.4% error after 500 epochs, some
 # more careful tuning of the hyper parameters and maybe also the arch is needed
 # to achieve the reported numbers in the paper):
@@ -83,38 +83,39 @@ from utils import get_data
 
 import sd_module
 
+
 def residual_module(death_rate, n_channel, name_scope, context, stride=1, bn_momentum=0.9):
     data = mx.sym.Variable(name_scope + '_data')
 
     # computation branch:
     #   BN -> ReLU -> Conv -> BN -> ReLU -> Conv
     bn1 = mx.symbol.BatchNorm(data=data, name=name_scope + '_bn1', fix_gamma=False,
-        momentum=bn_momentum,
-        # Same with https://github.com/soumith/cudnn.torch/blob/master/BatchNormalization.lua
-        # cuDNN v5 don't allow a small eps of 1e-5
-        eps=2e-5
-    )
-    relu1 = mx.symbol.Activation(data=bn1, act_type='relu', name=name_scope+'_relu1')
-    conv1 = mx.symbol.Convolution(data=relu1, num_filter=n_channel, kernel=(3, 3), pad=(1,1),
-                                  stride=(stride, stride), name=name_scope+'_conv1')
+                              momentum=bn_momentum,
+                              # Same with https://github.com/soumith/cudnn.torch/blob/master/BatchNormalization.lua
+                              # cuDNN v5 don't allow a small eps of 1e-5
+                              eps=2e-5
+                              )
+    relu1 = mx.symbol.Activation(data=bn1, act_type='relu', name=name_scope + '_relu1')
+    conv1 = mx.symbol.Convolution(data=relu1, num_filter=n_channel, kernel=(3, 3), pad=(1, 1),
+                                  stride=(stride, stride), name=name_scope + '_conv1')
     bn2 = mx.symbol.BatchNorm(data=conv1, fix_gamma=False, momentum=bn_momentum,
-                              eps=2e-5, name=name_scope+'_bn2')
-    relu2 = mx.symbol.Activation(data=bn2, act_type='relu', name=name_scope+'_relu2')
-    conv2 = mx.symbol.Convolution(data=relu2, num_filter=n_channel, kernel=(3, 3), pad=(1,1),
-                                  stride=(1, 1), name=name_scope+'_conv2')
+                              eps=2e-5, name=name_scope + '_bn2')
+    relu2 = mx.symbol.Activation(data=bn2, act_type='relu', name=name_scope + '_relu2')
+    conv2 = mx.symbol.Convolution(data=relu2, num_filter=n_channel, kernel=(3, 3), pad=(1, 1),
+                                  stride=(1, 1), name=name_scope + '_conv2')
     sym_compute = conv2
 
     # skip branch
     if stride > 1:
         sym_skip = mx.symbol.BatchNorm(data=data, fix_gamma=False, momentum=bn_momentum,
-                                       eps=2e-5, name=name_scope+'_skip_bn')
-        sym_skip = mx.symbol.Activation(data=sym_skip, act_type='relu', name=name_scope+'_skip_relu')
+                                       eps=2e-5, name=name_scope + '_skip_bn')
+        sym_skip = mx.symbol.Activation(data=sym_skip, act_type='relu', name=name_scope + '_skip_relu')
         sym_skip = mx.symbol.Convolution(data=sym_skip, num_filter=n_channel, kernel=(3, 3), pad=(1, 1),
-                                         stride=(stride, stride), name=name_scope+'_skip_conv')
+                                         stride=(stride, stride), name=name_scope + '_skip_conv')
     else:
         sym_skip = None
 
-    mod = sd_module.StochasticDepthModule(sym_compute, sym_skip, data_names=[name_scope+'_data'],
+    mod = sd_module.StochasticDepthModule(sym_compute, sym_skip, data_names=[name_scope + '_data'],
                                           context=context, death_rate=death_rate)
     return mod
 
@@ -130,6 +131,7 @@ death_mode = 'linear_decay'  # 'linear_decay' or 'uniform'
 
 n_classes = 10
 
+
 def get_death_rate(i_res_block):
     n_total_res_blocks = n_residual_blocks * 3
     if death_mode == 'linear_decay':
@@ -137,6 +139,7 @@ def get_death_rate(i_res_block):
     else:
         my_death_rate = death_rate
     return my_death_rate
+
 
 # 0. base ConvNet
 sym_base = mx.sym.Variable('data')
@@ -159,7 +162,7 @@ for i in range(n_residual_blocks):
 mod_seq.add(residual_module(get_death_rate(i_res_block), 32, 'res_AB', contexts, stride=2), auto_wiring=True)
 i_res_block += 1
 
-for i in range(n_residual_blocks-1):
+for i in range(n_residual_blocks - 1):
     mod_seq.add(residual_module(get_death_rate(i_res_block), 32, 'res_B_%d' % i, contexts), auto_wiring=True)
     i_res_block += 1
 
@@ -167,7 +170,7 @@ for i in range(n_residual_blocks-1):
 mod_seq.add(residual_module(get_death_rate(i_res_block), 64, 'res_BC', contexts, stride=2), auto_wiring=True)
 i_res_block += 1
 
-for i in range(n_residual_blocks-1):
+for i in range(n_residual_blocks - 1):
     mod_seq.add(residual_module(get_death_rate(i_res_block), 64, 'res_C_%d' % i, contexts), auto_wiring=True)
     i_res_block += 1
 
@@ -178,7 +181,6 @@ sym_final = mx.sym.FullyConnected(data=sym_final, num_hidden=n_classes, name='lo
 sym_final = mx.sym.SoftmaxOutput(data=sym_final, name='softmax')
 mod_final = mx.mod.Module(sym_final, context=contexts)
 mod_seq.add(mod_final, auto_wiring=True, take_labels=True)
-
 
 #################################################################################
 # Training
@@ -199,7 +201,6 @@ lr_scheduler = mx.lr_scheduler.FactorScheduler(step=max(int(epoch_size * lr_fact
 batch_end_callbacks = [mx.callback.Speedometer(batch_size, 50)]
 epoch_end_callbacks = [mx.callback.do_checkpoint('sd-%d' % (n_residual_blocks * 6 + 2))]
 
-
 args = type('', (), {})()
 args.batch_size = batch_size
 args.data_dir = os.path.join(os.path.dirname(__file__), "data")
@@ -214,4 +215,3 @@ mod_seq.fit(train, val,
             num_epoch=num_epochs, batch_end_callback=batch_end_callbacks,
             epoch_end_callback=epoch_end_callbacks,
             initializer=initializer)
-

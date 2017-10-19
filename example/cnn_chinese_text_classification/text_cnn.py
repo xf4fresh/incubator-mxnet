@@ -195,6 +195,7 @@ def train(symbol, train_iter, valid_iter, data_names, label_names):
 
     def norm_stat(d):
         return mx.nd.norm(d) / np.sqrt(d.size)
+
     mon = mx.mon.Monitor(25000, norm_stat)
 
     module.fit(train_data=train_iter,

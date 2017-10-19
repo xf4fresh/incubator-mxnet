@@ -18,7 +18,8 @@
 import find_mxnet
 import mxnet as mx
 
-def get_symbol(num_classes = 121):
+
+def get_symbol(num_classes=121):
     net = mx.sym.Variable("data")
     net = mx.sym.Convolution(data=net, kernel=(5, 5), num_filter=32, pad=(2, 2))
     net = mx.sym.Activation(data=net, act_type="relu")
@@ -46,4 +47,3 @@ def get_symbol(num_classes = 121):
     net = mx.symbol.SoftmaxOutput(data=net, name='softmax')
 
     return net
-

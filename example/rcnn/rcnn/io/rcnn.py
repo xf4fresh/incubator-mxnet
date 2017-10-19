@@ -191,4 +191,3 @@ def sample_rois(rois, fg_rois_per_image, rois_per_image, num_classes,
         expand_bbox_regression_targets(bbox_target_data, num_classes)
 
     return rois, labels, bbox_targets, bbox_weights
-

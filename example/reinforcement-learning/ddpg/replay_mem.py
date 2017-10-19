@@ -20,19 +20,18 @@ import numpy as np
 
 
 class ReplayMem(object):
-
     def __init__(
-        self,
-        obs_dim,
-        act_dim,
-        memory_size=1000000):
+            self,
+            obs_dim,
+            act_dim,
+            memory_size=1000000):
 
         # allocate space for memory cells
         self.obs_dim = obs_dim
         self.act_dim = act_dim
         self.obss = np.zeros((memory_size, obs_dim))
         self.acts = np.zeros((memory_size, act_dim))
-        self.rwds = np.zeros((memory_size, ))
+        self.rwds = np.zeros((memory_size,))
         self.ends = np.zeros(memory_size, dtype='uint8')
         self.memory_size = memory_size
         self.top = -1
@@ -62,7 +61,7 @@ class ReplayMem(object):
             # case where the last piece of memory is sampled
             # which does not have a successor state
             if idx == self.top:
-                    continue
+                continue
             transit_idx = (idx + 1) % self.memory_size
             indices[counter] = idx
             transit_indices[counter] = transit_idx
@@ -76,7 +75,6 @@ class ReplayMem(object):
 
 
 if __name__ == "__main__":
-
     memory = ReplayMem(2, 1, memory_size=10)
     memory.add_sample(np.array([2, 2]), np.array([2]), 10, 0)
     memory.add_sample(np.array([2, 2]), np.array([2]), 10, 0)
@@ -92,4 +90,3 @@ if __name__ == "__main__":
     print(memory.rwds)
     print(memory.ends)
     print(memory.get_batch(5))
-

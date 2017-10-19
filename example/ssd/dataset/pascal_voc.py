@@ -41,8 +41,9 @@ class PascalVoc(Imdb):
     is_train : boolean
         if true, will load annotations
     """
+
     def __init__(self, image_set, year, devkit_path, shuffle=False, is_train=False,
-            names='pascal_voc.names'):
+                 names='pascal_voc.names'):
         super(PascalVoc, self).__init__('voc_' + year + '_' + image_set)
         self.image_set = image_set
         self.year = year
@@ -52,10 +53,10 @@ class PascalVoc(Imdb):
         self.is_train = is_train
 
         self.classes = self._load_class_names(names,
-            os.path.join(os.path.dirname(__file__), 'names'))
+                                              os.path.join(os.path.dirname(__file__), 'names'))
 
         self.config = {'use_difficult': True,
-                       'comp_id': 'comp4',}
+                       'comp_id': 'comp4', }
 
         self.num_classes = len(self.classes)
         self.image_set_index = self._load_image_set_index(shuffle)

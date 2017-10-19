@@ -25,21 +25,17 @@ class Policy(object):
     """
 
     def __init__(self, env_spec):
-
         self.env_spec = env_spec
 
     def get_actions(self, obs):
-
         raise NotImplementedError
 
     @property
     def observation_space(self):
-
         return self.env_spec.observation_space
 
     @property
     def action_space(self):
-
         return self.env_spec.action_space
 
 
@@ -50,8 +46,8 @@ class DeterministicMLPPolicy(Policy):
     """
 
     def __init__(
-        self,
-        env_spec):
+            self,
+            env_spec):
 
         super(DeterministicMLPPolicy, self).__init__(env_spec)
 
@@ -77,7 +73,7 @@ class DeterministicMLPPolicy(Policy):
         raise NotImplementedError
 
     def define_exe(self, ctx, init, updater, input_shapes=None, args=None,
-                    grad_req=None):
+                   grad_req=None):
 
         # define an executor, initializer and updater for batch version
         self.exe = self.act.simple_bind(ctx=ctx, **input_shapes)
@@ -122,9 +118,3 @@ class DeterministicMLPPolicy(Policy):
         self.exe_one.forward(is_train=False)
 
         return self.exe_one.outputs[0].asnumpy()
-
-
-
-
-
-

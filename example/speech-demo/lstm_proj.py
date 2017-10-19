@@ -30,6 +30,7 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "seq_data", "seq_labels", "seq_outputs",
                                      "param_blocks"])
 
+
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., num_hidden_proj=0):
     """LSTM Cell symbol"""
     if dropout > 0.:
@@ -42,7 +43,7 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., nu
                                 name="t%d_l%d_i2h" % (seqidx, layeridx))
     h2h = mx.sym.FullyConnected(data=prev_state.h,
                                 weight=param.h2h_weight,
-                                #bias=param.h2h_bias,
+                                # bias=param.h2h_bias,
                                 no_bias=True,
                                 num_hidden=num_hidden * 4,
                                 name="t%d_l%d_h2h" % (seqidx, layeridx))
@@ -50,7 +51,7 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., nu
     slice_gates = mx.sym.SliceChannel(gates, num_outputs=4,
                                       name="t%d_l%d_slice" % (seqidx, layeridx))
 
-    Wcidc = mx.sym.broadcast_mul(param.c2i_bias,  prev_state.c) + slice_gates[0]
+    Wcidc = mx.sym.broadcast_mul(param.c2i_bias, prev_state.c) + slice_gates[0]
     in_gate = mx.sym.Activation(Wcidc, act_type="sigmoid")
     in_transform = mx.sym.Activation(slice_gates[1], act_type="tanh")
 
@@ -74,27 +75,27 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0., nu
     else:
         return LSTMState(c=next_c, h=next_h)
 
+
 def lstm_unroll(num_lstm_layer, seq_len, input_size,
                 num_hidden, num_label, dropout=0., output_states=False, take_softmax=True, num_hidden_proj=0):
-
     cls_weight = mx.sym.Variable("cls_weight")
     cls_bias = mx.sym.Variable("cls_bias")
     param_cells = []
     last_states = []
     for i in range(num_lstm_layer):
-        param_cells.append(LSTMParam(i2h_weight = mx.sym.Variable("l%d_i2h_weight" % i),
-                                     i2h_bias = mx.sym.Variable("l%d_i2h_bias" % i),
-                                     h2h_weight = mx.sym.Variable("l%d_h2h_weight" % i),
-                                     h2h_bias = mx.sym.Variable("l%d_h2h_bias" % i),
-                                     ph2h_weight = mx.sym.Variable("l%d_ph2h_weight" % i),
-                                     c2i_bias = mx.sym.Variable("l%d_c2i_bias" % i, shape=(1,num_hidden)),
-                                     c2f_bias = mx.sym.Variable("l%d_c2f_bias" % i, shape=(1,num_hidden)),
-                                     c2o_bias = mx.sym.Variable("l%d_c2o_bias" % i, shape=(1, num_hidden))
+        param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("l%d_i2h_weight" % i),
+                                     i2h_bias=mx.sym.Variable("l%d_i2h_bias" % i),
+                                     h2h_weight=mx.sym.Variable("l%d_h2h_weight" % i),
+                                     h2h_bias=mx.sym.Variable("l%d_h2h_bias" % i),
+                                     ph2h_weight=mx.sym.Variable("l%d_ph2h_weight" % i),
+                                     c2i_bias=mx.sym.Variable("l%d_c2i_bias" % i, shape=(1, num_hidden)),
+                                     c2f_bias=mx.sym.Variable("l%d_c2f_bias" % i, shape=(1, num_hidden)),
+                                     c2o_bias=mx.sym.Variable("l%d_c2o_bias" % i, shape=(1, num_hidden))
                                      ))
         state = LSTMState(c=mx.sym.Variable("l%d_init_c" % i),
                           h=mx.sym.Variable("l%d_init_h" % i))
         last_states.append(state)
-    assert(len(last_states) == num_lstm_layer)
+    assert (len(last_states) == num_lstm_layer)
 
     data = mx.sym.Variable('data')
     label = mx.sym.Variable('softmax_label')

@@ -26,6 +26,7 @@ from evaluate.eval_metric import MApMetric, VOC07MApMetric
 import logging
 from symbol.symbol_factory import get_symbol
 
+
 def evaluate_net(net, path_imgrec, num_classes, mean_pixels, data_shape,
                  model_prefix, epoch, ctx=mx.cpu(), batch_size=1,
                  path_imglist="", nms_thresh=0.45, force_nms=False,
@@ -90,14 +91,14 @@ def evaluate_net(net, path_imgrec, num_classes, mean_pixels, data_shape,
         net = load_net
     else:
         net = get_symbol(net, data_shape[1], num_classes=num_classes,
-            nms_thresh=nms_thresh, force_suppress=force_nms)
+                         nms_thresh=nms_thresh, force_suppress=force_nms)
     if not 'label' in net.list_arguments():
         label = mx.sym.Variable(name='label')
         net = mx.sym.Group([net, label])
 
     # init module
     mod = mx.mod.Module(net, label_names=('label',), logger=logger, context=ctx,
-        fixed_param_names=net.list_arguments())
+                        fixed_param_names=net.list_arguments())
     mod.bind(data_shapes=eval_iter.provide_data, label_shapes=eval_iter.provide_label)
     mod.set_params(args, auxs, allow_missing=False, force_init=True)
 

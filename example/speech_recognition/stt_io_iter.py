@@ -1,8 +1,8 @@
-
 from __future__ import print_function
 
 import sys
 import random
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 

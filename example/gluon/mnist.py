@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import argparse
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 import numpy as np
@@ -44,7 +45,6 @@ parser.add_argument('--log-interval', type=int, default=100, metavar='N',
                     help='how many batches to wait before logging training status')
 opt = parser.parse_args()
 
-
 # define network
 
 net = nn.Sequential()
@@ -53,11 +53,13 @@ with net.name_scope():
     net.add(nn.Dense(64, activation='relu'))
     net.add(nn.Dense(10))
 
+
 # data
 
 def transformer(data, label):
-    data = data.reshape((-1,)).astype(np.float32)/255
+    data = data.reshape((-1,)).astype(np.float32) / 255
     return data, label
+
 
 train_data = gluon.data.DataLoader(
     gluon.data.vision.MNIST('./data', train=True, transform=transformer),
@@ -66,6 +68,7 @@ train_data = gluon.data.DataLoader(
 val_data = gluon.data.DataLoader(
     gluon.data.vision.MNIST('./data', train=False, transform=transformer),
     batch_size=opt.batch_size, shuffle=False)
+
 
 # train
 
@@ -109,13 +112,13 @@ def train(epochs, ctx):
 
             if i % opt.log_interval == 0 and i > 0:
                 name, acc = metric.get()
-                print('[Epoch %d Batch %d] Training: %s=%f'%(epoch, i, name, acc))
+                print('[Epoch %d Batch %d] Training: %s=%f' % (epoch, i, name, acc))
 
         name, acc = metric.get()
-        print('[Epoch %d] Training: %s=%f'%(epoch, name, acc))
+        print('[Epoch %d] Training: %s=%f' % (epoch, name, acc))
 
         name, val_acc = test(ctx)
-        print('[Epoch %d] Validation: %s=%f'%(epoch, name, val_acc))
+        print('[Epoch %d] Validation: %s=%f' % (epoch, name, val_acc))
 
     net.save_params('mnist.params')
 

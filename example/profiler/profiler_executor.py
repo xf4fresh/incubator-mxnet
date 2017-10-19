@@ -39,9 +39,9 @@ def _download(data_dir):
         os.system("mkdir " + data_dir)
     os.chdir(data_dir)
     if (not os.path.exists('train-images-idx3-ubyte')) or \
-       (not os.path.exists('train-labels-idx1-ubyte')) or \
-       (not os.path.exists('t10k-images-idx3-ubyte')) or \
-       (not os.path.exists('t10k-labels-idx1-ubyte')):
+            (not os.path.exists('train-labels-idx1-ubyte')) or \
+            (not os.path.exists('t10k-images-idx3-ubyte')) or \
+            (not os.path.exists('t10k-labels-idx1-ubyte')):
         os.system("wget http://webdocs.cs.ualberta.ca/~bx3/data/mnist.zip")
         os.system("unzip -u mnist.zip; rm mnist.zip")
     os.chdir("..")
@@ -53,36 +53,38 @@ def get_data(data_shape):
     if '://' not in data_dir:
         _download(data_dir)
 
-    train           = mx.io.MNISTIter(
-        image       = data_dir + "train-images-idx3-ubyte",
-        label       = data_dir + "train-labels-idx1-ubyte",
-        input_shape = data_shape,
-        batch_size  = batch_size,
-        shuffle     = True,
-        )
+    train = mx.io.MNISTIter(
+        image=data_dir + "train-images-idx3-ubyte",
+        label=data_dir + "train-labels-idx1-ubyte",
+        input_shape=data_shape,
+        batch_size=batch_size,
+        shuffle=True,
+    )
 
     val = mx.io.MNISTIter(
-        image       = data_dir + "t10k-images-idx3-ubyte",
-        label       = data_dir + "t10k-labels-idx1-ubyte",
-        input_shape = data_shape,
-        batch_size  = batch_size,
-        )
+        image=data_dir + "t10k-images-idx3-ubyte",
+        label=data_dir + "t10k-labels-idx1-ubyte",
+        input_shape=data_shape,
+        batch_size=batch_size,
+    )
 
     return (train, val)
 
+
 def get_symbol():
     data = mx.symbol.Variable('data')
-    fc1  = mx.symbol.FullyConnected(data=data, name='fc1', num_hidden=args.fc1)
+    fc1 = mx.symbol.FullyConnected(data=data, name='fc1', num_hidden=args.fc1)
     act1 = mx.symbol.Activation(data=fc1, name='relu1', act_type='relu')
-    fc2  = mx.symbol.FullyConnected(data=act1 , name='fc2', num_hidden=args.fc2)
+    fc2 = mx.symbol.FullyConnected(data=act1, name='fc2', num_hidden=args.fc2)
     act2 = mx.symbol.Activation(data=fc2, name='relu2', act_type='relu')
-    fc3  = mx.symbol.FullyConnected(data=act2 , name='fc3', num_hidden=args.fc3)
+    fc3 = mx.symbol.FullyConnected(data=act2, name='fc3', num_hidden=args.fc3)
     act3 = mx.symbol.Activation(data=fc3, name='relu3', act_type='relu')
-    fc4  = mx.symbol.FullyConnected(data=act3 , name='fc4', num_hidden=args.fc4)
+    fc4 = mx.symbol.FullyConnected(data=act3, name='fc4', num_hidden=args.fc4)
     act4 = mx.symbol.Activation(data=fc4, name='relu4', act_type='relu')
-    fc5  = mx.symbol.FullyConnected(data=act4 , name='fc5', num_hidden=10)
-    net  = mx.symbol.SoftmaxOutput(data=fc5 , name='softmax')
-    return net, [('data', (128, 1, 28, 28))], [('softmax_label', (128, ))]
+    fc5 = mx.symbol.FullyConnected(data=act4, name='fc5', num_hidden=10)
+    net = mx.symbol.SoftmaxOutput(data=fc5, name='softmax')
+    return net, [('data', (128, 1, 28, 28))], [('softmax_label', (128,))]
+
 
 def get_module(ctx, sym, provide_data, provide_label, batch_size=None, is_train=True, use_memonger=False):
     if use_memonger:
@@ -102,10 +104,10 @@ def get_module(ctx, sym, provide_data, provide_label, batch_size=None, is_train=
     mod.init_params(initializer=mx.init.Xavier(magnitude=2.))
     mod.init_optimizer(optimizer='ccsgd',
                        optimizer_params={
-                            'learning_rate': 0.0001,
-                            'momentum': 0.0,
-                            'wd': 0.0
-                        })
+                           'learning_rate': 0.0001,
+                           'momentum': 0.0,
+                           'wd': 0.0
+                       })
     return mod
 
 
@@ -139,7 +141,7 @@ def benchmark(mod, dry_run=10, iterations=10):
     profiler.profiler_set_state('stop')
 
     t1 = time.clock()
-    return (t1 - t0)*1000.0 / iterations
+    return (t1 - t0) * 1000.0 / iterations
 
 
 def executor(num_iteration):

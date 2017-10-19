@@ -19,6 +19,7 @@
 # pylint: disable=superfluous-parens, no-member, invalid-name
 from __future__ import print_function
 import sys, random
+
 sys.path.insert(0, "../../python")
 import numpy as np
 import mxnet as mx
@@ -29,6 +30,7 @@ from io import BytesIO
 from captcha.image import ImageCaptcha
 import cv2, random
 
+
 class SimpleBatch(object):
     def __init__(self, data_names, data, label_names, label):
         self.data = data
@@ -37,7 +39,7 @@ class SimpleBatch(object):
         self.label_names = label_names
 
         self.pad = 0
-        self.index = None # TODO: what is index?
+        self.index = None  # TODO: what is index?
 
     @property
     def provide_data(self):
@@ -47,12 +49,14 @@ class SimpleBatch(object):
     def provide_label(self):
         return [(n, x.shape) for n, x in zip(self.label_names, self.label)]
 
+
 def gen_rand():
     buf = ""
-    max_len = random.randint(3,4)
+    max_len = random.randint(3, 4)
     for i in range(max_len):
-        buf += str(random.randint(0,9))
+        buf += str(random.randint(0, 9))
     return buf
+
 
 def get_label(buf):
     ret = np.zeros(4)
@@ -61,6 +65,7 @@ def get_label(buf):
     if len(buf) == 3:
         ret[3] = 0
     return ret
+
 
 class OCRIter(mx.io.DataIter):
     def __init__(self, count, batch_size, num_label, init_states):
@@ -89,7 +94,7 @@ class OCRIter(mx.io.DataIter):
                 img = cv2.resize(img, (80, 30))
                 img = img.transpose(1, 0)
                 img = img.reshape((80, 30))
-                img = np.multiply(img, 1/255.0)
+                img = np.multiply(img, 1 / 255.0)
                 data.append(img)
                 label.append(get_label(num))
 
@@ -98,26 +103,28 @@ class OCRIter(mx.io.DataIter):
             data_names = ['data'] + init_state_names
             label_names = ['label']
 
-
             data_batch = SimpleBatch(data_names, data_all, label_names, label_all)
             yield data_batch
 
     def reset(self):
         pass
 
+
 BATCH_SIZE = 32
 SEQ_LENGTH = 80
+
 
 def ctc_label(p):
     ret = []
     p1 = [0] + p
     for i in range(len(p)):
         c1 = p1[i]
-        c2 = p1[i+1]
+        c2 = p1[i + 1]
         if c2 == 0 or c2 == c1:
             continue
         ret.append(c2)
     return ret
+
 
 def remove_blank(l):
     ret = []
@@ -126,6 +133,7 @@ def remove_blank(l):
             break
         ret.append(l[i])
     return ret
+
 
 def Accuracy(label, pred):
     global BATCH_SIZE
@@ -149,7 +157,8 @@ def Accuracy(label, pred):
         total += 1.0
     return hit / total
 
-def LCS(p,l):
+
+def LCS(p, l):
     # Dynamic Programming Finding LCS
     if len(p) == 0:
         return 0
@@ -158,9 +167,9 @@ def LCS(p,l):
     M = np.int32(P == L)
     for i in range(M.shape[0]):
         for j in range(M.shape[1]):
-            up = 0 if i == 0 else M[i-1,j]
-            left = 0 if j == 0 else M[i,j-1]
-            M[i,j] = max(up, left, M[i,j] if (i == 0 or j == 0) else M[i,j] + M[i-1,j-1])
+            up = 0 if i == 0 else M[i - 1, j]
+            left = 0 if j == 0 else M[i, j - 1]
+            M[i, j] = max(up, left, M[i, j] if (i == 0 or j == 0) else M[i, j] + M[i - 1, j - 1])
     return M.max()
 
 
@@ -175,9 +184,10 @@ def Accuracy_LCS(label, pred):
         for k in range(SEQ_LENGTH):
             p.append(np.argmax(pred[k * BATCH_SIZE + i]))
         p = ctc_label(p)
-        hit += LCS(p,l) * 1.0 / len(l)
+        hit += LCS(p, l) * 1.0 / len(l)
         total += 1.0
     return hit / total
+
 
 if __name__ == '__main__':
     num_hidden = 100
@@ -190,13 +200,15 @@ if __name__ == '__main__':
 
     contexts = [mx.context.gpu(0)]
 
+
     def sym_gen(seq_len):
         return lstm_unroll(num_lstm_layer, seq_len,
                            num_hidden=num_hidden,
-                           num_label = num_label)
+                           num_label=num_label)
 
-    init_c = [('l%d_init_c'%l, (BATCH_SIZE, num_hidden)) for l in range(num_lstm_layer)]
-    init_h = [('l%d_init_h'%l, (BATCH_SIZE, num_hidden)) for l in range(num_lstm_layer)]
+
+    init_c = [('l%d_init_c' % l, (BATCH_SIZE, num_hidden)) for l in range(num_lstm_layer)]
+    init_h = [('l%d_init_h' % l, (BATCH_SIZE, num_hidden)) for l in range(num_lstm_layer)]
     init_states = init_c + init_h
 
     data_train = OCRIter(10000, BATCH_SIZE, num_label, init_states)
@@ -213,6 +225,7 @@ if __name__ == '__main__':
                                  initializer=mx.init.Xavier(factor_type="in", magnitude=2.34))
 
     import logging
+
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
 
@@ -220,10 +233,10 @@ if __name__ == '__main__':
 
     prefix = 'ocr'
     model.fit(X=data_train, eval_data=data_val,
-              eval_metric = mx.metric.np(Accuracy),
+              eval_metric=mx.metric.np(Accuracy),
               # Use the following eval_metric if your num_label >= 10, or varies in a wide range
               # eval_metric = mx.metric.np(Accuracy_LCS),
               batch_end_callback=mx.callback.Speedometer(BATCH_SIZE, 50),
-              epoch_end_callback = mx.callback.do_checkpoint(prefix, 1))
+              epoch_end_callback=mx.callback.do_checkpoint(prefix, 1))
 
     model.save(prefix)

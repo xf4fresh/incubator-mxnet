@@ -61,12 +61,13 @@ def tokenize_text(fname, vocab=None, invalid_label=-1, start_label=0):
 
 if __name__ == '__main__':
     import logging
+
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
 
     args = parser.parse_args()
 
-    #buckets = []
+    # buckets = []
     buckets = [10, 20, 30, 40, 50, 60]
 
     start_label = 1
@@ -77,14 +78,15 @@ if __name__ == '__main__':
     val_sent, _ = tokenize_text("./data/ptb.test.txt", vocab=vocab, start_label=start_label,
                                 invalid_label=invalid_label)
 
-    data_train  = mx.rnn.BucketSentenceIter(train_sent, args.batch_size, buckets=buckets,
-                                            invalid_label=invalid_label)
-    data_val    = mx.rnn.BucketSentenceIter(val_sent, args.batch_size, buckets=buckets,
-                                            invalid_label=invalid_label)
+    data_train = mx.rnn.BucketSentenceIter(train_sent, args.batch_size, buckets=buckets,
+                                           invalid_label=invalid_label)
+    data_val = mx.rnn.BucketSentenceIter(val_sent, args.batch_size, buckets=buckets,
+                                         invalid_label=invalid_label)
 
     stack = mx.rnn.SequentialRNNCell()
     for i in range(args.num_layers):
-        stack.add(mx.rnn.LSTMCell(num_hidden=args.num_hidden, prefix='lstm_l%d_'%i))
+        stack.add(mx.rnn.LSTMCell(num_hidden=args.num_hidden, prefix='lstm_l%d_' % i))
+
 
     def sym_gen(seq_len):
         data = mx.sym.Variable('data')
@@ -103,25 +105,26 @@ if __name__ == '__main__':
 
         return pred, ('data',), ('softmax_label',)
 
+
     if args.gpus:
         contexts = [mx.gpu(int(i)) for i in args.gpus.split(',')]
     else:
         contexts = mx.cpu(0)
 
     model = mx.mod.BucketingModule(
-        sym_gen             = sym_gen,
-        default_bucket_key  = data_train.default_bucket_key,
-        context             = contexts)
+        sym_gen=sym_gen,
+        default_bucket_key=data_train.default_bucket_key,
+        context=contexts)
 
     model.fit(
-        train_data          = data_train,
-        eval_data           = data_val,
-        eval_metric         = mx.metric.Perplexity(invalid_label),
-        kvstore             = args.kv_store,
-        optimizer           = args.optimizer,
-        optimizer_params    = { 'learning_rate': args.lr,
-                                'momentum': args.mom,
-                                'wd': args.wd },
-        initializer         = mx.init.Xavier(factor_type="in", magnitude=2.34),
-        num_epoch           = args.num_epochs,
-        batch_end_callback  = mx.callback.Speedometer(args.batch_size, args.disp_batches, auto_reset=False))
+        train_data=data_train,
+        eval_data=data_val,
+        eval_metric=mx.metric.Perplexity(invalid_label),
+        kvstore=args.kv_store,
+        optimizer=args.optimizer,
+        optimizer_params={'learning_rate': args.lr,
+                          'momentum': args.mom,
+                          'wd': args.wd},
+        initializer=mx.init.Xavier(factor_type="in", magnitude=2.34),
+        num_epoch=args.num_epochs,
+        batch_end_callback=mx.callback.Speedometer(args.batch_size, args.disp_batches, auto_reset=False))

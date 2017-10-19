@@ -18,6 +18,7 @@
 # pylint: disable=C0111,too-many-arguments,too-many-instance-attributes,too-many-locals,redefined-outer-name,fixme
 # pylint: disable=superfluous-parens, no-member, invalid-name
 import sys
+
 sys.path.insert(0, "../../python")
 import numpy as np
 import mxnet as mx
@@ -25,11 +26,13 @@ import mxnet as mx
 from sort_io import BucketSentenceIter, default_build_vocab
 from rnn_model import BiLSTMInferenceModel
 
+
 def MakeInput(char, vocab, arr):
     idx = vocab[char]
     tmp = np.zeros((1,))
     tmp[0] = idx
     arr[:] = tmp
+
 
 if __name__ == '__main__':
     batch_size = 1
@@ -63,5 +66,4 @@ if __name__ == '__main__':
     data = mx.nd.array(data)
     prob = model.forward(data)
     for k in range(len(tks)):
-        print(rvocab[np.argmax(prob, axis = 1)[k]])
-
+        print(rvocab[np.argmax(prob, axis=1)[k]])

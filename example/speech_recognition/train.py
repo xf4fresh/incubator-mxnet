@@ -1,5 +1,5 @@
-
 import sys
+
 sys.path.insert(0, "../../python")
 import os.path
 import json
@@ -159,7 +159,8 @@ def do_training(args, module, data_train, data_val, begin_epoch=0):
         # save checkpoints
         if n_epoch % save_checkpoint_every_n_epoch == 0:
             log.info('Epoch[%d] SAVE CHECKPOINT', n_epoch)
-            module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch, save_optimizer_states=save_optimizer_states)
+            module.save_checkpoint(prefix=get_checkpoint_path(args), epoch=n_epoch,
+                                   save_optimizer_states=save_optimizer_states)
 
         n_epoch += 1
         lr_scheduler.learning_rate = learning_rate / learning_rate_annealing

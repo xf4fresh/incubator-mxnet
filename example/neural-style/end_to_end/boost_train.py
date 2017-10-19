@@ -16,6 +16,7 @@
 # under the License.
 
 import sys
+
 sys.path.insert(0, "../../mxnet/python")
 
 import mxnet as mx
@@ -47,7 +48,7 @@ content_mod = basic.get_content_module("content", dshape, ctx, vgg_params)
 
 # loss
 loss, gscale = basic.get_loss_module("loss", dshape, ctx, vgg_params)
-extra_args = {"target_gram_%d" % i : style_array[i] for i in range(len(style_array))}
+extra_args = {"target_gram_%d" % i: style_array[i] for i in range(len(style_array))}
 loss.set_params(extra_args, {}, True, True)
 grad_array = []
 for i in range(len(style_array)):
@@ -64,9 +65,9 @@ for gen in gens:
         optimizer='sgd',
         optimizer_params={
             'learning_rate': 1e-4,
-            'momentum' : 0.9,
+            'momentum': 0.9,
             'wd': 5e-3,
-            'clip_gradient' : 5.0
+            'clip_gradient': 5.0
         })
 
 
@@ -83,8 +84,8 @@ def get_tv_grad_executor(img, ctx, tv_weight):
     out = mx.sym.Concat(*[
         mx.sym.Convolution(data=channels[i], weight=skernel,
                            num_filter=1,
-                           kernel=(3, 3), pad=(1,1),
-                           no_bias=True, stride=(1,1))
+                           kernel=(3, 3), pad=(1, 1),
+                           no_bias=True, stride=(1, 1))
         for i in range(nchannel)])
     kernel = mx.nd.array(np.array([[0, -1, 0],
                                    [-1, 4, -1],
@@ -94,11 +95,12 @@ def get_tv_grad_executor(img, ctx, tv_weight):
     out = out * tv_weight
     return out.bind(ctx, args={"img": img,
                                "kernel": kernel})
+
+
 tv_weight = 1e-2
 
 start_epoch = 0
 end_epoch = 3
-
 
 # data
 import os
@@ -109,7 +111,6 @@ data_root = "../data/"
 file_list = os.listdir(data_root)
 num_image = len(file_list)
 logging.info("Dataset size: %d" % num_image)
-
 
 # train
 
@@ -126,7 +127,7 @@ for i in range(start_epoch, end_epoch):
         content_mod.forward(mx.io.DataBatch([data], [0]), is_train=False)
         content_array = content_mod.get_outputs()[0].copyto(mx.cpu())
         # set target content
-        loss.set_params({"target_content" : content_array}, {}, True, True)
+        loss.set_params({"target_content": content_array}, {}, True, True)
         # gen_forward
         for k in range(len(gens)):
             gens[k].forward(mx.io.DataBatch([data_array[-1]], [0]), is_train=True)
@@ -139,7 +140,7 @@ for i in range(start_epoch, end_epoch):
         grad = mx.nd.zeros(data.shape)
         for k in range(len(gens) - 1, -1, -1):
             tv_grad_executor = get_tv_grad_executor(gens[k].get_outputs()[0],
-                    ctx, tv_weight)
+                                                    ctx, tv_weight)
             tv_grad_executor.forward()
 
             grad[:] += loss_grad_array[k] + tv_grad_executor.outputs[0].copyto(mx.cpu())
@@ -152,13 +153,8 @@ for i in range(start_epoch, end_epoch):
         if idx % 20 == 0:
             logging.info("Epoch %d: Image %d" % (i, idx))
             for k in range(len(gens)):
-                logging.info("Data Norm :%.5f" %\
-                        (mx.nd.norm(gens[k].get_input_grads()[0]).asscalar() / np.prod(dshape)))
+                logging.info("Data Norm :%.5f" % \
+                             (mx.nd.norm(gens[k].get_input_grads()[0]).asscalar() / np.prod(dshape)))
         if idx % 1000 == 0:
             for k in range(len(gens)):
                 gens[k].save_params("./model/%d/%s_%04d-%07d.params" % (k, model_prefix, i, idx))
-
-
-
-
-

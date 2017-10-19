@@ -118,8 +118,8 @@ def main():
 
     use_easgd = False
     optimizer = mx.optimizer.create(name=args.optimizer, learning_rate=args.lr, eps=args.eps,
-                    clip_gradient=args.clip_gradient,
-                    rescale_grad=1.0, wd=args.wd)
+                                    clip_gradient=args.clip_gradient,
+                                    rescale_grad=1.0, wd=args.wd)
     updater = mx.optimizer.get_updater(optimizer)
 
     qnet.print_stat()
@@ -189,15 +189,15 @@ def main():
                     if not args.double_q:
                         target_qval = target_qnet.forward(is_train=False, data=next_states)[0]
                         target_rewards = rewards + nd.choose_element_0index(target_qval,
-                                                                nd.argmax_channel(target_qval))\
-                                           * (1.0 - terminate_flags) * discount
+                                                                            nd.argmax_channel(target_qval)) \
+                                                   * (1.0 - terminate_flags) * discount
                     else:
                         target_qval = target_qnet.forward(is_train=False, data=next_states)[0]
                         qval = qnet.forward(is_train=False, data=next_states)[0]
 
                         target_rewards = rewards + nd.choose_element_0index(target_qval,
-                                                                nd.argmax_channel(qval))\
-                                           * (1.0 - terminate_flags) * discount
+                                                                            nd.argmax_channel(qval)) \
+                                                   * (1.0 - terminate_flags) * discount
                     outputs = qnet.forward(is_train=True,
                                            data=states,
                                            dqn_action=actions,
@@ -208,7 +208,7 @@ def main():
                     # 3.3 Calculate Loss
                     diff = nd.abs(nd.choose_element_0index(outputs[0], actions) - target_rewards)
                     quadratic_part = nd.clip(diff, -1, 1)
-                    loss = 0.5 * nd.sum(nd.square(quadratic_part)).asnumpy()[0] +\
+                    loss = 0.5 * nd.sum(nd.square(quadratic_part)).asnumpy()[0] + \
                            nd.sum(diff - quadratic_part).asnumpy()[0]
                     episode_loss += loss
 
@@ -220,21 +220,22 @@ def main():
             # Update the statistics
             epoch_reward += game.episode_reward
             info_str = "Epoch:%d, Episode:%d, Steps Left:%d/%d, Reward:%f, fps:%f, Exploration:%f" \
-                        % (epoch, episode, steps_left, steps_per_epoch, game.episode_reward,
-                           game.episode_step / (time_episode_end - time_episode_start), eps_curr)
+                       % (epoch, episode, steps_left, steps_per_epoch, game.episode_reward,
+                          game.episode_step / (time_episode_end - time_episode_start), eps_curr)
             if episode_update_step > 0:
                 info_str += ", Avg Loss:%f/%d" % (episode_loss / episode_update_step,
                                                   episode_update_step)
             if episode_action_step > 0:
                 info_str += ", Avg Q Value:%f/%d" % (episode_q_value / episode_action_step,
-                                                  episode_action_step)
+                                                     episode_action_step)
             if episode % 100 == 0:
                 logging.info(info_str)
         end = time.time()
         fps = steps_per_epoch / (end - start)
         qnet.save_params(dir_path=args.dir_path, epoch=epoch)
         logging.info("Epoch:%d, FPS:%f, Avg Reward: %f/%d"
-                 % (epoch, fps, epoch_reward / float(episode), episode))
+                     % (epoch, fps, epoch_reward / float(episode), episode))
+
 
 if __name__ == '__main__':
     main()

@@ -18,6 +18,7 @@
 import numpy as np
 import os.path as osp
 
+
 class Imdb(object):
     """
     Base class for dataset loading
@@ -27,6 +28,7 @@ class Imdb(object):
     name : str
         name of dataset
     """
+
     def __init__(self, name):
         self.name = name
         self.classes = []
@@ -76,6 +78,7 @@ class Imdb(object):
         fname : str
             saved filename
         """
+
         def progress_bar(count, total, suffix=''):
             import sys
             bar_len = 24
@@ -96,7 +99,7 @@ class Imdb(object):
             if root:
                 path = osp.relpath(path, root)
             str_list.append('\t'.join([str(index), str(2), str(label.shape[1])] \
-              + ["{0:.4f}".format(x) for x in label.ravel()] + [path,]) + '\n')
+                                      + ["{0:.4f}".format(x) for x in label.ravel()] + [path, ]) + '\n')
         if str_list:
             if shuffle:
                 import random

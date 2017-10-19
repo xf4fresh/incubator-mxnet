@@ -18,6 +18,7 @@
 import mxnet as mx
 from weighted_softmax_ce import *
 
+
 def linear_model(num_features, positive_cls_weight):
     # data with csr storage type to enable feeding data with CSRNDArray
     x = mx.symbol.Variable("data", stype='csr')

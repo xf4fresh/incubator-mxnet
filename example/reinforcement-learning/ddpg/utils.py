@@ -23,7 +23,6 @@ SEED = 12345
 
 
 def define_qfunc(obs, act):
-
     net = mx.symbol.FullyConnected(
         data=obs,
         name="qfunc_fc1",
@@ -58,7 +57,6 @@ def define_qfunc(obs, act):
 
 
 def define_policy(obs, action_dim):
-
     net = mx.symbol.FullyConnected(
         data=obs,
         name="policy_fc1",
@@ -88,12 +86,10 @@ def define_policy(obs, action_dim):
 
 
 def discount_return(x, discount):
-
     return np.sum(x * (discount ** np.arange(len(x))))
 
 
 def rollout(env, agent, max_path_length=np.inf):
-
     reward = []
     o = env.reset()
     # agent.reset()
@@ -112,13 +108,8 @@ def rollout(env, agent, max_path_length=np.inf):
 
 
 def sample_rewards(env, policy, eval_samples, max_path_length=np.inf):
-
     rewards = []
     for _ in range(eval_samples):
         rewards.append(rollout(env, policy, max_path_length))
 
     return rewards
-
-
-
-

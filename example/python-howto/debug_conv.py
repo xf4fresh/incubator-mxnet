@@ -17,16 +17,17 @@
 
 import mxnet as mx
 
-data_shape = (1,3,5,5)
-class SimpleData(object):
+data_shape = (1, 3, 5, 5)
 
+
+class SimpleData(object):
     def __init__(self, data):
         self.data = data
 
-data = mx.sym.Variable('data')
-conv = mx.sym.Convolution(data=data, kernel=(3,3), pad=(1,1), stride=(1,1), num_filter=1)
-mon = mx.mon.Monitor(1)
 
+data = mx.sym.Variable('data')
+conv = mx.sym.Convolution(data=data, kernel=(3, 3), pad=(1, 1), stride=(1, 1), num_filter=1)
+mon = mx.mon.Monitor(1)
 
 mod = mx.mod.Module(conv)
 mod.bind(data_shapes=[('data', data_shape)])

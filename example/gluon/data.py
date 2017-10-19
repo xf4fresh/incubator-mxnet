@@ -20,11 +20,13 @@
 import os
 import random
 import sys
+
 # code to automatically download dataset
 curr_path = os.path.dirname(os.path.abspath(os.path.expanduser(__file__)))
 sys.path.append(os.path.join(curr_path, "../../tests/python/common"))
 import get_data
 import mxnet as mx
+
 
 def mnist_iterator(batch_size, input_shape):
     """return train and val iterators for mnist"""
@@ -54,68 +56,69 @@ def cifar10_iterator(batch_size, data_shape, resize=-1):
     get_data.GetCifar10()
 
     train = mx.io.ImageRecordIter(
-        path_imgrec = "data/cifar/train.rec",
+        path_imgrec="data/cifar/train.rec",
         # mean_img    = "data/cifar/mean.bin",
-        resize      = resize,
-        data_shape  = data_shape,
-        batch_size  = batch_size,
-        rand_crop   = True,
-        rand_mirror = True)
+        resize=resize,
+        data_shape=data_shape,
+        batch_size=batch_size,
+        rand_crop=True,
+        rand_mirror=True)
 
     val = mx.io.ImageRecordIter(
-        path_imgrec = "data/cifar/test.rec",
+        path_imgrec="data/cifar/test.rec",
         # mean_img    = "data/cifar/mean.bin",
-        resize      = resize,
-        rand_crop   = False,
-        rand_mirror = False,
-        data_shape  = data_shape,
-        batch_size  = batch_size)
+        resize=resize,
+        rand_crop=False,
+        rand_mirror=False,
+        data_shape=data_shape,
+        batch_size=batch_size)
 
     return train, val
 
+
 def imagenet_iterator(train_data, val_data, batch_size, data_shape, resize=-1):
     train = mx.io.ImageRecordIter(
-        path_imgrec             = train_data,
-        data_shape              = data_shape,
-        mean_r                  = 123.68,
-        mean_g                  = 116.779,
-        mean_b                  = 103.939,
-        std_r                   = 58.395,
-        std_g                   = 57.12,
-        std_b                   = 57.375,
-        preprocess_threads      = 32,
-        shuffle                 = True,
-        batch_size              = batch_size,
-        rand_crop               = True,
-        resize                  = resize,
-        random_mirror           = True,
-        max_random_h            = 36,
-        max_random_s            = 50,
-        max_random_l            = 50,
-        max_random_rotate_angle = 10,
-        max_random_shear_ratio  = 0.1,
-        max_random_aspect_ratio = 0.25,
-        fill_value              = 127,
-        min_random_scale        = 0.533)
+        path_imgrec=train_data,
+        data_shape=data_shape,
+        mean_r=123.68,
+        mean_g=116.779,
+        mean_b=103.939,
+        std_r=58.395,
+        std_g=57.12,
+        std_b=57.375,
+        preprocess_threads=32,
+        shuffle=True,
+        batch_size=batch_size,
+        rand_crop=True,
+        resize=resize,
+        random_mirror=True,
+        max_random_h=36,
+        max_random_s=50,
+        max_random_l=50,
+        max_random_rotate_angle=10,
+        max_random_shear_ratio=0.1,
+        max_random_aspect_ratio=0.25,
+        fill_value=127,
+        min_random_scale=0.533)
 
     val = mx.io.ImageRecordIter(
-        path_imgrec        = val_data,
-        data_shape         = data_shape,
-        mean_r             = 123.68,
-        mean_g             = 116.779,
-        mean_b             = 103.939,
-        std_r              = 58.395,
-        std_g              = 57.12,
-        std_b              = 57.375,
-        preprocess_threads = 32,
-        batch_size         = batch_size,
-        resize             = resize)
+        path_imgrec=val_data,
+        data_shape=data_shape,
+        mean_r=123.68,
+        mean_g=116.779,
+        mean_b=103.939,
+        std_r=58.395,
+        std_g=57.12,
+        std_b=57.375,
+        preprocess_threads=32,
+        batch_size=batch_size,
+        resize=resize)
 
     return train, val
 
 
 class DummyIter(mx.io.DataIter):
-    def __init__(self, batch_size, data_shape, batches = 5):
+    def __init__(self, batch_size, data_shape, batches=5):
         super(DummyIter, self).__init__(batch_size)
         self.data_shape = (batch_size,) + data_shape
         self.label_shape = (batch_size,)
@@ -134,8 +137,10 @@ class DummyIter(mx.io.DataIter):
             self._batches = 0
             raise StopIteration
 
+
 def dummy_iterator(batch_size, data_shape):
     return DummyIter(batch_size, data_shape), DummyIter(batch_size, data_shape)
+
 
 class ImagePairIter(mx.io.DataIter):
     def __init__(self, path, data_shape, label_shape, batch_size=64, flag=0, input_aug=None, target_aug=None):
@@ -174,8 +179,8 @@ class ImagePairIter(mx.io.DataIter):
 
             data = mx.nd.concat(*[mx.nd.expand_dims(d, axis=0) for d in data], dim=0)
             label = mx.nd.concat(*[mx.nd.expand_dims(d, axis=0) for d in label], dim=0)
-            data = [mx.nd.transpose(data, axes=(0, 3, 1, 2)).astype('float32')/255]
-            label = [mx.nd.transpose(label, axes=(0, 3, 1, 2)).astype('float32')/255]
+            data = [mx.nd.transpose(data, axes=(0, 3, 1, 2)).astype('float32') / 255]
+            label = [mx.nd.transpose(label, axes=(0, 3, 1, 2)).astype('float32') / 255]
 
             return mx.io.DataBatch(data=data, label=label)
         else:

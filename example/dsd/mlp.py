@@ -22,6 +22,7 @@ import argparse
 from math import ceil
 import sparse_sgd
 
+
 # symbol net
 def get_symbol():
     data = mx.symbol.Variable('data')
@@ -34,18 +35,20 @@ def get_symbol():
 
     return softmax
 
+
 # download ubyte version of mnist and untar
 def download_data():
     if not os.path.isdir("data/"):
         os.system("mkdir data/")
     if (not os.path.exists('data/train-images-idx3-ubyte')) or \
-       (not os.path.exists('data/train-labels-idx1-ubyte')) or \
-       (not os.path.exists('data/t10k-images-idx3-ubyte')) or \
-       (not os.path.exists('data/t10k-labels-idx1-ubyte')):
+            (not os.path.exists('data/train-labels-idx1-ubyte')) or \
+            (not os.path.exists('data/t10k-images-idx3-ubyte')) or \
+            (not os.path.exists('data/t10k-labels-idx1-ubyte')):
         os.system("wget -q http://data.mxnet.io/mxnet/data/mnist.zip -P data/")
         os.chdir("./data")
         os.system("unzip -u mnist.zip")
         os.chdir("..")
+
 
 # get data iterators
 def get_iters(batch_size):
@@ -71,13 +74,14 @@ def get_iters(batch_size):
 
     return (train, val)
 
+
 def test_mlp(args):
     # get parameters
     prefix = './mlp'
     batch_size = 100
     pruning_switch_epoch = [int(i) for i in args.pruning_switch_epoch.split(',')]
     num_epoch = pruning_switch_epoch[-1]
-    batches_per_epoch = ceil(60000.0/batch_size)
+    batches_per_epoch = ceil(60000.0 / batch_size)
     weight_sparsity = args.weight_sparsity
     bias_sparsity = args.bias_sparsity
     weight_threshold = args.weight_threshold
@@ -101,23 +105,23 @@ def test_mlp(args):
         data_names=['data'],
         label_names=['sm_label'])
     optimizer_params = {
-        'learning_rate'             : 0.1,
-        'wd'                        : 0.004,
-        'momentum'                  : 0.9,
-        'pruning_switch_epoch'      : pruning_switch_epoch,
-        'batches_per_epoch'         : batches_per_epoch,
-        'weight_sparsity'           : weight_sparsity,
-        'bias_sparsity'             : bias_sparsity,
-        'weight_threshold'          : weight_threshold,
-        'bias_threshold'            : bias_threshold}
+        'learning_rate': 0.1,
+        'wd': 0.004,
+        'momentum': 0.9,
+        'pruning_switch_epoch': pruning_switch_epoch,
+        'batches_per_epoch': batches_per_epoch,
+        'weight_sparsity': weight_sparsity,
+        'bias_sparsity': bias_sparsity,
+        'weight_threshold': weight_threshold,
+        'bias_threshold': bias_threshold}
     logging.info('Start training...')
     model.fit(train,
-        eval_data=val,
-        eval_metric='acc',
-        epoch_end_callback=mx.callback.do_checkpoint(prefix),
-        num_epoch=num_epoch,
-        optimizer='sparsesgd',
-        optimizer_params=optimizer_params)
+              eval_data=val,
+              eval_metric='acc',
+              epoch_end_callback=mx.callback.do_checkpoint(prefix),
+              num_epoch=num_epoch,
+              optimizer='sparsesgd',
+              optimizer_params=optimizer_params)
     logging.info('Finish traning...')
 
     # remove files
@@ -127,7 +131,6 @@ def test_mlp(args):
 
 
 if __name__ == "__main__":
-
     # print logging by default
     logging.basicConfig(level=logging.DEBUG)
 

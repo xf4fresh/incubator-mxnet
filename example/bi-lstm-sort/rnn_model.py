@@ -18,11 +18,13 @@
 # pylint: disable=C0111,too-many-arguments,too-many-instance-attributes,too-many-locals,redefined-outer-name,fixme
 # pylint: disable=superfluous-parens, no-member, invalid-name
 import sys
+
 sys.path.insert(0, "../../python")
 import numpy as np
 import mxnet as mx
 
 from lstm import LSTMState, LSTMParam, lstm, bi_lstm_inference_symbol
+
 
 class BiLSTMInferenceModel(object):
     def __init__(self,
@@ -40,10 +42,10 @@ class BiLSTMInferenceModel(object):
                                             num_label,
                                             dropout)
         batch_size = 1
-        init_c = [('l%d_init_c'%l, (batch_size, num_hidden)) for l in range(2)]
-        init_h = [('l%d_init_h'%l, (batch_size, num_hidden)) for l in range(2)]
+        init_c = [('l%d_init_c' % l, (batch_size, num_hidden)) for l in range(2)]
+        init_h = [('l%d_init_h' % l, (batch_size, num_hidden)) for l in range(2)]
 
-        data_shape = [("data", (batch_size, seq_len, ))]
+        data_shape = [("data", (batch_size, seq_len,))]
 
         input_shapes = dict(init_c + init_h + data_shape)
         self.executor = self.sym.simple_bind(ctx=mx.cpu(), **input_shapes)
@@ -70,5 +72,3 @@ class BiLSTMInferenceModel(object):
             self.states_dict[key].copyto(self.executor.arg_dict[key])
         prob = self.executor.outputs[0].asnumpy()
         return prob
-
-

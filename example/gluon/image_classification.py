@@ -19,6 +19,7 @@ from __future__ import division
 
 import argparse, time
 import logging
+
 logging.basicConfig(level=logging.INFO)
 
 import mxnet as mx
@@ -97,7 +98,7 @@ elif dataset == 'cifar10':
 elif dataset == 'imagenet':
     if model_name == 'inceptionv3':
         train_data, val_data = imagenet_iterator(opt.train_data, opt.val_data,
-                                              batch_size, (3, 299, 299))
+                                                 batch_size, (3, 299, 299))
     else:
         train_data, val_data = imagenet_iterator(opt.train_data, opt.val_data,
                                                  batch_size, (3, 224, 224))
@@ -106,6 +107,7 @@ elif dataset == 'dummy':
         train_data, val_data = dummy_iterator(batch_size, (3, 299, 299))
     else:
         train_data, val_data = dummy_iterator(batch_size, (3, 224, 224))
+
 
 def test(ctx):
     metric = mx.metric.Accuracy()
@@ -126,7 +128,7 @@ def train(epochs, ctx):
     net.initialize(mx.init.Xavier(magnitude=2), ctx=ctx)
     trainer = gluon.Trainer(net.collect_params(), 'sgd',
                             {'learning_rate': opt.lr, 'wd': opt.wd, 'momentum': opt.momentum},
-                            kvstore = opt.kvstore)
+                            kvstore=opt.kvstore)
     metric = mx.metric.Accuracy()
     loss = gluon.loss.SoftmaxCrossEntropyLoss()
 
@@ -152,19 +154,20 @@ def train(epochs, ctx):
                     L.backward()
             trainer.step(batch.data[0].shape[0])
             metric.update(label, outputs)
-            if opt.log_interval and not (i+1)%opt.log_interval:
+            if opt.log_interval and not (i + 1) % opt.log_interval:
                 name, acc = metric.get()
-                logging.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f'%(
-                               epoch, i, batch_size/(time.time()-btic), name, acc))
+                logging.info('Epoch[%d] Batch [%d]\tSpeed: %f samples/sec\t%s=%f' % (
+                    epoch, i, batch_size / (time.time() - btic), name, acc))
             btic = time.time()
 
         name, acc = metric.get()
-        logging.info('[Epoch %d] training: %s=%f'%(epoch, name, acc))
-        logging.info('[Epoch %d] time cost: %f'%(epoch, time.time()-tic))
+        logging.info('[Epoch %d] training: %s=%f' % (epoch, name, acc))
+        logging.info('[Epoch %d] time cost: %f' % (epoch, time.time() - tic))
         name, val_acc = test(ctx)
-        logging.info('[Epoch %d] validation: %s=%f'%(epoch, name, val_acc))
+        logging.info('[Epoch %d] validation: %s=%f' % (epoch, name, val_acc))
 
-    net.save_params('image-classifier-%s-%d.params'%(opt.model, epochs))
+    net.save_params('image-classifier-%s-%d.params' % (opt.model, epochs))
+
 
 if __name__ == '__main__':
     if opt.mode == 'symbolic':
@@ -173,15 +176,15 @@ if __name__ == '__main__':
         softmax = mx.sym.SoftmaxOutput(out, name='softmax')
         mod = mx.mod.Module(softmax, context=[mx.gpu(i) for i in range(num_gpus)] if num_gpus > 0 else [mx.cpu()])
         mod.fit(train_data,
-                eval_data = val_data,
+                eval_data=val_data,
                 num_epoch=opt.epochs,
                 kvstore=opt.kvstore,
-                batch_end_callback = mx.callback.Speedometer(batch_size, max(1, opt.log_interval)),
-                epoch_end_callback = mx.callback.do_checkpoint('image-classifier-%s'% opt.model),
-                optimizer = 'sgd',
-                optimizer_params = {'learning_rate': opt.lr, 'wd': opt.wd, 'momentum': opt.momentum},
-                initializer = mx.init.Xavier(magnitude=2))
-        mod.save_params('image-classifier-%s-%d-final.params'%(opt.model, epochs))
+                batch_end_callback=mx.callback.Speedometer(batch_size, max(1, opt.log_interval)),
+                epoch_end_callback=mx.callback.do_checkpoint('image-classifier-%s' % opt.model),
+                optimizer='sgd',
+                optimizer_params={'learning_rate': opt.lr, 'wd': opt.wd, 'momentum': opt.momentum},
+                initializer=mx.init.Xavier(magnitude=2))
+        mod.save_params('image-classifier-%s-%d-final.params' % (opt.model, epochs))
     else:
         if opt.mode == 'hybrid':
             net.hybridize()

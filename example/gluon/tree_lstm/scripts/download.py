@@ -32,12 +32,14 @@ import zipfile
 import gzip
 from mxnet.test_utils import download
 
+
 def unzip(filepath):
     print("Extracting: " + filepath)
     dirpath = os.path.dirname(filepath)
     with zipfile.ZipFile(filepath) as zf:
         zf.extractall(dirpath)
     os.remove(filepath)
+
 
 def download_tagger(dirpath):
     tagger_dir = 'stanford-tagger'
@@ -53,6 +55,7 @@ def download_tagger(dirpath):
     os.remove(filepath)
     os.rename(os.path.join(dirpath, zip_dir), os.path.join(dirpath, tagger_dir))
 
+
 def download_parser(dirpath):
     parser_dir = 'stanford-parser'
     if os.path.exists(os.path.join(dirpath, parser_dir)):
@@ -67,6 +70,7 @@ def download_parser(dirpath):
     os.remove(filepath)
     os.rename(os.path.join(dirpath, zip_dir), os.path.join(dirpath, parser_dir))
 
+
 def download_wordvecs(dirpath):
     if os.path.exists(dirpath):
         print('Found Glove vectors - skip')
@@ -75,6 +79,7 @@ def download_wordvecs(dirpath):
         os.makedirs(dirpath)
     url = 'http://www-nlp.stanford.edu/data/glove.840B.300d.zip'
     unzip(download(url, dirname=dirpath))
+
 
 def download_sick(dirpath):
     if os.path.exists(dirpath):
@@ -88,6 +93,7 @@ def download_sick(dirpath):
     unzip(download(train_url, dirname=dirpath))
     unzip(download(trial_url, dirname=dirpath))
     unzip(download(test_url, dirname=dirpath))
+
 
 if __name__ == '__main__':
     base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

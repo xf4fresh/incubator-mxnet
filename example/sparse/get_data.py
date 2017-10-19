@@ -19,6 +19,7 @@
 import os, gzip
 import sys
 
+
 def get_libsvm_data(data_dir, data_name, url):
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)

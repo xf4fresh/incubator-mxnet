@@ -24,30 +24,29 @@ import numpy as np
 
 
 class DDPG(object):
-
     def __init__(
-        self,
-        env,
-        policy,
-        qfunc,
-        strategy,
-        ctx=mx.gpu(0),
-        batch_size=32,
-        n_epochs=1000,
-        epoch_length=1000,
-        memory_size=1000000,
-        memory_start_size=1000,
-        discount=0.99,
-        max_path_length=1000,
-        eval_samples=10000,
-        qfunc_updater="adam",
-        qfunc_lr=1e-4,
-        policy_updater="adam",
-        policy_lr=1e-4,
-        soft_target_tau=1e-3,
-        n_updates_per_sample=1,
-        include_horizon_terminal=False,
-        seed=12345):
+            self,
+            env,
+            policy,
+            qfunc,
+            strategy,
+            ctx=mx.gpu(0),
+            batch_size=32,
+            n_epochs=1000,
+            epoch_length=1000,
+            memory_size=1000000,
+            memory_start_size=1000,
+            discount=0.99,
+            max_path_length=1000,
+            eval_samples=10000,
+            qfunc_updater="adam",
+            qfunc_lr=1e-4,
+            policy_updater="adam",
+            policy_lr=1e-4,
+            soft_target_tau=1e-3,
+            n_updates_per_sample=1,
+            include_horizon_terminal=False,
+            seed=12345):
 
         mx.random.seed(seed)
         np.random.seed(seed)
@@ -83,7 +82,6 @@ class DDPG(object):
         self.y_averages = []
         self.strategy_path_returns = []
 
-
     def init_net(self):
 
         # qfunc init
@@ -114,7 +112,7 @@ class DDPG(object):
         qfunc_target_shapes = {
             "obs": (self.batch_size, self.env.observation_space.flat_dim),
             "act": (self.batch_size, self.env.action_space.flat_dim)
-        	}
+        }
         self.qfunc_target = qval_sym.simple_bind(ctx=self.ctx,
                                                  **qfunc_target_shapes)
         # parameters are not shared but initialized the same
@@ -149,17 +147,17 @@ class DDPG(object):
         # since the loss is different, yval is not needed
         args = {}
         for name, arr in self.qfunc.arg_dict.items():
-        	if name != "yval":
-        		args[name] = arr
+            if name != "yval":
+                args[name] = arr
         args_grad = {}
         policy_grad_dict = dict(zip(self.qfunc.loss.list_arguments(), self.qfunc.exe.grad_arrays))
         for name, arr in policy_grad_dict.items():
-        	if name != "yval":
-        		args_grad[name] = arr
+            if name != "yval":
+                args_grad[name] = arr
 
         self.policy_executor = policy_loss.bind(
             ctx=self.ctx,
-        	args=args,
+            args=args,
             args_grad=args_grad,
             grad_req="write")
         self.policy_executor_arg_dict = self.policy_executor.arg_dict
@@ -232,8 +230,8 @@ class DDPG(object):
             logger.dump_tabular(with_prefix=False)
             logger.pop_prefix()
 
-        # self.env.terminate()
-        # self.policy.terminate()
+            # self.env.terminate()
+            # self.policy.terminate()
 
     def do_update(self, itr, batch):
 
@@ -272,11 +270,11 @@ class DDPG(object):
         for name, arr in self.policy_target.arg_dict.items():
             if name not in self.policy_input_shapes:
                 arr[:] = (1.0 - self.soft_target_tau) * arr[:] + \
-                      self.soft_target_tau * self.policy.arg_dict[name][:]
+                         self.soft_target_tau * self.policy.arg_dict[name][:]
         for name, arr in self.qfunc_target.arg_dict.items():
             if name not in self.qfunc_input_shapes:
                 arr[:] = (1.0 - self.soft_target_tau) * arr[:] + \
-                      self.soft_target_tau * self.qfunc.arg_dict[name][:]
+                         self.soft_target_tau * self.qfunc.arg_dict[name][:]
 
         self.qfunc_loss_averages.append(qfunc_loss)
         self.policy_loss_averages.append(policy_loss)
@@ -304,15 +302,15 @@ class DDPG(object):
         logger.record_tabular('Epoch', epoch)
         if epoch == self.n_epochs - 1:
             logger.record_tabular('AverageReturn',
-                              np.mean(returns))
+                                  np.mean(returns))
             logger.record_tabular('StdReturn',
-                              np.std(returns))
+                                  np.std(returns))
             logger.record_tabular('MaxReturn',
-                              np.max(returns))
+                                  np.max(returns))
             logger.record_tabular('MinReturn',
-                              np.min(returns))
+                                  np.min(returns))
             logger.record_tabular('AverageDiscountedReturn',
-                              average_discounted_return)
+                                  average_discounted_return)
         if len(self.strategy_path_returns) > 0:
             logger.record_tabular('AverageEsReturn',
                                   np.mean(self.strategy_path_returns))

@@ -30,7 +30,7 @@ class RandomNumberQueue(object):
             self._pool = np.random.rand(len(self._pool))
             self._index = 0
         self._index += 1
-        return self._pool[self._index-1]
+        return self._pool[self._index - 1]
 
 
 class StochasticDepthModule(mx.module.BaseModule):
@@ -54,6 +54,7 @@ class StochasticDepthModule(mx.module.BaseModule):
     death_rate: float
         Default 0. The probability of turning off the computing branch.
     """
+
     def __init__(self, symbol_compute, symbol_skip=None,
                  data_names=('data',), label_names=None,
                  logger=logging, context=mx.context.cpu(),

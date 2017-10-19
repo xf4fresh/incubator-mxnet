@@ -22,6 +22,7 @@ import os
 import sys
 from evaluate.evaluate_net import evaluate_net
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Evaluate a network')
     parser.add_argument('--rec-path', dest='rec_path', help='which record file to use',
@@ -70,6 +71,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 if __name__ == '__main__':
     args = parse_args()
     # choose ctx
@@ -81,9 +83,9 @@ if __name__ == '__main__':
     num_class = args.num_class
     if len(args.class_names) > 0:
         if os.path.isfile(args.class_names):
-                # try to open it to read class names
-                with open(args.class_names, 'r') as f:
-                    class_names = [l.strip() for l in f.readlines()]
+            # try to open it to read class names
+            with open(args.class_names, 'r') as f:
+                class_names = [l.strip() for l in f.readlines()]
         else:
             class_names = [c.strip() for c in args.class_names.split(',')]
         assert len(class_names) == num_class

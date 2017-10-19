@@ -139,7 +139,7 @@ def get_symbol(num_classes=1000, **kwargs):
     tower_conv1_1 = ConvFactory(tower_conv1, 288, (3, 3), stride=(2, 2))
     tower_conv2 = ConvFactory(net, 256, (1, 1))
     tower_conv2_1 = ConvFactory(tower_conv2, 288, (3, 3), pad=(1, 1))
-    tower_conv2_2 = ConvFactory(tower_conv2_1, 320, (3, 3),  stride=(2, 2))
+    tower_conv2_2 = ConvFactory(tower_conv2_1, 320, (3, 3), stride=(2, 2))
     tower_pool = mx.symbol.Pooling(net, kernel=(
         3, 3), stride=(2, 2), pool_type='max')
     net = mx.symbol.Concat(

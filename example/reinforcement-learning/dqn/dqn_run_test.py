@@ -133,7 +133,7 @@ def main():
     rows = 84
     cols = 84
     ctx = re.findall('([a-z]+)(\d*)', args.ctx)
-    ctx = [(device, int(num)) if len(num) >0 else (device, 0) for device, num in ctx]
+    ctx = [(device, int(num)) if len(num) > 0 else (device, 0) for device, num in ctx]
     q_ctx = mx.Context(*ctx[0])
     minibatch_size = 32
     epoch_range = [int(n) for n in args.epoch_range.split(',')]
@@ -168,6 +168,7 @@ def main():
         else:
             avg_reward = calculate_avg_reward(game, qnet, args.test_steps, exploartion)
             print("Epoch:%d Avg Reward: %f" % (epoch, avg_reward))
+
 
 if __name__ == '__main__':
     main()

@@ -20,10 +20,11 @@ import mxnet as mx
 import numpy as np
 import logging
 from solver import Solver, Monitor
+
 try:
-   import cPickle as pickle
+    import cPickle as pickle
 except:
-   import pickle
+    import pickle
 
 
 def extract_feature(sym, args, auxs, data_iter, N, xpu=mx.cpu()):
@@ -50,6 +51,7 @@ def extract_feature(sym, args, auxs, data_iter, N, xpu=mx.cpu()):
         out.append(buff.asnumpy())
     outputs = [np.concatenate(i, axis=0)[:N] for i in outputs]
     return dict(zip(sym.list_outputs(), outputs))
+
 
 class MXModel(object):
     def __init__(self, xpu=mx.cpu(), *args, **kwargs):

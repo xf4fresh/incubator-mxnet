@@ -17,6 +17,7 @@
 
 import re
 import sys
+
 sys.path.insert(0, "../../python")
 import time
 import logging
@@ -53,12 +54,12 @@ def prepare_data(args):
     feat_dim = args.config.getint('data', 'xdim')
 
     test_data_args = {
-            "gpu_chunk": 32768,
-            "lst_file": file_test,
-            "file_format": file_format,
-            "separate_lines": True,
-            "has_labels": True
-            }
+        "gpu_chunk": 32768,
+        "lst_file": file_test,
+        "file_format": file_format,
+        "separate_lines": True,
+        "has_labels": True
+    }
 
     test_sets = DataReadStream(test_data_args, feat_dim)
 
@@ -86,18 +87,17 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)-15s %(message)s')
 
     # load the model
-    label_mean = np.zeros((label_dim,1), dtype='float32')
+    label_mean = np.zeros((label_dim, 1), dtype='float32')
     data_test = TruncatedSentenceIter(test_sets, batch_size, init_states,
-                                         20, feat_dim=feat_dim,
-                                         do_shuffling=False, pad_zeros=True, has_label=True)
+                                      20, feat_dim=feat_dim,
+                                      do_shuffling=False, pad_zeros=True, has_label=True)
 
     for i, batch in enumerate(data_test.labels):
-        hist, edges = np.histogram(batch.flat, bins=range(0,label_dim+1))
-        label_mean += hist.reshape(label_dim,1)
+        hist, edges = np.histogram(batch.flat, bins=range(0, label_dim + 1))
+        label_mean += hist.reshape(label_dim, 1)
 
     kaldiWriter = KaldiWriteOut(None, out_file)
     kaldiWriter.open_or_fd()
     kaldiWriter.write("label_mean", label_mean)
-
 
     args.config.write(sys.stderr)

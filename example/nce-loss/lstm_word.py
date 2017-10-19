@@ -19,6 +19,7 @@
 from __future__ import print_function
 import logging
 import sys, random, time, math
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
@@ -34,6 +35,7 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "init_states", "last_states",
                                      "seq_data", "seq_labels", "seq_outputs",
                                      "param_blocks"])
+
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
     """LSTM Cell symbol"""
@@ -78,37 +80,37 @@ def get_net(vocab_size, seq_len, num_label, num_lstm_layer, num_hidden):
     label_weight = mx.sym.Variable('label_weight')
     embed_weight = mx.sym.Variable('embed_weight')
     label_embed_weight = mx.sym.Variable('label_embed_weight')
-    data_embed = mx.sym.Embedding(data = data, input_dim = vocab_size,
-                                  weight = embed_weight,
-                                  output_dim = 100, name = 'data_embed')
-    datavec = mx.sym.SliceChannel(data = data_embed,
-                                  num_outputs = seq_len,
-                                  squeeze_axis = True, name = 'data_slice')
-    labelvec = mx.sym.SliceChannel(data = label,
-                                   num_outputs = seq_len,
-                                   squeeze_axis = True, name = 'label_slice')
-    labelweightvec = mx.sym.SliceChannel(data = label_weight,
-                                         num_outputs = seq_len,
-                                         squeeze_axis = True, name = 'label_weight_slice')
+    data_embed = mx.sym.Embedding(data=data, input_dim=vocab_size,
+                                  weight=embed_weight,
+                                  output_dim=100, name='data_embed')
+    datavec = mx.sym.SliceChannel(data=data_embed,
+                                  num_outputs=seq_len,
+                                  squeeze_axis=True, name='data_slice')
+    labelvec = mx.sym.SliceChannel(data=label,
+                                   num_outputs=seq_len,
+                                   squeeze_axis=True, name='label_slice')
+    labelweightvec = mx.sym.SliceChannel(data=label_weight,
+                                         num_outputs=seq_len,
+                                         squeeze_axis=True, name='label_weight_slice')
     probs = []
     for seqidx in range(seq_len):
         hidden = datavec[seqidx]
 
         for i in range(num_lstm_layer):
-            next_state = lstm(num_hidden, indata = hidden,
-                              prev_state = last_states[i],
-                              param = param_cells[i],
-                              seqidx = seqidx, layeridx = i)
+            next_state = lstm(num_hidden, indata=hidden,
+                              prev_state=last_states[i],
+                              param=param_cells[i],
+                              seqidx=seqidx, layeridx=i)
             hidden = next_state.h
             last_states[i] = next_state
 
-        probs.append(nce_loss(data = hidden,
-                              label = labelvec[seqidx],
-                              label_weight = labelweightvec[seqidx],
-                              embed_weight = label_embed_weight,
-                              vocab_size = vocab_size,
-                              num_hidden = 100,
-                              num_label = num_label))
+        probs.append(nce_loss(data=hidden,
+                              label=labelvec[seqidx],
+                              label_weight=labelweightvec[seqidx],
+                              embed_weight=label_embed_weight,
+                              vocab_size=vocab_size,
+                              num_hidden=100,
+                              num_label=num_label))
     return mx.sym.Group(probs)
 
 
@@ -134,6 +136,7 @@ def load_data(name):
         v = int(math.pow(v * 1.0, 0.75))
         negative += [i for _ in range(v)]
     return data, negative, vocab, freq
+
 
 class SimpleBatch(object):
     def __init__(self, data_names, data, label_names, label):
@@ -176,12 +179,12 @@ class DataIter(mx.io.DataIter):
         batch_label = []
         batch_label_weight = []
         for i in range(0, len(self.data) - self.seq_len - 1, self.seq_len):
-            data = self.data[i: i+self.seq_len]
-            label = [[self.data[i+k+1]] \
-                     + [self.sample_ne() for _ in range(self.num_label-1)]\
+            data = self.data[i: i + self.seq_len]
+            label = [[self.data[i + k + 1]] \
+                     + [self.sample_ne() for _ in range(self.num_label - 1)] \
                      for k in range(self.seq_len)]
             label_weight = [[1.0] \
-                            + [0.0 for _ in range(self.num_label-1)]\
+                            + [0.0 for _ in range(self.num_label - 1)] \
                             for k in range(self.seq_len)]
 
             batch_data.append(data)
@@ -200,23 +203,23 @@ class DataIter(mx.io.DataIter):
     def reset(self):
         pass
 
+
 if __name__ == '__main__':
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
 
     parser = OptionParser()
-    parser.add_option("-g", "--gpu", action = "store_true", dest = "gpu", default = False,
-                      help = "use gpu")
+    parser.add_option("-g", "--gpu", action="store_true", dest="gpu", default=False,
+                      help="use gpu")
     batch_size = 1024
     seq_len = 5
     num_label = 6
     num_lstm_layer = 2
     num_hidden = 100
 
-    init_c = [('l%d_init_c'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
-    init_h = [('l%d_init_h'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+    init_c = [('l%d_init_c' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+    init_h = [('l%d_init_h' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
     init_states = init_c + init_h
-
 
     data_train = DataIter("./data/text8", batch_size, seq_len, num_label,
                           init_states)
@@ -226,16 +229,15 @@ if __name__ == '__main__':
     devs = mx.cpu()
     if options.gpu == True:
         devs = mx.gpu()
-    model = mx.model.FeedForward(ctx = devs,
-                                 symbol = network,
-                                 num_epoch = 20,
-                                 learning_rate = 0.3,
-                                 momentum = 0.9,
-                                 wd = 0.0000,
+    model = mx.model.FeedForward(ctx=devs,
+                                 symbol=network,
+                                 num_epoch=20,
+                                 learning_rate=0.3,
+                                 momentum=0.9,
+                                 wd=0.0000,
                                  initializer=mx.init.Xavier(factor_type="in", magnitude=2.34))
 
     metric = NceLSTMAuc()
-    model.fit(X = data_train,
-              eval_metric = metric,
-              batch_end_callback = mx.callback.Speedometer(batch_size, 50),)
-
+    model.fit(X=data_train,
+              eval_metric=metric,
+              batch_end_callback=mx.callback.Speedometer(batch_size, 50), )

@@ -24,6 +24,7 @@ import importlib
 import sys
 from symbol.symbol_factory import get_symbol
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Convert a trained model to deploy model')
     parser.add_argument('--network', dest='network', type=str, default='vgg16_reduced',
@@ -45,11 +46,12 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 if __name__ == '__main__':
     args = parse_args()
     net = get_symbol(args.network, args.data_shape,
-        num_classes=args.num_classes, nms_thresh=args.nms_thresh,
-        force_suppress=args.force_nms, nms_topk=args.nms_topk)
+                     num_classes=args.num_classes, nms_thresh=args.nms_thresh,
+                     force_suppress=args.force_nms, nms_topk=args.nms_topk)
     if args.prefix.endswith('_'):
         prefix = args.prefix + args.network + '_' + str(args.data_shape)
     else:

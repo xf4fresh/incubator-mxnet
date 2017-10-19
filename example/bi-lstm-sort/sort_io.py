@@ -19,9 +19,11 @@
 # pylint: disable=superfluous-parens, no-member, invalid-name
 from __future__ import print_function
 import sys
+
 sys.path.insert(0, "../../python")
 import numpy as np
 import mxnet as mx
+
 
 # The interface of a data iter that works for bucketing
 #
@@ -39,6 +41,7 @@ def default_read_content(path):
         content = content.replace('\n', ' <eos> ').replace('. ', ' <eos> ')
         return content
 
+
 def default_build_vocab(path):
     content = default_read_content(path)
     content = content.split(' ')
@@ -47,8 +50,8 @@ def default_build_vocab(path):
     words = [x for x in words]
     words = sorted(words)
     the_vocab = {}
-    idx = 1 # 0 is left for zero-padding
-    the_vocab[' '] = 0 # put a dummy element here so that len(vocab) is correct
+    idx = 1  # 0 is left for zero-padding
+    the_vocab[' '] = 0  # put a dummy element here so that len(vocab) is correct
     for word in words:
         if len(word) == 0:
             continue
@@ -57,10 +60,12 @@ def default_build_vocab(path):
             idx += 1
     return the_vocab
 
+
 def default_text2id(sentence, the_vocab):
     words = sentence.split(' ')
     words = [the_vocab[w] for w in words if len(w) > 0]
     return words
+
 
 def default_gen_buckets(sentences, batch_size, the_vocab):
     len_dict = {}
@@ -80,7 +85,7 @@ def default_gen_buckets(sentences, batch_size, the_vocab):
 
     tl = 0
     buckets = []
-    for l, n in len_dict.items(): # TODO: There are better heuristic ways to do this
+    for l, n in len_dict.items():  # TODO: There are better heuristic ways to do this
         if n + tl >= batch_size:
             buckets.append(l)
             tl = 0
@@ -100,7 +105,7 @@ class SimpleBatch(object):
         self.bucket_key = bucket_key
 
         self.pad = 0
-        self.index = None # TODO: what is index?
+        self.index = None  # TODO: what is index?
 
     @property
     def provide_data(self):
@@ -110,8 +115,10 @@ class SimpleBatch(object):
     def provide_label(self):
         return [(n, x.shape) for n, x in zip(self.label_names, self.label)]
 
+
 class DummyIter(mx.io.DataIter):
     "A dummy iterator that always return the same batch, used for speed testing"
+
     def __init__(self, real_iter):
         super(DummyIter, self).__init__()
         self.real_iter = real_iter
@@ -128,6 +135,7 @@ class DummyIter(mx.io.DataIter):
 
     def next(self):
         return self.the_batch
+
 
 class BucketSentenceIter(mx.io.DataIter):
     def __init__(self, path, vocab, buckets, batch_size,
@@ -168,8 +176,8 @@ class BucketSentenceIter(mx.io.DataIter):
                 if bkt >= len(sentence):
                     self.data[i].append(sentence)
                     break
-            # we just ignore the sentence it is longer than the maximum
-            # bucket size here
+                    # we just ignore the sentence it is longer than the maximum
+                    # bucket size here
 
         # convert data into ndarrays for better speed during training
         data = [np.zeros((len(x), buckets[i])) for i, x in enumerate(self.data)]
@@ -202,9 +210,9 @@ class BucketSentenceIter(mx.io.DataIter):
         bucket_n_batches = []
         for i in range(len(self.data)):
             bucket_n_batches.append(len(self.data[i]) / self.batch_size)
-            self.data[i] = self.data[i][:int(bucket_n_batches[i]*self.batch_size)]
+            self.data[i] = self.data[i][:int(bucket_n_batches[i] * self.batch_size)]
 
-        bucket_plan = np.hstack([np.zeros(n, int)+i for i, n in enumerate(bucket_n_batches)])
+        bucket_plan = np.hstack([np.zeros(n, int) + i for i, n in enumerate(bucket_n_batches)])
         np.random.shuffle(bucket_plan)
 
         bucket_idx_all = [np.random.permutation(len(x)) for x in self.data]
@@ -229,18 +237,18 @@ class BucketSentenceIter(mx.io.DataIter):
             label = self.label_buffer[i_bucket]
 
             i_idx = self.bucket_curr_idx[i_bucket]
-            idx = self.bucket_idx_all[i_bucket][i_idx:i_idx+self.batch_size]
+            idx = self.bucket_idx_all[i_bucket][i_idx:i_idx + self.batch_size]
             self.bucket_curr_idx[i_bucket] += self.batch_size
             data[:] = self.data[i_bucket][idx]
 
             for k in range(len(data)):
                 label[k] = sorted(data[k])
-                #count = len(data[k]) / 2
-                #for j in range(count):
+                # count = len(data[k]) / 2
+                # for j in range(count):
                 #    data[j+count] = data[j]
 
-            #label[:, :-1] = data[:, 1:]
-            #label[:, -1] = 0
+            # label[:, :-1] = data[:, 1:]
+            # label[:, -1] = 0
 
             data_all = [mx.nd.array(data)] + self.init_state_arrays
             label_all = [mx.nd.array(label)]

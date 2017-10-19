@@ -17,6 +17,7 @@
 
 import collections
 
+
 class DotDict(dict):
     """
     Simple class for dot access elements in dict, support nested initialization
@@ -29,6 +30,7 @@ class DotDict(dict):
     # delete keys
     del d.new_key
     """
+
     def __init__(self, *args, **kwargs):
         super(DotDict, self).__init__(*args, **kwargs)
         for arg in args:
@@ -61,7 +63,7 @@ class DotDict(dict):
 def namedtuple_with_defaults(typename, field_names, default_values=()):
     """ create a namedtuple with default values """
     T = collections.namedtuple(typename, field_names)
-    T.__new__.__defaults__ = (None, ) * len(T._fields)
+    T.__new__.__defaults__ = (None,) * len(T._fields)
     if isinstance(default_values, collections.Mapping):
         prototype = T(**default_values)
     else:
@@ -69,11 +71,13 @@ def namedtuple_with_defaults(typename, field_names, default_values=()):
     T.__new__.__defaults__ = tuple(prototype)
     return T
 
+
 def merge_dict(a, b):
     """ merge dict a, b, with b overriding keys in a """
     c = a.copy()
     c.update(b)
     return c
+
 
 def zip_namedtuple(nt_list):
     """ accept list of namedtuple, return a dict of zipped fields """
@@ -83,11 +87,12 @@ def zip_namedtuple(nt_list):
         nt_list = [nt_list]
     for nt in nt_list:
         assert type(nt) == type(nt_list[0])
-    ret = {k : [v] for k, v in nt_list[0]._asdict().items()}
+    ret = {k: [v] for k, v in nt_list[0]._asdict().items()}
     for nt in nt_list[1:]:
         for k, v in nt._asdict().items():
             ret[k].append(v)
     return ret
+
 
 def config_as_dict(cfg):
     """ convert raw configuration to unified dictionary """

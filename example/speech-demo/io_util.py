@@ -20,6 +20,7 @@ import numpy as np
 import sys
 from io_func.feat_io import DataReadStream
 
+
 # The interface of a data iter that works for bucketing
 #
 # DataIter
@@ -64,6 +65,7 @@ class SimpleBatch(object):
         else:
             return None
 
+
 class SimpleIter(mx.io.DataIter):
     """DataIter used in Calculate Statistics (in progress).
 
@@ -77,10 +79,11 @@ class SimpleIter(mx.io.DataIter):
         for testing use `True` so that the evaluation metric can
         choose to ignore the padding by detecting the zero-labels.
     """
+
     def __init__(self, train_sets, batch_size,
-            init_states, delay=5, feat_dim=40, label_dim=1955,
-            label_mean_sets=None, data_name='data',
-            label_name='softmax_label', has_label=True, load_label_mean=True):
+                 init_states, delay=5, feat_dim=40, label_dim=1955,
+                 label_mean_sets=None, data_name='data',
+                 label_name='softmax_label', has_label=True, load_label_mean=True):
 
         self.train_sets = train_sets
         self.label_mean_sets = label_mean_sets
@@ -101,7 +104,7 @@ class SimpleIter(mx.io.DataIter):
             self.label_mean_sets.initialize_read()
             (feats, tgts, utt_id) = self.label_mean_sets.load_next_seq()
 
-            self.label_mean = feats/np.sum(feats)
+            self.label_mean = feats / np.sum(feats)
             for i, v in enumerate(feats):
                 if v <= 1.0:
                     self.label_mean[i] = 1
@@ -121,7 +124,7 @@ class SimpleIter(mx.io.DataIter):
             utt_lens.append(feats.shape[0])
             utt_ids.append(utt_id)
             if self.has_label:
-                labels.append(tgts+1)
+                labels.append(tgts + 1)
             if feats.shape[0] not in buckets:
                 buckets_map[feats.shape[0]] = feats.shape[0]
 
@@ -129,7 +132,7 @@ class SimpleIter(mx.io.DataIter):
             buckets.append(k)
 
         buckets.sort()
-        i_max_bucket = len(buckets)-1
+        i_max_bucket = len(buckets) - 1
         max_bucket = buckets[i_max_bucket]
         self.buckets = buckets
         self.data = [[] for k in buckets]
@@ -165,12 +168,12 @@ class SimpleIter(mx.io.DataIter):
 
         data = [np.zeros((len(x), buckets[i], self.feat_dim))
                 if len(x) % self.batch_size == 0
-                else np.zeros(((len(x)/self.batch_size + 1) * self.batch_size, buckets[i], self.feat_dim))
+                else np.zeros(((len(x) / self.batch_size + 1) * self.batch_size, buckets[i], self.feat_dim))
                 for i, x in enumerate(self.data)]
 
         label = [np.zeros((len(x), buckets[i]))
                  if len(x) % self.batch_size == 0
-                 else np.zeros(((len(x)/self.batch_size + 1) * self.batch_size, buckets[i]))
+                 else np.zeros(((len(x) / self.batch_size + 1) * self.batch_size, buckets[i]))
                  for i, x in enumerate(self.data)]
 
         utt_id = [[] for k in buckets]
@@ -180,13 +183,12 @@ class SimpleIter(mx.io.DataIter):
         for i, x in enumerate(data):
             utt_lens[i] = [0] * len(x)
 
-
         for i_bucket in range(len(self.buckets)):
             for j in range(len(self.data[i_bucket])):
                 sentence = self.data[i_bucket][j]
                 if self.has_label:
                     sentence[1][delay:] = sentence[1][:-delay]
-                    sentence[1][:delay] = sentence[1][0] # broadcast assignment
+                    sentence[1][:delay] = sentence[1][0]  # broadcast assignment
                     data[i_bucket][j, :len(sentence[0])] = sentence[0]
                     label[i_bucket][j, :len(sentence[1])] = sentence[1]
                 else:
@@ -201,7 +203,6 @@ class SimpleIter(mx.io.DataIter):
         self.label = label
         self.utt_id = utt_id
         self.utt_lens = utt_lens
-
 
         # Get the size of each bucket, so that we could sample
         # uniformly from the bucket
@@ -230,10 +231,10 @@ class SimpleIter(mx.io.DataIter):
         bucket_n_batches = []
         for i in range(len(self.data)):
             bucket_n_batches.append(len(self.data[i]) / self.batch_size)
-            self.data[i] = self.data[i][:int(bucket_n_batches[i]*self.batch_size),:]
-            self.label[i] = self.label[i][:int(bucket_n_batches[i]*self.batch_size)]
+            self.data[i] = self.data[i][:int(bucket_n_batches[i] * self.batch_size), :]
+            self.label[i] = self.label[i][:int(bucket_n_batches[i] * self.batch_size)]
 
-        bucket_plan = np.hstack([np.zeros(n, int)+i for i, n in enumerate(bucket_n_batches)])
+        bucket_plan = np.hstack([np.zeros(n, int) + i for i, n in enumerate(bucket_n_batches)])
         np.random.shuffle(bucket_plan)
 
         bucket_idx_all = [np.random.permutation(len(x)) for x in self.data]
@@ -262,7 +263,7 @@ class SimpleIter(mx.io.DataIter):
             label = self.label_buffer[i_bucket]
 
             i_idx = self.bucket_curr_idx[i_bucket]
-            idx = self.bucket_idx_all[i_bucket][i_idx:i_idx+self.batch_size]
+            idx = self.bucket_idx_all[i_bucket][i_idx:i_idx + self.batch_size]
             self.bucket_curr_idx[i_bucket] += self.batch_size
             data[:] = self.data[i_bucket][idx]
             label[:] = self.label[i_bucket][idx]
@@ -278,6 +279,7 @@ class SimpleIter(mx.io.DataIter):
 
     def reset(self):
         self.bucket_curr_idx = [0 for x in self.data]
+
 
 class TruncatedSentenceIter(mx.io.DataIter):
     """DataIter used in Truncated-BPTT.
@@ -297,6 +299,7 @@ class TruncatedSentenceIter(mx.io.DataIter):
         for testing use `True` so that the evaluation metric can
         choose to ignore the padding by detecting the zero-labels.
     """
+
     def __init__(self, train_sets, batch_size, init_states, truncate_len=20, delay=5,
                  feat_dim=40, data_name='data', label_name='softmax_label',
                  has_label=True, do_shuffling=True, pad_zeros=False, time_major=False):
@@ -361,12 +364,12 @@ class TruncatedSentenceIter(mx.io.DataIter):
                 tgs[:self.delay] = tgs[0]  # boradcast assign
             self.features.append(feats)
             if self.has_label:
-                self.labels.append(tgs+1)
+                self.labels.append(tgs + 1)
             self.utt_ids.append(utt_id)
             seq_len_tot += feats.shape[0]
 
         sys.stderr.write('    %d utterances loaded...\n' % len(self.utt_ids))
-        sys.stderr.write('    avg-sequence-len = %.0f\n' % (seq_len_tot/len(self.utt_ids)))
+        sys.stderr.write('    avg-sequence-len = %.0f\n' % (seq_len_tot / len(self.utt_ids)))
 
     def _make_data_plan(self):
         if self.do_shuffling:
@@ -412,9 +415,9 @@ class TruncatedSentenceIter(mx.io.DataIter):
                     # reset the states
                     for state in self.init_state_arrays:
                         if self.time_major:
-                            state[:, i:i+1, :] = 0.1
+                            state[:, i:i + 1, :] = 0.1
                         else:
-                            state[i:i+1] = 0.1
+                            state[i:i + 1] = 0.1
                     # load new sentence
                     if is_pad[i]:
                         # I am already a padded sentence, just rewind to the
@@ -440,7 +443,7 @@ class TruncatedSentenceIter(mx.io.DataIter):
                     effective_sample_count -= self.truncate_len
                 else:
                     idx_take = slice(utt_inside_idx[i],
-                                     min(utt_inside_idx[i]+self.truncate_len,
+                                     min(utt_inside_idx[i] + self.truncate_len,
                                          fea_utt.shape[0]))
                     n_take = idx_take.stop - idx_take.start
                     if self.time_major:
@@ -502,12 +505,12 @@ class BucketSentenceIter(mx.io.DataIter):
         self.label_name = label_name
 
         buckets.sort()
-        i_max_bucket = len(buckets)-1
+        i_max_bucket = len(buckets) - 1
         max_bucket = buckets[i_max_bucket]
 
         if has_label != True:
             buckets = [i for i in range(1, max_bucket)]
-            i_max_bucket = len(buckets)-1
+            i_max_bucket = len(buckets) - 1
             max_bucket = buckets[i_max_bucket]
 
         self.buckets = buckets
@@ -518,7 +521,7 @@ class BucketSentenceIter(mx.io.DataIter):
         self.has_label = has_label
 
         sys.stderr.write("Loading data...\n")
-        T_OVERLAP = buckets[0]/2
+        T_OVERLAP = buckets[0] / 2
         n = 0
         while True:
             (feats, tgts, utt_id) = self.train_sets.load_next_seq()
@@ -539,17 +542,17 @@ class BucketSentenceIter(mx.io.DataIter):
                     i_bucket = i_max_bucket
                 else:
                     for i, bkt in enumerate(buckets):
-                        if bkt >= t_end-t_start:
-                            t_take = t_end-t_start
+                        if bkt >= t_end - t_start:
+                            t_take = t_end - t_start
                             i_bucket = i
                             break
 
                 n += 1
                 if self.has_label:
-                    self.data[i_bucket].append((feats[t_start:t_start+t_take],
-                                                tgts[t_start:t_start+t_take]+1))
+                    self.data[i_bucket].append((feats[t_start:t_start + t_take],
+                                                tgts[t_start:t_start + t_take] + 1))
                 else:
-                    self.data[i_bucket].append(feats[t_start:t_start+t_take])
+                    self.data[i_bucket].append(feats[t_start:t_start + t_take])
 
                 self.utt_id[i_bucket].append(utt_id)
                 t_start += t_take
@@ -567,13 +570,13 @@ class BucketSentenceIter(mx.io.DataIter):
 
         data = [np.zeros((len(x), buckets[i], self.feat_dim))
                 if len(x) % self.batch_size == 0
-                else np.zeros(((len(x)/self.batch_size + 1) * self.batch_size, buckets[i],
+                else np.zeros(((len(x) / self.batch_size + 1) * self.batch_size, buckets[i],
                                self.feat_dim))
                 for i, x in enumerate(self.data)]
 
         label = [np.zeros((len(x), buckets[i]))
                  if len(x) % self.batch_size == 0
-                 else np.zeros(((len(x)/self.batch_size + 1) * self.batch_size, buckets[i]))
+                 else np.zeros(((len(x) / self.batch_size + 1) * self.batch_size, buckets[i]))
                  for i, x in enumerate(self.data)]
 
         utt_id = [[] for k in buckets]
@@ -614,7 +617,7 @@ class BucketSentenceIter(mx.io.DataIter):
         self.init_state_arrays = [mx.nd.zeros(x[1]) for x in init_states]
 
         self.provide_data = [(data_name, (batch_size, self.default_bucket_key, self.feat_dim))] + \
-            init_states
+                            init_states
         self.provide_label = [(label_name, (self.batch_size, self.default_bucket_key))]
 
     def make_data_iter_plan(self):
@@ -623,10 +626,10 @@ class BucketSentenceIter(mx.io.DataIter):
         bucket_n_batches = []
         for i in range(len(self.data)):
             bucket_n_batches.append(len(self.data[i]) / self.batch_size)
-            self.data[i] = self.data[i][:int(bucket_n_batches[i]*self.batch_size), :]
-            self.label[i] = self.label[i][:int(bucket_n_batches[i]*self.batch_size)]
+            self.data[i] = self.data[i][:int(bucket_n_batches[i] * self.batch_size), :]
+            self.label[i] = self.label[i][:int(bucket_n_batches[i] * self.batch_size)]
 
-        bucket_plan = np.hstack([np.zeros(n, int)+i for i, n in enumerate(bucket_n_batches)])
+        bucket_plan = np.hstack([np.zeros(n, int) + i for i, n in enumerate(bucket_n_batches)])
         np.random.shuffle(bucket_plan)
 
         bucket_idx_all = [np.random.permutation(len(x)) for x in self.data]
@@ -653,7 +656,7 @@ class BucketSentenceIter(mx.io.DataIter):
             label = self.label_buffer[i_bucket]
 
             i_idx = self.bucket_curr_idx[i_bucket]
-            idx = self.bucket_idx_all[i_bucket][i_idx:i_idx+self.batch_size]
+            idx = self.bucket_idx_all[i_bucket][i_idx:i_idx + self.batch_size]
             self.bucket_curr_idx[i_bucket] += self.batch_size
             data[:] = self.data[i_bucket][idx]
             label[:] = self.label[i_bucket][idx]
@@ -668,4 +671,3 @@ class BucketSentenceIter(mx.io.DataIter):
 
     def reset(self):
         self.bucket_curr_idx = [0 for x in self.data]
-

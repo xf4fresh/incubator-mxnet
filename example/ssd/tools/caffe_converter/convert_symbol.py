@@ -20,6 +20,7 @@ import argparse
 import re
 import caffe_parser
 
+
 def _get_input(proto):
     """Get input size
     """
@@ -38,6 +39,7 @@ def _get_input(proto):
     # We assume the first bottom blob of first layer is the output from data layer
     input_name = layer[0].bottom[0]
     return input_name, input_dim, layer
+
 
 def _convert_conv_param(param):
     """
@@ -102,6 +104,7 @@ def _convert_conv_param(param):
 
     return param_string
 
+
 def _convert_pooling_param(param):
     """Convert the pooling layer parameter
     """
@@ -120,11 +123,13 @@ def _convert_pooling_param(param):
         raise ValueError("Unknown Pooling Method!")
     return param_string
 
+
 def _find_layer(layers, name):
     for layer in layers:
         if layer.name == name:
             return layer
     return None
+
 
 def _parse_proto(prototxt_fname):
     """Parse Caffe prototxt into symbol string
@@ -192,8 +197,8 @@ def _parse_proto(prototxt_fname):
             need_flatten[name] = need_flatten[mapping[layer.bottom[0]]]
         if layer.type == 'Softmax' or layer.type == 20:
             if layer.softmax_param.axis == 2:
-                symbol_string += "%s = mx.symbol.transpose(%s, axes=(0,2,1))\n" %\
-                    (mapping[layer.bottom[0]], mapping[layer.bottom[0]])
+                symbol_string += "%s = mx.symbol.transpose(%s, axes=(0,2,1))\n" % \
+                                 (mapping[layer.bottom[0]], mapping[layer.bottom[0]])
                 type_string = 'mx.symbol.SoftmaxActivation'
                 param_string = "mode='channel'"
                 need_flatten[name] = False
@@ -201,7 +206,7 @@ def _parse_proto(prototxt_fname):
                 type_string = 'mx.symbol.SoftmaxOutput'
         if layer.type == 'Flatten' or layer.type == 8:
             if 'softmax' in layer.bottom[0]:
-                prev_name = re.sub('[-/]', '_', layers[i-1].name)
+                prev_name = re.sub('[-/]', '_', layers[i - 1].name)
                 skip_layer = True
             else:
                 type_string = 'mx.symbol.Flatten'
@@ -224,15 +229,15 @@ def _parse_proto(prototxt_fname):
             if (epsilon <= 1e-05):
                 epsilon = 1e-04
             # if next layer is scale, don't fix gamma
-            fix_gamma = layers[i+1].type != 'Scale'
+            fix_gamma = layers[i + 1].type != 'Scale'
             param_string = 'use_global_stats=%s, fix_gamma=%s, eps=%f' % (
                 param.use_global_stats, fix_gamma, epsilon)
             need_flatten[name] = need_flatten[mapping[layer.bottom[0]]]
         if layer.type == 'Scale':
-            assert layers[i-1].type == 'BatchNorm'
+            assert layers[i - 1].type == 'BatchNorm'
             need_flatten[name] = need_flatten[mapping[layer.bottom[0]]]
             skip_layer = True
-            prev_name = re.sub('[-/]', '_', layers[i-1].name)
+            prev_name = re.sub('[-/]', '_', layers[i - 1].name)
         if layer.type == 'PReLU':
             type_string = 'mx.symbol.LeakyReLU'
             param = layer.prelu_param
@@ -260,12 +265,12 @@ def _parse_proto(prototxt_fname):
             if conv_layer.type == 'Convolution':
                 scale_name = "%s_scale" % name
                 symbol_string += "%s=mx.sym.Variable(name='%s', shape=(1, %d, 1, 1), init=mx.init.Constant(%f))\n" % \
-                    (scale_name, scale_name, conv_layer.convolution_param.num_output,
-                    param.scale_filler.value)
-                symbol_string += "%s=mx.symbol.L2Normalization(name='%s', data=%s, mode='channel')\n" %\
-                    (name, name, mapping[layer.bottom[0]])
-                symbol_string += "%s=mx.symbol.broadcast_mul(lhs=%s, rhs=%s)\n" %\
-                    (name, scale_name, name)
+                                 (scale_name, scale_name, conv_layer.convolution_param.num_output,
+                                  param.scale_filler.value)
+                symbol_string += "%s=mx.symbol.L2Normalization(name='%s', data=%s, mode='channel')\n" % \
+                                 (name, name, mapping[layer.bottom[0]])
+                symbol_string += "%s=mx.symbol.broadcast_mul(lhs=%s, rhs=%s)\n" % \
+                                 (name, scale_name, name)
                 type_string = 'split'
                 need_flatten[name] = True
             else:
@@ -285,10 +290,10 @@ def _parse_proto(prototxt_fname):
                 import math
                 min_size = param.min_size[0] / input_dim[2]
                 max_size = math.sqrt(param.min_size[0] * param.max_size[0]) / input_dim[2]
-                sizes = '(%f, %f)' %(min_size, max_size)
+                sizes = '(%f, %f)' % (min_size, max_size)
             except AttributeError:
                 min_size = param.min_size[0] / input_dim[2]
-                sizes = '(%f)' %(min_size)
+                sizes = '(%f)' % (min_size)
             ars = list(param.aspect_ratio)
             ratios = [1.]
             for ar in ars:
@@ -311,7 +316,7 @@ def _parse_proto(prototxt_fname):
             step = '(%f, %f)' % (step_h / finput_dimh, step_w / finput_dimw)
             assert param.offset == 0.5, "currently only support offset = 0.5"
             symbol_string += '%s = mx.contrib.symbol.MultiBoxPrior(%s, sizes=%s, ratios=%s, clip=%s, steps=%s, name="%s")\n' % \
-                (name, mapping[layer.bottom[0]], sizes, ratios_string, clip, step, name)
+                             (name, mapping[layer.bottom[0]], sizes, ratios_string, clip, step, name)
             symbol_string += '%s = mx.symbol.Flatten(data=%s)\n' % (name, name)
             type_string = 'split'
             need_flatten[name] = False
@@ -323,7 +328,7 @@ def _parse_proto(prototxt_fname):
             nms_param = param.nms_param
             type_string = 'mx.contrib.symbol.MultiBoxDetection'
             param_string = "nms_threshold=%f, nms_topk=%d, clip=False" % \
-                (nms_param.nms_threshold, nms_param.top_k)
+                           (nms_param.nms_threshold, nms_param.top_k)
         if skip_layer:
             assert len(layer.bottom) == 1
             symbol_string += "%s = %s\n" % (name, prev_name)
@@ -349,14 +354,16 @@ def _parse_proto(prototxt_fname):
                 if not bottom_order:
                     bottom_order = range(len(bottom))
                 symbol_string += "%s = %s(name='%s', *[%s] %s)\n" % \
-                                 (name, type_string, name, ','.join([mapping[bottom[x]] for x in bottom_order]), param_string)
+                                 (name, type_string, name, ','.join([mapping[bottom[x]] for x in bottom_order]),
+                                  param_string)
                 if layer.type == 'Concat' and layer.concat_param.axis == 2:
-                    symbol_string += "%s = mx.symbol.Reshape(data=%s, shape=(0, -1, 4), name='%s')\n" %\
-                        (name, name, name)
+                    symbol_string += "%s = mx.symbol.Reshape(data=%s, shape=(0, -1, 4), name='%s')\n" % \
+                                     (name, name, name)
         for j in range(len(layer.top)):
             mapping[layer.top[j]] = name
         output_name = name
     return symbol_string, output_name, input_dim
+
 
 def convert_symbol(prototxt_fname):
     """Convert caffe model definition into Symbol
@@ -374,11 +381,12 @@ def convert_symbol(prototxt_fname):
         Input shape
     """
     sym, output_name, input_dim = _parse_proto(prototxt_fname)
-    exec(sym)                   # pylint: disable=exec-used
+    exec (sym)  # pylint: disable=exec-used
     _locals = locals()
-    exec("ret = " + output_name, globals(), _locals)  # pylint: disable=exec-used
+    exec ("ret = " + output_name, globals(), _locals)  # pylint: disable=exec-used
     ret = _locals['ret']
     return ret, input_dim
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -389,6 +397,7 @@ def main():
 
     sym, _ = convert_symbol(args.prototxt)
     sym.save(args.output)
+
 
 if __name__ == '__main__':
     main()

@@ -20,6 +20,7 @@ import mxnet as mx
 from mxnet.ndarray import NDArray, zeros, clip, sqrt
 from mxnet.random import normal
 
+
 @mx.optimizer.register
 class speechSGD(mx.optimizer.Optimizer):
     """A very simple SGD optimizer with momentum and weight regularization.
@@ -44,6 +45,7 @@ class speechSGD(mx.optimizer.Optimizer):
     param_idx2name : dict of string/int to float, optional
         special treat weight decay in parameter ends with bias, gamma, and beta
     """
+
     def __init__(self, momentum=0.0, **kwargs):
         super(speechSGD, self).__init__(**kwargs)
         self.momentum = momentum
@@ -104,8 +106,8 @@ class speechSGD(mx.optimizer.Optimizer):
         state : NDArray or other objects returned by init_state
             The auxiliary state used in optimization.
         """
-        assert(isinstance(weight, NDArray))
-        assert(isinstance(grad, NDArray))
+        assert (isinstance(weight, NDArray))
+        assert (isinstance(grad, NDArray))
         (lr, momentum) = self._get_lr(index)
         wd = self._get_wd(index)
         self._update_count(index)
@@ -122,6 +124,3 @@ class speechSGD(mx.optimizer.Optimizer):
         else:
             assert self.momentum == 0.0
             weight[:] += -lr * (grad + self.wd * weight)
-
-
-

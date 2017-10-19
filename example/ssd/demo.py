@@ -23,6 +23,7 @@ import sys
 from detect.detector import Detector
 from symbol.symbol_factory import get_symbol
 
+
 def get_detector(net, prefix, epoch, data_shape, mean_pixels, ctx, num_class,
                  nms_thresh=0.5, force_nms=True, nms_topk=400):
     """
@@ -53,9 +54,10 @@ def get_detector(net, prefix, epoch, data_shape, mean_pixels, ctx, num_class,
         if isinstance(data_shape, tuple):
             data_shape = data_shape[0]
         net = get_symbol(net, data_shape, num_classes=num_class, nms_thresh=nms_thresh,
-            force_nms=force_nms, nms_topk=nms_topk)
+                         force_nms=force_nms, nms_topk=nms_topk)
     detector = Detector(net, prefix, epoch, data_shape, mean_pixels, ctx=ctx)
     return detector
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Single-shot detection network demo')
@@ -102,6 +104,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def parse_class_names(class_names):
     """ parse # classes and class_names if applicable """
     if len(class_names) > 0:
@@ -117,6 +120,7 @@ def parse_class_names(class_names):
         raise RuntimeError("No valid class_name provided...")
     return class_names
 
+
 def parse_data_shape(data_shape_str):
     """Parse string to tuple or int"""
     ds = data_shape_str.strip().split(',')
@@ -127,6 +131,7 @@ def parse_data_shape(data_shape_str):
     else:
         raise ValueError("Unexpected data_shape: %s", data_shape_str)
     return data_shape
+
 
 if __name__ == '__main__':
     args = parse_args()

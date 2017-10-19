@@ -34,6 +34,7 @@ class TestDB(Imdb):
     extension : str or None
         image extension, eg. ".jpg", optional
     """
+
     def __init__(self, images, root_dir=None, extension=None):
         if not isinstance(images, list):
             images = [images]
@@ -43,7 +44,6 @@ class TestDB(Imdb):
         self.num_images = num_images
         self.root_dir = root_dir if root_dir else None
         self.extension = extension if extension else None
-
 
     def image_path_from_index(self, index):
         """

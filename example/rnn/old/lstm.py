@@ -17,12 +17,14 @@
 
 # pylint:skip-file
 import sys
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
 from collections import namedtuple
 import time
 import math
+
 LSTMState = namedtuple("LSTMState", ["c", "h"])
 LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
@@ -30,6 +32,7 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "init_states", "last_states",
                                      "seq_data", "seq_labels", "seq_outputs",
                                      "param_blocks"])
+
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
     """LSTM Cell symbol"""
@@ -64,7 +67,6 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
 # to allow this situation to work properly
 def lstm_unroll(num_lstm_layer, seq_len, input_size,
                 num_hidden, num_embed, num_label, dropout=0.):
-
     embed_weight = mx.sym.Variable("embed_weight")
     cls_weight = mx.sym.Variable("cls_weight")
     cls_bias = mx.sym.Variable("cls_bias")
@@ -78,7 +80,7 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
         state = LSTMState(c=mx.sym.Variable("l%d_init_c" % i),
                           h=mx.sym.Variable("l%d_init_h" % i))
         last_states.append(state)
-    assert(len(last_states) == num_lstm_layer)
+    assert (len(last_states) == num_lstm_layer)
 
     # embeding layer
     data = mx.sym.Variable('data')
@@ -119,33 +121,34 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
     label = mx.sym.transpose(data=label)
     label = mx.sym.Reshape(data=label, target_shape=(0,))
 
-    #label_slice = mx.sym.SliceChannel(data=label, num_outputs=seq_len)
-    #label = [label_slice[t] for t in range(seq_len)]
-    #label = mx.sym.Concat(*label, dim=0)
-    #label = mx.sym.Reshape(data=label, target_shape=(0,))
+    # label_slice = mx.sym.SliceChannel(data=label, num_outputs=seq_len)
+    # label = [label_slice[t] for t in range(seq_len)]
+    # label = mx.sym.Concat(*label, dim=0)
+    # label = mx.sym.Reshape(data=label, target_shape=(0,))
     ################################################################################
 
     sm = mx.sym.SoftmaxOutput(data=pred, label=label, name='softmax')
 
     return sm
 
+
 def lstm_inference_symbol(num_lstm_layer, input_size,
                           num_hidden, num_embed, num_label, dropout=0.):
     seqidx = 0
-    embed_weight=mx.sym.Variable("embed_weight")
+    embed_weight = mx.sym.Variable("embed_weight")
     cls_weight = mx.sym.Variable("cls_weight")
     cls_bias = mx.sym.Variable("cls_bias")
     param_cells = []
     last_states = []
     for i in range(num_lstm_layer):
-        param_cells.append(LSTMParam(i2h_weight = mx.sym.Variable("l%d_i2h_weight" % i),
-                                      i2h_bias = mx.sym.Variable("l%d_i2h_bias" % i),
-                                      h2h_weight = mx.sym.Variable("l%d_h2h_weight" % i),
-                                      h2h_bias = mx.sym.Variable("l%d_h2h_bias" % i)))
+        param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("l%d_i2h_weight" % i),
+                                     i2h_bias=mx.sym.Variable("l%d_i2h_bias" % i),
+                                     h2h_weight=mx.sym.Variable("l%d_h2h_weight" % i),
+                                     h2h_bias=mx.sym.Variable("l%d_h2h_bias" % i)))
         state = LSTMState(c=mx.sym.Variable("l%d_init_c" % i),
                           h=mx.sym.Variable("l%d_init_h" % i))
         last_states.append(state)
-    assert(len(last_states) == num_lstm_layer)
+    assert (len(last_states) == num_lstm_layer)
     data = mx.sym.Variable("data")
 
     hidden = mx.sym.Embedding(data=data,
@@ -155,8 +158,8 @@ def lstm_inference_symbol(num_lstm_layer, input_size,
                               name="embed")
     # stack LSTM
     for i in range(num_lstm_layer):
-        if i==0:
-            dp=0.
+        if i == 0:
+            dp = 0.
         else:
             dp = dropout
         next_state = lstm(num_hidden, indata=hidden,

@@ -51,17 +51,17 @@ layers = [int(i) for i in opt.num_units.split(',')]
 
 if __name__ == '__main__':
     ae_model = AutoEncoderModel(mx.cpu(0), layers, pt_dropout=0.2,
-        internal_act='relu', output_act='relu')
+                                internal_act='relu', output_act='relu')
 
     X, _ = data.get_mnist()
     train_X = X[:60000]
     val_X = X[60000:]
 
     ae_model.layerwise_pretrain(train_X, batch_size, pretrain_num_iter, 'sgd', l_rate=0.1,
-                                decay=0.0, lr_scheduler=mx.misc.FactorScheduler(20000,0.1),
+                                decay=0.0, lr_scheduler=mx.misc.FactorScheduler(20000, 0.1),
                                 print_every=print_every)
     ae_model.finetune(train_X, batch_size, finetune_num_iter, 'sgd', l_rate=0.1, decay=0.0,
-                      lr_scheduler=mx.misc.FactorScheduler(20000,0.1), print_every=print_every)
+                      lr_scheduler=mx.misc.FactorScheduler(20000, 0.1), print_every=print_every)
     ae_model.save('mnist_pt.arg')
     ae_model.load('mnist_pt.arg')
     print("Training error:", ae_model.eval(train_X))
@@ -70,6 +70,7 @@ if __name__ == '__main__':
         try:
             from matplotlib import pyplot as plt
             from model import extract_feature
+
             # sample a random image
             original_image = X[np.random.choice(X.shape[0]), :].reshape(1, 784)
             data_iter = mx.io.NDArrayIter({'data': original_image}, batch_size=1, shuffle=False,
@@ -79,7 +80,7 @@ if __name__ == '__main__':
                                                   ae_model.auxs, data_iter, 1,
                                                   ae_model.xpu).values()[0]
             print("original image")
-            plt.imshow(original_image.reshape((28,28)))
+            plt.imshow(original_image.reshape((28, 28)))
             plt.show()
             print("reconstructed image")
             plt.imshow(reconstructed_image.reshape((28, 28)))

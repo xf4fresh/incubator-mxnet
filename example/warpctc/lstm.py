@@ -17,12 +17,14 @@
 
 # pylint:skip-file
 import sys
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
 from collections import namedtuple
 import time
 import math
+
 LSTMState = namedtuple("LSTMState", ["c", "h"])
 LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
@@ -30,6 +32,7 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "init_states", "last_states",
                                      "seq_data", "seq_labels", "seq_outputs",
                                      "param_blocks"])
+
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx):
     """LSTM Cell symbol"""
@@ -67,7 +70,7 @@ def lstm_unroll(num_lstm_layer, seq_len,
         state = LSTMState(c=mx.sym.Variable("l%d_init_c" % i),
                           h=mx.sym.Variable("l%d_init_h" % i))
         last_states.append(state)
-    assert(len(last_states) == num_lstm_layer)
+    assert (len(last_states) == num_lstm_layer)
 
     # embeding layer
     data = mx.sym.Variable('data')
@@ -90,8 +93,8 @@ def lstm_unroll(num_lstm_layer, seq_len,
     pred = mx.sym.FullyConnected(data=hidden_concat, num_hidden=11)
 
     label = mx.sym.Reshape(data=label, shape=(-1,))
-    label = mx.sym.Cast(data = label, dtype = 'int32')
-    sm = mx.sym.WarpCTC(data=pred, label=label, label_length = num_label, input_length = seq_len)
+    label = mx.sym.Cast(data=label, dtype='int32')
+    sm = mx.sym.WarpCTC(data=pred, label=label, label_length=num_label, input_length=seq_len)
     return sm
 
 

@@ -17,12 +17,14 @@
 
 # pylint:skip-file
 import sys
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
 from collections import namedtuple
 import time
 import math
+
 LSTMState = namedtuple("LSTMState", ["c", "h"])
 LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
@@ -30,6 +32,7 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "init_states", "last_states", "forward_state", "backward_state",
                                      "seq_data", "seq_labels", "seq_outputs",
                                      "param_blocks"])
+
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
     """LSTM Cell symbol"""
@@ -58,22 +61,21 @@ def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
 
 
 def bi_lstm_unroll(seq_len, input_size,
-                num_hidden, num_embed, num_label, dropout=0.):
-
+                   num_hidden, num_embed, num_label, dropout=0.):
     embed_weight = mx.sym.Variable("embed_weight")
     cls_weight = mx.sym.Variable("cls_weight")
     cls_bias = mx.sym.Variable("cls_bias")
     last_states = []
-    last_states.append(LSTMState(c = mx.sym.Variable("l0_init_c"), h = mx.sym.Variable("l0_init_h")))
-    last_states.append(LSTMState(c = mx.sym.Variable("l1_init_c"), h = mx.sym.Variable("l1_init_h")))
+    last_states.append(LSTMState(c=mx.sym.Variable("l0_init_c"), h=mx.sym.Variable("l0_init_h")))
+    last_states.append(LSTMState(c=mx.sym.Variable("l1_init_c"), h=mx.sym.Variable("l1_init_h")))
     forward_param = LSTMParam(i2h_weight=mx.sym.Variable("l0_i2h_weight"),
                               i2h_bias=mx.sym.Variable("l0_i2h_bias"),
                               h2h_weight=mx.sym.Variable("l0_h2h_weight"),
                               h2h_bias=mx.sym.Variable("l0_h2h_bias"))
     backward_param = LSTMParam(i2h_weight=mx.sym.Variable("l1_i2h_weight"),
-                              i2h_bias=mx.sym.Variable("l1_i2h_bias"),
-                              h2h_weight=mx.sym.Variable("l1_h2h_weight"),
-                              h2h_bias=mx.sym.Variable("l1_h2h_bias"))
+                               i2h_bias=mx.sym.Variable("l1_i2h_bias"),
+                               h2h_weight=mx.sym.Variable("l1_h2h_weight"),
+                               h2h_bias=mx.sym.Variable("l1_h2h_bias"))
 
     # embeding layer
     data = mx.sym.Variable('data')
@@ -100,7 +102,7 @@ def bi_lstm_unroll(seq_len, input_size,
         next_state = lstm(num_hidden, indata=hidden,
                           prev_state=last_states[1],
                           param=backward_param,
-                          seqidx=k, layeridx=1,dropout=dropout)
+                          seqidx=k, layeridx=1, dropout=dropout)
         hidden = next_state.h
         last_states[1] = next_state
         backward_hidden.insert(0, hidden)
@@ -123,19 +125,19 @@ def bi_lstm_unroll(seq_len, input_size,
 def bi_lstm_inference_symbol(input_size, seq_len,
                              num_hidden, num_embed, num_label, dropout=0.):
     seqidx = 0
-    embed_weight=mx.sym.Variable("embed_weight")
+    embed_weight = mx.sym.Variable("embed_weight")
     cls_weight = mx.sym.Variable("cls_weight")
     cls_bias = mx.sym.Variable("cls_bias")
-    last_states = [LSTMState(c = mx.sym.Variable("l0_init_c"), h = mx.sym.Variable("l0_init_h")),
-                   LSTMState(c = mx.sym.Variable("l1_init_c"), h = mx.sym.Variable("l1_init_h"))]
+    last_states = [LSTMState(c=mx.sym.Variable("l0_init_c"), h=mx.sym.Variable("l0_init_h")),
+                   LSTMState(c=mx.sym.Variable("l1_init_c"), h=mx.sym.Variable("l1_init_h"))]
     forward_param = LSTMParam(i2h_weight=mx.sym.Variable("l0_i2h_weight"),
                               i2h_bias=mx.sym.Variable("l0_i2h_bias"),
                               h2h_weight=mx.sym.Variable("l0_h2h_weight"),
                               h2h_bias=mx.sym.Variable("l0_h2h_bias"))
     backward_param = LSTMParam(i2h_weight=mx.sym.Variable("l1_i2h_weight"),
-                              i2h_bias=mx.sym.Variable("l1_i2h_bias"),
-                              h2h_weight=mx.sym.Variable("l1_h2h_weight"),
-                              h2h_bias=mx.sym.Variable("l1_h2h_bias"))
+                               i2h_bias=mx.sym.Variable("l1_i2h_bias"),
+                               h2h_weight=mx.sym.Variable("l1_h2h_weight"),
+                               h2h_bias=mx.sym.Variable("l1_h2h_bias"))
     data = mx.sym.Variable("data")
     embed = mx.sym.Embedding(data=data, input_dim=input_size,
                              weight=embed_weight, output_dim=num_embed, name='embed')
@@ -173,4 +175,3 @@ def bi_lstm_inference_symbol(input_size, seq_len,
         output.append(state.c)
         output.append(state.h)
     return mx.sym.Group(output)
-

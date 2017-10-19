@@ -28,6 +28,7 @@ from evaluate.eval_metric import MApMetric, VOC07MApMetric
 from config.config import cfg
 from symbol.symbol_factory import get_symbol_train
 
+
 def convert_pretrained(name, args):
     """
     Special operations need to be made due to name inconsistance, etc
@@ -44,6 +45,7 @@ def convert_pretrained(name, args):
     processed arguments as dict
     """
     return args
+
 
 def get_lr_scheduler(learning_rate, lr_refactor_step, lr_refactor_ratio,
                      num_example, batch_size, begin_epoch):
@@ -86,6 +88,7 @@ def get_lr_scheduler(learning_rate, lr_refactor_step, lr_refactor_ratio,
             return (lr, None)
         lr_scheduler = mx.lr_scheduler.MultiFactorScheduler(step=steps, factor=lr_refactor_ratio)
         return (lr, lr_scheduler)
+
 
 def train_net(net, train_path, num_classes, batch_size,
               data_shape, mean_pixels, resume, finetune, pretrained, epoch,
@@ -185,17 +188,17 @@ def train_net(net, train_path, num_classes, batch_size,
     assert len(mean_pixels) == 3, "must provide all RGB mean values"
 
     train_iter = DetRecordIter(train_path, batch_size, data_shape, mean_pixels=mean_pixels,
-        label_pad_width=label_pad_width, path_imglist=train_list, **cfg.train)
+                               label_pad_width=label_pad_width, path_imglist=train_list, **cfg.train)
 
     if val_path:
         val_iter = DetRecordIter(val_path, batch_size, data_shape, mean_pixels=mean_pixels,
-            label_pad_width=label_pad_width, path_imglist=val_list, **cfg.valid)
+                                 label_pad_width=label_pad_width, path_imglist=val_list, **cfg.valid)
     else:
         val_iter = None
 
     # load symbol
     net = get_symbol_train(net, data_shape[1], num_classes=num_classes,
-        nms_thresh=nms_thresh, force_suppress=force_suppress, nms_topk=nms_topk)
+                           nms_thresh=nms_thresh, force_suppress=force_suppress, nms_topk=nms_topk)
 
     # define layers with fixed weight/bias
     if freeze_layer_pattern.strip():
@@ -205,28 +208,28 @@ def train_net(net, train_path, num_classes, batch_size,
         fixed_param_names = None
 
     # load pretrained or resume from previous state
-    ctx_str = '('+ ','.join([str(c) for c in ctx]) + ')'
+    ctx_str = '(' + ','.join([str(c) for c in ctx]) + ')'
     if resume > 0:
         logger.info("Resume training with {} from epoch {}"
-            .format(ctx_str, resume))
+                    .format(ctx_str, resume))
         _, args, auxs = mx.model.load_checkpoint(prefix, resume)
         begin_epoch = resume
     elif finetune > 0:
         logger.info("Start finetuning with {} from epoch {}"
-            .format(ctx_str, finetune))
+                    .format(ctx_str, finetune))
         _, args, auxs = mx.model.load_checkpoint(prefix, finetune)
         begin_epoch = finetune
         # the prediction convolution layers name starts with relu, so it's fine
         fixed_param_names = [name for name in net.list_arguments() \
-            if name.startswith('conv')]
+                             if name.startswith('conv')]
     elif pretrained:
         logger.info("Start training with {} from pretrained model {}"
-            .format(ctx_str, pretrained))
+                    .format(ctx_str, pretrained))
         _, args, auxs = mx.model.load_checkpoint(pretrained, epoch)
         args = convert_pretrained(pretrained, args)
     else:
         logger.info("Experimental: start training from scratch with {}"
-            .format(ctx_str))
+                    .format(ctx_str))
         args = None
         auxs = None
         fixed_param_names = None
@@ -243,13 +246,13 @@ def train_net(net, train_path, num_classes, batch_size,
     batch_end_callback = mx.callback.Speedometer(train_iter.batch_size, frequent=frequent)
     epoch_end_callback = mx.callback.do_checkpoint(prefix)
     learning_rate, lr_scheduler = get_lr_scheduler(learning_rate, lr_refactor_step,
-        lr_refactor_ratio, num_example, batch_size, begin_epoch)
-    optimizer_params={'learning_rate':learning_rate,
-                      'momentum':momentum,
-                      'wd':weight_decay,
-                      'lr_scheduler':lr_scheduler,
-                      'clip_gradient':None,
-                      'rescale_grad': 1.0 / len(ctx) if len(ctx) > 0 else 1.0 }
+                                                   lr_refactor_ratio, num_example, batch_size, begin_epoch)
+    optimizer_params = {'learning_rate': learning_rate,
+                        'momentum': momentum,
+                        'wd': weight_decay,
+                        'lr_scheduler': lr_scheduler,
+                        'clip_gradient': None,
+                        'rescale_grad': 1.0 / len(ctx) if len(ctx) > 0 else 1.0}
     monitor = mx.mon.Monitor(iter_monitor, pattern=monitor_pattern) if iter_monitor > 0 else None
 
     # run fit net, every n epochs we run evaluation network to get mAP

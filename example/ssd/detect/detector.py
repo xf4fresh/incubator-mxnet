@@ -22,6 +22,7 @@ from timeit import default_timer as timer
 from dataset.testdb import TestDB
 from dataset.iterator import DetIter
 
+
 class Detector(object):
     """
     SSD detector which hold a detection network and wraps detection API
@@ -43,6 +44,7 @@ class Detector(object):
     ctx : mx.ctx
         device to use, if None, use mx.cpu() as default context
     """
+
     def __init__(self, symbol, model_prefix, epoch, data_shape, mean_pixels, \
                  batch_size=1, ctx=None):
         self.ctx = ctx
@@ -156,9 +158,9 @@ class Detector(object):
                     if classes and len(classes) > cls_id:
                         class_name = classes[cls_id]
                     plt.gca().text(xmin, ymin - 2,
-                                    '{:s} {:.3f}'.format(class_name, score),
-                                    bbox=dict(facecolor=colors[cls_id], alpha=0.5),
-                                    fontsize=12, color='white')
+                                   '{:s} {:.3f}'.format(class_name, score),
+                                   bbox=dict(facecolor=colors[cls_id], alpha=0.5),
+                                   fontsize=12, color='white')
         plt.show()
 
     def detect_and_visualize(self, im_list, root_dir=None, extension=None,

@@ -20,8 +20,8 @@ import struct
 import numpy as num
 import sys
 
-class KaldiParser(object):
 
+class KaldiParser(object):
     NO_OPEN_BRACKET = "found > before <"
     ERR_NO_CLOSE_BRACKET = "reached eof before >"
     ERR_BYTES_BEFORE_TOKEN = "found bytes before <"
@@ -30,7 +30,7 @@ class KaldiParser(object):
     def __init__(self, f):
         self.f = f
         self.binary = self.f.read(2) == '\0B'
-        assert(self.binary), "text format not supported yet"
+        assert (self.binary), "text format not supported yet"
         if not self.binary:
             self.f.seek(0, 0)
 
@@ -76,7 +76,7 @@ class KaldiParser(object):
 
     def read_space(self):
         b = self.f.read(1)
-        assert(b == " " or b is None)
+        assert (b == " " or b is None)
 
     # http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
     def read_basic_type(self, type):
@@ -96,50 +96,52 @@ class KaldiParser(object):
                 print("unrecognized type")
                 return None
 
-            assert(size == dsize)
+            assert (size == dsize)
             n = num.fromfile(self.f, dtype=num.dtype(dtype), count=1)
             return n[0]
 
         else:
-            assert(False), "not supported yet"
+            assert (False), "not supported yet"
 
     def read_matrix(self):
         mode = self.f.read(2)
-        #print mode
-        assert(mode == 'FM')
+        # print mode
+        assert (mode == 'FM')
         self.read_space()
 
         rows = self.read_basic_type("int")
-        #print "rows", rows
+        # print "rows", rows
         cols = self.read_basic_type("int")
-        #print "cols", cols
+        # print "cols", cols
 
         n = num.fromfile(self.f, dtype=num.dtype("<f4"), count=rows * cols)
         n = n.reshape((rows, cols))
 
-        #print n[0][0]
-        #print "-----------"
+        # print n[0][0]
+        # print "-----------"
         return n
 
     def read_vector(self):
         mode = self.f.read(2)
-        #print mode
-        assert(mode == 'FV')
+        # print mode
+        assert (mode == 'FV')
         self.read_space()
 
         length = self.read_basic_type("int")
-        #print "length", length
+        # print "length", length
 
         n = num.fromfile(self.f, dtype=num.dtype("<f4"), count=length)
-        #print n[0]
-        #print "-----------"
+        # print n[0]
+        # print "-----------"
         return n
+
 
 def fileIsBinary(filename):
     f = open(filename, "rb")
     binary = (f.read(2) == '\0B')
     f.seek(0, 0)
     return binary
+
 
 def file2nnet_binary(filename):
     f = open(filename, "rb")
@@ -166,15 +168,15 @@ def file2nnet_binary(filename):
             parser.read_basic_type("float")
         elif tok == "<maxnorm>":
             parser.read_basic_type("float")
-            layer["weights"] = parser.read_matrix().transpose()        # kaldi writes the transpose!!!!
+            layer["weights"] = parser.read_matrix().transpose()  # kaldi writes the transpose!!!!
             layer["bias"] = parser.read_vector()
         elif tok == "<sigmoid>" or tok == "<softmax>":
             layer["type"] = tok[1:-1]
             outdim1 = parser.read_basic_type("int")
             outdim2 = parser.read_basic_type("int")
-            assert(outdim1 == outdim2 and outdim2 == layer["outdim"])
+            assert (outdim1 == outdim2 and outdim2 == layer["outdim"])
         elif tok == "</nnet>":
-            #print "Done!"
+            # print "Done!"
             break
         else:
             print("unrecognized token", tok)
@@ -183,20 +185,19 @@ def file2nnet_binary(filename):
     if layer is not None:
         net += [layer]
 
-    #for layer in net:
+    # for layer in net:
     #    print layer.keys()
 
     return net
 
+
 if __name__ == '__main__':
     filename = "exp/dnn4_pretrain-dbn_dnn/nnet_6.dbn_dnn.init"
-    #filename = "/usr/users/leoliu/s5/exp/dnn4_pretrain-dbn_dnn/final.feature_transform"
+    # filename = "/usr/users/leoliu/s5/exp/dnn4_pretrain-dbn_dnn/final.feature_transform"
     print(filename)
 
     print("isBinary:", fileIsBinary(filename))
     a = file2nnet_binary(filename)
-
-
 
     """
     while True:

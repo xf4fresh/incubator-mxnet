@@ -20,6 +20,7 @@ import logging
 import os
 import time
 
+
 def _get_lr_scheduler(args, kv):
     if 'lr_factor' not in args or args.lr_factor >= 1:
         return (args.lr, None)
@@ -33,10 +34,11 @@ def _get_lr_scheduler(args, kv):
         if begin_epoch >= s:
             lr *= args.lr_factor
     if lr != args.lr:
-        logging.info('Adjust learning rate to %e for epoch %d' %(lr, begin_epoch))
+        logging.info('Adjust learning rate to %e for epoch %d' % (lr, begin_epoch))
 
-    steps = [epoch_size * (x-begin_epoch) for x in step_epochs if x-begin_epoch > 0]
+    steps = [epoch_size * (x - begin_epoch) for x in step_epochs if x - begin_epoch > 0]
     return (lr, mx.lr_scheduler.MultiFactorScheduler(step=steps, factor=args.lr_factor))
+
 
 def _load_model(args, rank=0):
     if 'load_epoch' not in args or args.load_epoch is None:
@@ -50,6 +52,7 @@ def _load_model(args, rank=0):
     logging.info('Loaded model %s_%04d.params', model_prefix, args.load_epoch)
     return (sym, arg_params, aux_params)
 
+
 def _save_model(args, rank=0):
     if args.model_prefix is None:
         return None
@@ -58,6 +61,7 @@ def _save_model(args, rank=0):
         os.mkdir(dst_dir)
     return mx.callback.do_checkpoint(args.model_prefix if rank == 0 else "%s-%d" % (
         args.model_prefix, rank))
+
 
 def add_fit_args(parser):
     """
@@ -105,6 +109,7 @@ def add_fit_args(parser):
                        help='precision: float32 or float16')
     return train
 
+
 def fit(args, network, data_loader, **kwargs):
     """
     train a model
@@ -127,13 +132,12 @@ def fit(args, network, data_loader, **kwargs):
         for i, batch in enumerate(train):
             for j in batch.data:
                 j.wait_to_read()
-            if (i+1) % args.disp_batches == 0:
+            if (i + 1) % args.disp_batches == 0:
                 logging.info('Batch [%d]\tSpeed: %.2f samples/sec' % (
-                    i, args.disp_batches*args.batch_size/(time.time()-tic)))
+                    i, args.disp_batches * args.batch_size / (time.time() - tic)))
                 tic = time.time()
 
         return
-
 
     # load model
     if 'arg_params' in kwargs and 'aux_params' in kwargs:
@@ -156,16 +160,16 @@ def fit(args, network, data_loader, **kwargs):
 
     # create model
     model = mx.mod.Module(
-        context       = devs,
-        symbol        = network
+        context=devs,
+        symbol=network
     )
 
-    lr_scheduler  = lr_scheduler
+    lr_scheduler = lr_scheduler
     optimizer_params = {
-            'learning_rate': lr,
-            'wd' : args.wd,
-            'lr_scheduler': lr_scheduler,
-            'multi_precision': True}
+        'learning_rate': lr,
+        'wd': args.wd,
+        'lr_scheduler': lr_scheduler,
+        'multi_precision': True}
 
     # Only a limited number of optimizers have 'momentum' property
     has_momentum = {'sgd', 'dcasgd', 'nag'}
@@ -195,17 +199,17 @@ def fit(args, network, data_loader, **kwargs):
 
     # run
     model.fit(train,
-        begin_epoch        = args.load_epoch if args.load_epoch else 0,
-        num_epoch          = args.num_epochs,
-        eval_data          = val,
-        eval_metric        = eval_metrics,
-        kvstore            = kv,
-        optimizer          = args.optimizer,
-        optimizer_params   = optimizer_params,
-        initializer        = initializer,
-        arg_params         = arg_params,
-        aux_params         = aux_params,
-        batch_end_callback = batch_end_callbacks,
-        epoch_end_callback = checkpoint,
-        allow_missing      = True,
-        monitor            = monitor)
+              begin_epoch=args.load_epoch if args.load_epoch else 0,
+              num_epoch=args.num_epochs,
+              eval_data=val,
+              eval_metric=eval_metrics,
+              kvstore=kv,
+              optimizer=args.optimizer,
+              optimizer_params=optimizer_params,
+              initializer=initializer,
+              arg_params=arg_params,
+              aux_params=aux_params,
+              batch_end_callback=batch_end_callbacks,
+              epoch_end_callback=checkpoint,
+              allow_missing=True,
+              monitor=monitor)

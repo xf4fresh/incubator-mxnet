@@ -16,5 +16,6 @@
 # under the License.
 
 import os
+
 if not os.path.exists('images'):
-        os.system('svn checkout https://github.com/dmlc/web-data/trunk/mxnet/example/style_transfer/images')
+    os.system('svn checkout https://github.com/dmlc/web-data/trunk/mxnet/example/style_transfer/images')

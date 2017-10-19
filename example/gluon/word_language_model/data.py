@@ -19,6 +19,7 @@ import os
 import numpy as np
 import mxnet as mx
 
+
 class Dictionary(object):
     def __init__(self):
         self.word2idx = {}

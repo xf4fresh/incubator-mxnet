@@ -30,15 +30,16 @@ from utils import get_data
 
 import sd_module
 
+
 def get_conv(
-    name,
-    data,
-    num_filter,
-    kernel,
-    stride,
-    pad,
-    with_relu,
-    bn_momentum
+        name,
+        data,
+        num_filter,
+        kernel,
+        stride,
+        pad,
+        with_relu,
+        bn_momentum
 ):
     conv = mx.symbol.Convolution(
         name=name,
@@ -64,6 +65,7 @@ def get_conv(
         mx.symbol.Activation(name=name + '_relu', data=bn, act_type='relu')
         if with_relu else bn
     )
+
 
 death_rates = [0.3]
 contexts = [mx.context.cpu()]
@@ -116,7 +118,6 @@ softmax = mx.sym.SoftmaxOutput(pred, name='softmax')
 mod_seq.add(mx.mod.Module(softmax, context=contexts, data_names=['data_final']),
             auto_wiring=True, take_labels=True)
 
-
 n_epoch = 2
 batch_size = 100
 
@@ -124,15 +125,15 @@ basedir = os.path.dirname(__file__)
 get_data.get_mnist(os.path.join(basedir, "data"))
 
 train = mx.io.MNISTIter(
-        image=os.path.join(basedir, "data", "train-images-idx3-ubyte"),
-        label=os.path.join(basedir, "data", "train-labels-idx1-ubyte"),
-        input_shape=(1, 28, 28), flat=False,
-        batch_size=batch_size, shuffle=True, silent=False, seed=10)
+    image=os.path.join(basedir, "data", "train-images-idx3-ubyte"),
+    label=os.path.join(basedir, "data", "train-labels-idx1-ubyte"),
+    input_shape=(1, 28, 28), flat=False,
+    batch_size=batch_size, shuffle=True, silent=False, seed=10)
 val = mx.io.MNISTIter(
-        image=os.path.join(basedir, "data", "t10k-images-idx3-ubyte"),
-        label=os.path.join(basedir, "data", "t10k-labels-idx1-ubyte"),
-        input_shape=(1, 28, 28), flat=False,
-        batch_size=batch_size, shuffle=True, silent=False)
+    image=os.path.join(basedir, "data", "t10k-images-idx3-ubyte"),
+    label=os.path.join(basedir, "data", "t10k-labels-idx1-ubyte"),
+    input_shape=(1, 28, 28), flat=False,
+    batch_size=batch_size, shuffle=True, silent=False)
 
 logging.basicConfig(level=logging.DEBUG)
 mod_seq.fit(train, val, optimizer_params={'learning_rate': 0.01, 'momentum': 0.9},

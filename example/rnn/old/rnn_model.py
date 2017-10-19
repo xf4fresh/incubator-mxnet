@@ -19,6 +19,7 @@
 # pylint: disable=C0111,too-many-arguments,too-many-instance-attributes,too-many-locals,redefined-outer-name,fixme
 # pylint: disable=superfluous-parens, no-member, invalid-name
 import sys
+
 sys.path.insert(0, "../../python")
 import numpy as np
 import mxnet as mx
@@ -45,8 +46,8 @@ class LSTMInferenceModel(object):
                                          dropout)
 
         batch_size = 1
-        init_c = [('l%d_init_c'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
-        init_h = [('l%d_init_h'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+        init_c = [('l%d_init_c' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+        init_h = [('l%d_init_h' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
         data_shape = [("data", (batch_size,))]
 
         input_shapes = dict(init_c + init_h + data_shape)

@@ -18,6 +18,7 @@
 # pylint:skip-file
 import logging
 import sys, random, time
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
@@ -25,13 +26,15 @@ from collections import namedtuple
 
 ToyModel = namedtuple("ToyModel", ["ex", "symbol", "param_blocks"])
 
+
 def get_net(vocab_size):
     data = mx.sym.Variable('data')
     label = mx.sym.Variable('label')
-    pred = mx.sym.FullyConnected(data = data, num_hidden = 100)
-    pred = mx.sym.FullyConnected(data = pred, num_hidden = vocab_size)
-    sm = mx.sym.SoftmaxOutput(data = pred, label = label)
+    pred = mx.sym.FullyConnected(data=data, num_hidden=100)
+    pred = mx.sym.FullyConnected(data=pred, num_hidden=vocab_size)
+    sm = mx.sym.SoftmaxOutput(data=pred, label=label)
     return sm
+
 
 class SimpleBatch(object):
     def __init__(self, data_names, data, label_names, label):
@@ -89,6 +92,7 @@ class DataIter(mx.io.DataIter):
     def reset(self):
         pass
 
+
 if __name__ == '__main__':
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
@@ -103,14 +107,13 @@ if __name__ == '__main__':
 
     network = get_net(vocab_size)
     devs = mx.cpu()
-    model = mx.model.FeedForward(ctx = devs,
-                                 symbol = network,
-                                 num_epoch = 20,
-                                 learning_rate = 0.03,
-                                 momentum = 0.9,
-                                 wd = 0.0000,
+    model = mx.model.FeedForward(ctx=devs,
+                                 symbol=network,
+                                 num_epoch=20,
+                                 learning_rate=0.03,
+                                 momentum=0.9,
+                                 wd=0.0000,
                                  initializer=mx.init.Xavier(factor_type="in", magnitude=2.34))
 
-    model.fit(X = data_train, eval_data = data_test,
-              batch_end_callback = mx.callback.Speedometer(batch_size, 50),)
-
+    model.fit(X=data_train, eval_data=data_test,
+              batch_end_callback=mx.callback.Speedometer(batch_size, 50), )

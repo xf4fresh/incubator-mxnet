@@ -151,7 +151,7 @@ if __name__ == '__main__':
     else:
         preprocessors = [Atari8080Preprocessor() for _ in range(args.num_envs)]
     for i, env in enumerate(envs):
-        env.seed(i+args.seed)
+        env.seed(i + args.seed)
 
     agent = Agent(preprocessors[0].obs_size, envs[0].action_space.n,
                   config=config)

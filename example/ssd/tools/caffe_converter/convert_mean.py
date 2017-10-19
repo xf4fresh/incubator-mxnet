@@ -22,6 +22,7 @@ import mxnet as mx
 import numpy as np
 import caffe_parser
 
+
 def convert_mean(binaryproto_fname, output=None):
     """Convert caffe mean
 
@@ -52,12 +53,14 @@ def convert_mean(binaryproto_fname, output=None):
         mx.nd.save(output, {"mean_image": nd})
     return nd
 
+
 def main():
     parser = argparse.ArgumentParser(description='Convert caffe mean')
     parser.add_argument('binaryproto_fname', help='Filename of the mean')
     parser.add_argument('output', help='The name of the output file')
     args = parser.parse_args()
     convert_mean(args.binaryproto_fname, args.output)
+
 
 if __name__ == '__main__':
     main()

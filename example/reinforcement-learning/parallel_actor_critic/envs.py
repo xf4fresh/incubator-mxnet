@@ -21,7 +21,7 @@ import numpy as np
 class Atari8080Preprocessor(object):
     def __init__(self):
         self.prev = None
-        self.obs_size = 80*80
+        self.obs_size = 80 * 80
 
     def reset(self):
         self.prev = None

@@ -134,4 +134,3 @@ def expand_bbox_regression_targets(bbox_targets_data, num_classes):
         bbox_targets[index, start:end] = bbox_targets_data[index, 1:]
         bbox_weights[index, start:end] = config.TRAIN.BBOX_WEIGHTS
     return bbox_targets, bbox_weights
-

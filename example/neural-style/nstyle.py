@@ -20,20 +20,22 @@ import mxnet as mx
 import numpy as np
 import importlib
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 import argparse
 from collections import namedtuple
 from skimage import io, transform
 from skimage.restoration import denoise_tv_chambolle
 
-CallbackData = namedtuple('CallbackData', field_names=['eps','epoch','img','filename'])
+CallbackData = namedtuple('CallbackData', field_names=['eps', 'epoch', 'img', 'filename'])
+
 
 def get_args(arglist=None):
     parser = argparse.ArgumentParser(description='neural style')
 
     parser.add_argument('--model', type=str, default='vgg19',
-                        choices = ['vgg'],
-                        help = 'the pretrained model to use')
+                        choices=['vgg'],
+                        help='the pretrained model to use')
     parser.add_argument('--content-image', type=str, default='input/IMG_4343.jpg',
                         help='the content image')
     parser.add_argument('--style-image', type=str, default='input/starry_night.jpg',
@@ -88,6 +90,7 @@ def PreprocessContentImage(path, long_edge):
     logging.info("resize the content image to %s", new_size)
     return np.resize(sample, (1, 3, sample.shape[1], sample.shape[2]))
 
+
 def PreprocessStyleImage(path, shape):
     img = io.imread(path)
     resized_img = transform.resize(img, (shape[2], shape[3]))
@@ -100,6 +103,7 @@ def PreprocessStyleImage(path, shape):
     sample[2, :] -= 103.939
     return np.resize(sample, (1, 3, sample.shape[1], sample.shape[2]))
 
+
 def PostprocessImage(img):
     img = np.resize(img, (3, img.shape[2], img.shape[3]))
     img[0, :] += 123.68
@@ -110,12 +114,14 @@ def PostprocessImage(img):
     img = np.clip(img, 0, 255)
     return img.astype('uint8')
 
+
 def SaveImage(img, filename, remove_noise=0.):
     logging.info('save output to %s', filename)
     out = PostprocessImage(img)
     if remove_noise != 0.0:
         out = denoise_tv_chambolle(out, weight=remove_noise, multichannel=True)
     io.imsave(filename, out)
+
 
 def style_gram_symbol(input_size, style):
     _, output_shapes, _ = style.infer_shape(data=(1, 3, input_size[0], input_size[1]))
@@ -140,6 +146,7 @@ def get_loss(gram, content):
     content_loss = mx.sym.sum(mx.sym.square(cvar - content))
     return mx.sym.Group(gram_loss), content_loss
 
+
 def get_tv_grad_executor(img, ctx, tv_weight):
     """create TV gradient executor with input binded on img
     """
@@ -152,8 +159,8 @@ def get_tv_grad_executor(img, ctx, tv_weight):
     out = mx.sym.Concat(*[
         mx.sym.Convolution(data=channels[i], weight=skernel,
                            num_filter=1,
-                           kernel=(3, 3), pad=(1,1),
-                           no_bias=True, stride=(1,1))
+                           kernel=(3, 3), pad=(1, 1),
+                           no_bias=True, stride=(1, 1))
         for i in range(nchannel)])
     kernel = mx.nd.array(np.array([[0, -1, 0],
                                    [-1, 4, -1],
@@ -163,6 +170,7 @@ def get_tv_grad_executor(img, ctx, tv_weight):
     out = out * tv_weight
     return out.bind(ctx, args={"img": img,
                                "kernel": kernel})
+
 
 def train_nstyle(args, callback=None):
     """Train a neural style network.
@@ -178,7 +186,7 @@ def train_nstyle(args, callback=None):
     # model
     Executor = namedtuple('Executor', ['executor', 'data', 'data_grad'])
 
-    model_module =  importlib.import_module('model_' + args.model)
+    model_module = importlib.import_module('model_' + args.model)
     style, content = model_module.get_symbol()
     gram, gscale = style_gram_symbol(size, style)
     model_executor = model_module.get_executor(gram, content, size, dev)
@@ -214,13 +222,13 @@ def train_nstyle(args, callback=None):
     img[:] = mx.rnd.uniform(-0.1, 0.1, img.shape)
 
     lr = mx.lr_scheduler.FactorScheduler(step=args.lr_sched_delay,
-            factor=args.lr_sched_factor)
+                                         factor=args.lr_sched_factor)
 
     optimizer = mx.optimizer.NAG(
-        learning_rate = args.lr,
-        wd = 0.0001,
+        learning_rate=args.lr,
+        wd=0.0001,
         momentum=0.95,
-        lr_scheduler = lr)
+        lr_scheduler=lr)
     optim_state = optimizer.create_state(0, img)
 
     logging.info('start training arguments %s', args)
@@ -255,10 +263,10 @@ def train_nstyle(args, callback=None):
         if callback:
             cbdata = {
                 'eps': eps,
-                'epoch': e+1,
+                'epoch': e + 1,
             }
-        if (e+1) % args.save_epochs == 0:
-            outfn = args.output_dir + 'e_'+str(e+1)+'.jpg'
+        if (e + 1) % args.save_epochs == 0:
+            outfn = args.output_dir + 'e_' + str(e + 1) + '.jpg'
             npimg = new_img.asnumpy()
             SaveImage(npimg, outfn, args.remove_noise)
             if callback:
@@ -274,4 +282,3 @@ def train_nstyle(args, callback=None):
 if __name__ == "__main__":
     args = get_args()
     train_nstyle(args)
-

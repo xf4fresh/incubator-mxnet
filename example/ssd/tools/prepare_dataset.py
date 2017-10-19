@@ -19,11 +19,13 @@ from __future__ import print_function
 import sys, os
 import argparse
 import subprocess
+
 curr_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(curr_path, '..'))
 from dataset.pascal_voc import PascalVoc
 from dataset.mscoco import Coco
 from dataset.concat_db import ConcatDB
+
 
 def load_pascal(image_set, year, devkit_path, shuffle=False):
     """
@@ -64,6 +66,7 @@ def load_pascal(image_set, year, devkit_path, shuffle=False):
     else:
         return imdbs[0]
 
+
 def load_coco(image_set, dirname, shuffle=False):
     """
     wrapper function for loading ms coco dataset
@@ -88,6 +91,7 @@ def load_coco(image_set, dirname, shuffle=False):
     else:
         return imdbs[0]
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Prepare lists for dataset')
     parser.add_argument('--dataset', dest='dataset', help='dataset to use',
@@ -107,6 +111,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 if __name__ == '__main__':
     args = parse_args()
     if args.dataset == 'pascal':
@@ -123,8 +128,8 @@ if __name__ == '__main__':
     print("List file {} generated...".format(args.target))
 
     subprocess.check_call(["python",
-        os.path.join(curr_path, "../../../tools/im2rec.py"),
-        os.path.abspath(args.target), os.path.abspath(args.root_path),
-        "--shuffle", str(int(args.shuffle)), "--pack-label", "1"])
+                           os.path.join(curr_path, "../../../tools/im2rec.py"),
+                           os.path.abspath(args.target), os.path.abspath(args.root_path),
+                           "--shuffle", str(int(args.shuffle)), "--pack-label", "1"])
 
     print("Record file {} generated...".format(args.target.split('.')[0] + '.rec'))

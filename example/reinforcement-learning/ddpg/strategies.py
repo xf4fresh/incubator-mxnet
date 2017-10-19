@@ -24,11 +24,9 @@ class BaseStrategy(object):
     """
 
     def get_action(self, obs, policy):
-
         raise NotImplementedError
 
     def reset(self):
-
         pass
 
 
@@ -39,7 +37,6 @@ class OUStrategy(BaseStrategy):
     """
 
     def __init__(self, env_spec, mu=0, theta=0.15, sigma=0.3):
-
         self.mu = mu
         self.theta = theta
         self.sigma = sigma
@@ -47,7 +44,6 @@ class OUStrategy(BaseStrategy):
         self.state = np.ones(self.action_space.flat_dim) * self.mu
 
     def evolve_state(self):
-
         x = self.state
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
         self.state = x + dx
@@ -55,13 +51,11 @@ class OUStrategy(BaseStrategy):
         return self.state
 
     def reset(self):
-
         self.state = np.ones(self.action_space.flat_dim) * self.mu
 
     def get_action(self, obs, policy):
-
         # get_action accepts a 2D tensor with one row
-    	obs = obs.reshape((1, -1))
+        obs = obs.reshape((1, -1))
         action = policy.get_action(obs)
         increment = self.evolve_state()
 
@@ -94,5 +88,3 @@ if __name__ == "__main__":
 
     plt.plot(states)
     plt.show()
-
-

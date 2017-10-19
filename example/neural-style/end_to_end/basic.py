@@ -16,18 +16,20 @@
 # under the License.
 
 import sys
+
 sys.path.insert(0, "../../mxnet/python/")
 
 import mxnet as mx
 import numpy as np
 import model_vgg19 as vgg
 
+
 class PretrainedInit(mx.init.Initializer):
     def __init__(self, prefix, params, verbose=False):
         self.prefix_len = len(prefix) + 1
         self.verbose = verbose
-        self.arg_params = {k : v for k, v in params.items() if k.startswith("arg:")}
-        self.aux_params = {k : v for k, v in params.items() if k.startswith("aux:")}
+        self.arg_params = {k: v for k, v in params.items() if k.startswith("arg:")}
+        self.aux_params = {k: v for k, v in params.items() if k.startswith("aux:")}
         self.arg_names = set([k[4:] for k in self.arg_params.keys()])
         self.aux_names = set([k[4:] for k in self.aux_params.keys()])
 
@@ -69,6 +71,7 @@ def get_loss(gram, content):
     content_loss = mx.sym.sum(mx.sym.square(cvar - content))
     return mx.sym.Group(gram_loss), content_loss
 
+
 def get_content_module(prefix, dshape, ctx, params):
     sym = vgg.get_vgg_symbol(prefix, True)
     init = PretrainedInit(prefix, params)
@@ -80,8 +83,9 @@ def get_content_module(prefix, dshape, ctx, params):
     mod.init_params(init)
     return mod
 
+
 def get_style_module(prefix, dshape, ctx, params):
-    input_shape = {"%s_data" % prefix : dshape}
+    input_shape = {"%s_data" % prefix: dshape}
     style, content = vgg.get_vgg_symbol(prefix)
     gram, gscale = style_gram_symbol(input_shape, style)
     init = PretrainedInit(prefix, params)
@@ -95,7 +99,7 @@ def get_style_module(prefix, dshape, ctx, params):
 
 
 def get_loss_module(prefix, dshape, ctx, params):
-    input_shape = {"%s_data" % prefix : dshape}
+    input_shape = {"%s_data" % prefix: dshape}
     style, content = vgg.get_vgg_symbol(prefix)
     gram, gscale = style_gram_symbol(input_shape, style)
     style_loss, content_loss = get_loss(gram, content)
@@ -112,10 +116,10 @@ def get_loss_module(prefix, dshape, ctx, params):
     return mod, gscale
 
 
-
 if __name__ == "__main__":
     from data_processing import PreprocessContentImage, PreprocessStyleImage
     from data_processing import PostprocessImage, SaveImage
+
     vgg_params = mx.nd.load("./model/vgg19.params")
     style_weight = 2
     content_weight = 10
@@ -136,7 +140,7 @@ if __name__ == "__main__":
     del content_mod
     # loss
     mod, gscale = get_loss_module("loss", dshape, ctx, vgg_params)
-    extra_args = {"target_gram_%d" % i : style_array[i] for i in range(len(style_array))}
+    extra_args = {"target_gram_%d" % i: style_array[i] for i in range(len(style_array))}
     extra_args["target_content"] = content_array
     mod.set_params(extra_args, {}, True, True)
     grad_array = []
@@ -148,16 +152,17 @@ if __name__ == "__main__":
     img[:] = mx.rnd.uniform(-0.1, 0.1, img.shape)
     lr = mx.lr_scheduler.FactorScheduler(step=80, factor=.9)
     optimizer = mx.optimizer.SGD(
-            learning_rate = 0.001,
-            wd = 0.0005,
-            momentum=0.9,
-            lr_scheduler = lr)
+        learning_rate=0.001,
+        wd=0.0005,
+        momentum=0.9,
+        lr_scheduler=lr)
     optim_state = optimizer.create_state(0, img)
 
     old_img = img.copyto(ctx)
     clip_norm = 1 * np.prod(img.shape)
 
     import logging
+
     for e in range(800):
         mod.forward(mx.io.DataBatch([img], [0]), is_train=True)
         mod.backward(grad_array)
@@ -172,8 +177,7 @@ if __name__ == "__main__":
         eps = (mx.nd.norm(old_img - new_img) / mx.nd.norm(new_img)).asscalar()
         old_img = new_img.copyto(ctx)
         logging.info('epoch %d, relative change %f', e, eps)
-        if (e+1) % 50 == 0:
-            SaveImage(new_img.asnumpy(), 'output/tmp_'+str(e+1)+'.jpg')
+        if (e + 1) % 50 == 0:
+            SaveImage(new_img.asnumpy(), 'output/tmp_' + str(e + 1) + '.jpg')
 
     SaveImage(new_img.asnumpy(), "./output/out.jpg")
-

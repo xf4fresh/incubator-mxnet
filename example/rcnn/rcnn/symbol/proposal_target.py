@@ -99,7 +99,7 @@ class ProposalTargetProp(mx.operator.CustomOpProp):
         gt_boxes_shape = in_shape[1]
 
         output_rois_shape = (self._batch_rois, 5)
-        label_shape = (self._batch_rois, )
+        label_shape = (self._batch_rois,)
         bbox_target_shape = (self._batch_rois, self._num_classes * 4)
         bbox_weight_shape = (self._batch_rois, self._num_classes * 4)
 

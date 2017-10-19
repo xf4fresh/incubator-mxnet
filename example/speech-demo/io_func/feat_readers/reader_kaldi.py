@@ -34,39 +34,42 @@ c_float = ctypes.c_float
 
 kaldi = ctypes.cdll.LoadLibrary("libkaldi-python-wrap.so")  # this needs to be in LD_LIBRARY_PATH
 
+
 def decl(f, restype, argtypes):
     f.restype = restype
     if argtypes is not None and len(argtypes) != 0:
         f.argtypes = argtypes
 
-decl(kaldi.SBFMReader_new,          c_void_p,   [])
-decl(kaldi.SBFMReader_new_char,     c_void_p,   [c_char_p])
-decl(kaldi.SBFMReader_Open,         c_int,      [c_void_p, c_char_p])
-decl(kaldi.SBFMReader_Done,         c_int,      [c_void_p])
-decl(kaldi.SBFMReader_Key,          c_char_p,   [c_void_p])
-decl(kaldi.SBFMReader_FreeCurrent,  None,       [c_void_p])
-decl(kaldi.SBFMReader_Value,        c_void_p,   [c_void_p])
-decl(kaldi.SBFMReader_Next,         None,       [c_void_p])
-decl(kaldi.SBFMReader_IsOpen,       c_int,      [c_void_p])
-decl(kaldi.SBFMReader_Close,        c_int,      [c_void_p])
-decl(kaldi.SBFMReader_Delete,       None,       [c_void_p])
 
-decl(kaldi.MatrixF_NumRows,     c_int,       [c_void_p])
-decl(kaldi.MatrixF_NumCols,     c_int,       [c_void_p])
-decl(kaldi.MatrixF_Stride,      c_int,       [c_void_p])
-decl(kaldi.MatrixF_cpy_to_ptr,  None,        [c_void_p, c_float_ptr, c_int])
-decl(kaldi.MatrixF_SizeInBytes, c_int,       [c_void_p])
-decl(kaldi.MatrixF_Data,        c_float_ptr, [c_void_p])
+decl(kaldi.SBFMReader_new, c_void_p, [])
+decl(kaldi.SBFMReader_new_char, c_void_p, [c_char_p])
+decl(kaldi.SBFMReader_Open, c_int, [c_void_p, c_char_p])
+decl(kaldi.SBFMReader_Done, c_int, [c_void_p])
+decl(kaldi.SBFMReader_Key, c_char_p, [c_void_p])
+decl(kaldi.SBFMReader_FreeCurrent, None, [c_void_p])
+decl(kaldi.SBFMReader_Value, c_void_p, [c_void_p])
+decl(kaldi.SBFMReader_Next, None, [c_void_p])
+decl(kaldi.SBFMReader_IsOpen, c_int, [c_void_p])
+decl(kaldi.SBFMReader_Close, c_int, [c_void_p])
+decl(kaldi.SBFMReader_Delete, None, [c_void_p])
 
-decl(kaldi.RAPReader_new_char,      c_void_p,   [c_char_p])
-decl(kaldi.RAPReader_HasKey,        c_int,      [c_void_p, c_char_p])
-decl(kaldi.RAPReader_Value,         c_int_ptr,  [c_void_p, c_char_p])
-decl(kaldi.RAPReader_DeleteValue,   None,       [c_void_p, c_int_ptr])
-decl(kaldi.RAPReader_Delete,        None,       [c_void_p])
+decl(kaldi.MatrixF_NumRows, c_int, [c_void_p])
+decl(kaldi.MatrixF_NumCols, c_int, [c_void_p])
+decl(kaldi.MatrixF_Stride, c_int, [c_void_p])
+decl(kaldi.MatrixF_cpy_to_ptr, None, [c_void_p, c_float_ptr, c_int])
+decl(kaldi.MatrixF_SizeInBytes, c_int, [c_void_p])
+decl(kaldi.MatrixF_Data, c_float_ptr, [c_void_p])
 
-decl(kaldi.Nnet_new,            c_void_p,   [c_char_p, c_float, c_int])
-decl(kaldi.Nnet_Feedforward,    c_void_p,   [c_void_p, c_void_p])
-decl(kaldi.Nnet_Delete,         None,       [c_void_p])
+decl(kaldi.RAPReader_new_char, c_void_p, [c_char_p])
+decl(kaldi.RAPReader_HasKey, c_int, [c_void_p, c_char_p])
+decl(kaldi.RAPReader_Value, c_int_ptr, [c_void_p, c_char_p])
+decl(kaldi.RAPReader_DeleteValue, None, [c_void_p, c_int_ptr])
+decl(kaldi.RAPReader_Delete, None, [c_void_p])
+
+decl(kaldi.Nnet_new, c_void_p, [c_char_p, c_float, c_int])
+decl(kaldi.Nnet_Feedforward, c_void_p, [c_void_p, c_void_p])
+decl(kaldi.Nnet_Delete, None, [c_void_p])
+
 
 class kaldiReader(BaseReader):
     def __init__(self, featureFile, labelFile, byteOrder=None):
@@ -104,7 +107,7 @@ class kaldiReader(BaseReader):
         utt = kaldi.SBFMReader_Key(self.feature_reader)
         self.utt_id = utt
 
-        #return numpy.ones((256, 819)).astype('float32'), numpy.ones(256).astype('int32')
+        # return numpy.ones((256, 819)).astype('float32'), numpy.ones(256).astype('int32')
 
         feat_value = kaldi.SBFMReader_Value(self.feature_reader)
         if self.nnet_transf is not None:
@@ -121,12 +124,12 @@ class kaldiReader(BaseReader):
         # Can't use memmove/memcpy because arrays are strided
         # Use special function -_-
 
-        feats = numpy.empty((feat_rows,feat_cols), dtype=numpy.float32)
+        feats = numpy.empty((feat_rows, feat_cols), dtype=numpy.float32)
         # MUST: cast Python int to pointer, otherwise C interprets as 32-bit
         # if you print the pointer value before casting, you might see weird value before seg fault
         # casting fixes that
         feats_numpy_ptr = ctypes.cast(feats.ctypes.data, c_float_ptr)
-        kaldi.MatrixF_cpy_to_ptr(feat_value, feats_numpy_ptr, feats.strides[0]/4)
+        kaldi.MatrixF_cpy_to_ptr(feat_value, feats_numpy_ptr, feats.strides[0] / 4)
 
         if self.targets_rspecifier is not None:
             if kaldi.RAPReader_HasKey(self.targets_reader, utt):
@@ -145,8 +148,8 @@ class kaldiReader(BaseReader):
 
         kaldi.SBFMReader_Next(self.feature_reader)
 
-        #print "FEATS:", feats[0:5][0:5]
-        #print "TGTS :", tgts[0:5]
+        # print "FEATS:", feats[0:5][0:5]
+        # print "TGTS :", tgts[0:5]
 
         return feats, tgts
 

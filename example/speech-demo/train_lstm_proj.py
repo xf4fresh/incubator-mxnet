@@ -17,6 +17,7 @@
 
 import re
 import sys
+
 sys.path.insert(0, "../../python")
 import time
 import logging
@@ -29,10 +30,10 @@ from lstm_proj import lstm_unroll
 from io_util import BucketSentenceIter, TruncatedSentenceIter, DataReadStream
 from config_util import parse_args, get_checkpoint_path, parse_contexts
 
-
 # some constants
 METHOD_BUCKETING = 'bucketing'
 METHOD_TBPTT = 'truncated-bptt'
+
 
 def prepare_data(args):
     batch_size = args.config.getint('train', 'batch_size')
@@ -40,11 +41,11 @@ def prepare_data(args):
     num_hidden_proj = args.config.getint('arch', 'num_hidden_proj')
     num_lstm_layer = args.config.getint('arch', 'num_lstm_layer')
 
-    init_c = [('l%d_init_c'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+    init_c = [('l%d_init_c' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
     if num_hidden_proj > 0:
-        init_h = [('l%d_init_h'%l, (batch_size, num_hidden_proj)) for l in range(num_lstm_layer)]
+        init_h = [('l%d_init_h' % l, (batch_size, num_hidden_proj)) for l in range(num_lstm_layer)]
     else:
-        init_h = [('l%d_init_h'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+        init_h = [('l%d_init_h' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
 
     init_states = init_c + init_h
 
@@ -54,23 +55,24 @@ def prepare_data(args):
     feat_dim = args.config.getint('data', 'xdim')
 
     train_data_args = {
-            "gpu_chunk": 32768,
-            "lst_file": file_train,
-            "file_format": file_format,
-            "separate_lines": True
-            }
+        "gpu_chunk": 32768,
+        "lst_file": file_train,
+        "file_format": file_format,
+        "separate_lines": True
+    }
 
     dev_data_args = {
-            "gpu_chunk": 32768,
-            "lst_file": file_dev,
-            "file_format": file_format,
-            "separate_lines": True
-            }
+        "gpu_chunk": 32768,
+        "lst_file": file_dev,
+        "file_format": file_format,
+        "separate_lines": True
+    }
 
     train_sets = DataReadStream(train_data_args, feat_dim)
     dev_sets = DataReadStream(dev_data_args, feat_dim)
 
     return (init_states, train_sets, dev_sets)
+
 
 def CrossEntropy(labels, preds):
     labels = labels.reshape((-1,))
@@ -83,7 +85,8 @@ def CrossEntropy(labels, preds):
         if label > 0:
             loss += -np.log(max(1e-10, preds[i][int(label)]))
             num_inst += 1
-    return loss , num_inst
+    return loss, num_inst
+
 
 def Acc_exclude_padding(labels, preds):
     labels = labels.reshape((-1,))
@@ -101,10 +104,12 @@ def Acc_exclude_padding(labels, preds):
         num_inst += len(pred_label_real)
     return sum_metric, num_inst
 
+
 class SimpleLRScheduler(mx.lr_scheduler.LRScheduler):
     """A simple lr schedule that simply return `dynamic_lr`. We will set `dynamic_lr`
     dynamically based on performance on the validation set.
     """
+
     def __init__(self, dynamic_lr, effective_sample_count=1, momentum=0.9, optimizer="sgd"):
         super(SimpleLRScheduler, self).__init__()
         self.dynamic_lr = dynamic_lr
@@ -118,6 +123,7 @@ class SimpleLRScheduler(mx.lr_scheduler.LRScheduler):
         else:
             return self.dynamic_lr / self.effective_sample_count
 
+
 def score_with_state_forwarding(module, eval_data, eval_metric):
     eval_data.reset()
     eval_metric.reset()
@@ -130,7 +136,7 @@ def score_with_state_forwarding(module, eval_data, eval_metric):
         outputs = module.get_outputs()
         # outputs[0] is softmax, 1:end are states
         for i in range(1, len(outputs)):
-            outputs[i].copyto(eval_data.init_state_arrays[i-1])
+            outputs[i].copyto(eval_data.init_state_arrays[i - 1])
 
 
 def get_initializer(args):
@@ -181,21 +187,22 @@ def do_training(training_method, args, module, data_train, data_val):
     def reset_optimizer():
         if optimizer == "sgd" or optimizer == "speechSGD":
             module.init_optimizer(kvstore='device',
-                              optimizer=args.config.get('train', 'optimizer'),
-                              optimizer_params={'lr_scheduler': lr_scheduler,
-                                                'momentum': momentum,
-                                                'rescale_grad': 1.0,
-                                                'clip_gradient': clip_gradient,
-                                                'wd': weight_decay},
-                              force_init=True)
+                                  optimizer=args.config.get('train', 'optimizer'),
+                                  optimizer_params={'lr_scheduler': lr_scheduler,
+                                                    'momentum': momentum,
+                                                    'rescale_grad': 1.0,
+                                                    'clip_gradient': clip_gradient,
+                                                    'wd': weight_decay},
+                                  force_init=True)
         else:
             module.init_optimizer(kvstore='device',
-                              optimizer=args.config.get('train', 'optimizer'),
-                              optimizer_params={'lr_scheduler': lr_scheduler,
-                                                'rescale_grad': 1.0,
-                                                'clip_gradient': clip_gradient,
-                                                'wd': weight_decay},
-                              force_init=True)
+                                  optimizer=args.config.get('train', 'optimizer'),
+                                  optimizer_params={'lr_scheduler': lr_scheduler,
+                                                    'rescale_grad': 1.0,
+                                                    'clip_gradient': clip_gradient,
+                                                    'wd': weight_decay},
+                                  force_init=True)
+
     reset_optimizer()
 
     while True:
@@ -205,10 +212,11 @@ def do_training(training_method, args, module, data_train, data_val):
         for nbatch, data_batch in enumerate(data_train):
             if training_method == METHOD_TBPTT:
                 lr_scheduler.effective_sample_count = data_train.batch_size * truncate_len
-                lr_scheduler.momentum = np.power(np.power(momentum, 1.0/(data_train.batch_size * truncate_len)), data_batch.effective_sample_count)
+                lr_scheduler.momentum = np.power(np.power(momentum, 1.0 / (data_train.batch_size * truncate_len)),
+                                                 data_batch.effective_sample_count)
             else:
                 if data_batch.effective_sample_count is not None:
-                    lr_scheduler.effective_sample_count = 1#data_batch.effective_sample_count
+                    lr_scheduler.effective_sample_count = 1  # data_batch.effective_sample_count
 
             module.forward_backward(data_batch)
             module.update()
@@ -225,12 +233,12 @@ def do_training(training_method, args, module, data_train, data_val):
                 outputs = module.get_outputs()
                 # outputs[0] is softmax, 1:end are states
                 for i in range(1, len(outputs)):
-                    outputs[i].copyto(data_train.init_state_arrays[i-1])
+                    outputs[i].copyto(data_train.init_state_arrays[i - 1])
 
         for name, val in eval_metric.get_name_value():
             logging.info('Epoch[%d] Train-%s=%f', n_epoch, name, val)
         toc = time.time()
-        logging.info('Epoch[%d] Time cost=%.3f', n_epoch, toc-tic)
+        logging.info('Epoch[%d] Time cost=%.3f', n_epoch, toc - tic)
 
         data_train.reset()
 
@@ -268,6 +276,7 @@ def do_training(training_method, args, module, data_train, data_val):
         if n_epoch == num_epoch:
             break
 
+
 if __name__ == '__main__':
     args = parse_args()
     args.config.write(sys.stdout)
@@ -291,7 +300,8 @@ if __name__ == '__main__':
         buckets = args.config.get('train', 'buckets')
         buckets = list(map(int, re.split(r'\W+', buckets)))
         data_train = BucketSentenceIter(train_sets, buckets, batch_size, init_states, feat_dim=feat_dim)
-        data_val   = BucketSentenceIter(dev_sets, buckets, batch_size, init_states, feat_dim=feat_dim)
+        data_val = BucketSentenceIter(dev_sets, buckets, batch_size, init_states, feat_dim=feat_dim)
+
 
         def sym_gen(seq_len):
             sym = lstm_unroll(num_lstm_layer, seq_len, feat_dim, num_hidden=num_hidden,
@@ -299,6 +309,7 @@ if __name__ == '__main__':
             data_names = ['data'] + state_names
             label_names = ['softmax_label']
             return (sym, data_names, label_names)
+
 
         module = mx.mod.BucketingModule(sym_gen,
                                         default_bucket_key=data_train.default_bucket_key,
@@ -321,7 +332,7 @@ if __name__ == '__main__':
     else:
         raise RuntimeError('Unknown training method: %s' % training_method)
 
-    print("="*80)
+    print("=" * 80)
     print("Finished Training")
-    print("="*80)
+    print("=" * 80)
     args.config.write(sys.stdout)

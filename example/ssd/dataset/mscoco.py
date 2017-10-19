@@ -35,6 +35,7 @@ class Coco(Imdb):
         whether initially shuffle image list
 
     """
+
     def __init__(self, anno_file, image_dir, shuffle=True, names='mscoco.names'):
         assert os.path.isfile(anno_file), "Invalid annotation file: " + anno_file
         basename = os.path.splitext(os.path.basename(anno_file))[0]
@@ -42,12 +43,11 @@ class Coco(Imdb):
         self.image_dir = image_dir
 
         self.classes = self._load_class_names(names,
-            os.path.join(os.path.dirname(__file__), 'names'))
+                                              os.path.join(os.path.dirname(__file__), 'names'))
 
         self.num_classes = len(self.classes)
         self._load_all(anno_file, shuffle)
         self.num_images = len(self.image_set_index)
-
 
     def image_path_from_index(self, index):
         """

@@ -32,9 +32,9 @@ from mxnet.io import PrefetchingIter
 
 from data import ImagePairIter
 
-
 # CLI
-parser = argparse.ArgumentParser(description='Super-resolution using an efficient sub-pixel convolution neural network.')
+parser = argparse.ArgumentParser(
+    description='Super-resolution using an efficient sub-pixel convolution neural network.')
 parser.add_argument('--upscale_factor', type=int, default=3, help="super resolution upscale factor. default is 3.")
 parser.add_argument('--batch_size', type=int, default=4, help='training batch size, per device. default is 4.')
 parser.add_argument('--test_batch_size', type=int, default=100, help='test batch size')
@@ -54,6 +54,8 @@ color_flag = 0
 # get data
 dataset_path = "dataset"
 dataset_url = "http://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/BSDS300-images.tgz"
+
+
 def get_dataset(prefetch=False):
     image_path = os.path.join(dataset_path, "BSDS300/images")
 
@@ -84,6 +86,7 @@ def get_dataset(prefetch=False):
 
     return [PrefetchingIter(i) for i in iters] if prefetch else iters
 
+
 train_data, val_data = get_dataset()
 
 mx.random.seed(opt.seed)
@@ -93,7 +96,7 @@ ctx = [mx.gpu(0)] if opt.use_gpu else [mx.cpu()]
 # define model
 def _rearrange(raw, F, upscale_factor):
     # (N, C * r^2, H, W) -> (N, C, r^2, H, W)
-    splitted = F.reshape(raw, shape=(0, -4, -1, upscale_factor**2, 0, 0))
+    splitted = F.reshape(raw, shape=(0, -4, -1, upscale_factor ** 2, 0, 0))
     # (N, C, r^2, H, W) -> (N, C, r, r, H, W)
     unflatten = F.reshape(splitted, shape=(0, 0, -4, upscale_factor, upscale_factor, 0, 0))
     # (N, C, r, r, H, W) -> (N, C, H, r, W, r)
@@ -118,8 +121,10 @@ class SuperResolutionNet(gluon.Block):
         x = F.Activation(self.conv3(x), act_type='relu')
         return _rearrange(self.conv4(x), F, self.upscale_factor)
 
+
 net = SuperResolutionNet(upscale_factor)
 metric = mx.metric.MSE()
+
 
 def test(ctx):
     val_data.reset()
@@ -133,10 +138,10 @@ def test(ctx):
         for x in data:
             outputs.append(net(x))
         metric.update(label, outputs)
-        avg_psnr += 10 * math.log10(1/metric.get()[1])
+        avg_psnr += 10 * math.log10(1 / metric.get()[1])
         metric.reset()
     avg_psnr /= batches
-    print('validation avg psnr: %f'%avg_psnr)
+    print('validation avg psnr: %f' % avg_psnr)
 
 
 def train(epoch, ctx):
@@ -165,10 +170,11 @@ def train(epoch, ctx):
 
         name, acc = metric.get()
         metric.reset()
-        print('training mse at epoch %d: %s=%f'%(i, name, acc))
+        print('training mse at epoch %d: %s=%f' % (i, name, acc))
         test(ctx)
 
     net.save_params('superres.params')
+
 
 def resolve(ctx):
     from PIL import Image
@@ -187,6 +193,7 @@ def resolve(ctx):
     out_img = Image.merge('YCbCr', [out_img_y, out_img_cb, out_img_cr]).convert('RGB')
 
     out_img.save('resolved.png')
+
 
 if opt.resolve_img:
     resolve(ctx)

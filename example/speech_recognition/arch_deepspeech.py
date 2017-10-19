@@ -1,4 +1,3 @@
-
 """
 architecture file for deep speech 2 model
 """

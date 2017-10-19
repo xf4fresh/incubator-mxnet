@@ -38,7 +38,7 @@ from mxnet import ndarray as nd
 train = pd.read_csv("train.csv")
 test = pd.read_csv("test.csv")
 all_X = pd.concat((train.loc[:, 'MSSubClass':'SaleCondition'],
-                      test.loc[:, 'MSSubClass':'SaleCondition']))
+                   test.loc[:, 'MSSubClass':'SaleCondition']))
 
 # Get all the numerical features and apply standardization.
 numeric_feas = all_X.dtypes[all_X.dtypes != "object"].index
@@ -63,12 +63,14 @@ y_train.reshape((num_train, 1))
 X_test = nd.array(X_test)
 square_loss = gluon.loss.L2Loss()
 
+
 def get_rmse_log(net, X_train, y_train):
     """Gets root mse between the logarithms of the prediction and the truth."""
     num_train = X_train.shape[0]
     clipped_preds = nd.clip(net(X_train), 1, float('inf'))
     return np.sqrt(2 * nd.sum(square_loss(
         nd.log(clipped_preds), nd.log(y_train))).asscalar() / num_train)
+
 
 def get_net():
     """Gets a neural network. Better results are obtained with modifications."""
@@ -78,6 +80,7 @@ def get_net():
         net.add(gluon.nn.Dense(1))
     net.initialize()
     return net
+
 
 def train(net, X_train, y_train, epochs, verbose_epoch, learning_rate,
           weight_decay, batch_size):
@@ -100,6 +103,7 @@ def train(net, X_train, y_train, epochs, verbose_epoch, learning_rate,
         if epoch > verbose_epoch:
             print("Epoch %d, train loss: %f" % (epoch, avg_loss))
     return avg_loss
+
 
 def k_fold_cross_valid(k, epochs, verbose_epoch, X_train, y_train,
                        learning_rate, weight_decay, batch_size):
@@ -134,6 +138,7 @@ def k_fold_cross_valid(k, epochs, verbose_epoch, X_train, y_train,
         test_loss_sum += test_loss
     return train_loss_sum / k, test_loss_sum / k
 
+
 # The sets of parameters. Better results are obtained with modifications.
 # These parameters can be fine-tuned with k-fold cross-validation.
 k = 5
@@ -149,16 +154,18 @@ train_loss, test_loss = \
 print("%d-fold validation: Avg train loss: %f, Avg test loss: %f" %
       (k, train_loss, test_loss))
 
+
 def learn(epochs, verbose_epoch, X_train, y_train, test, learning_rate,
           weight_decay, batch_size):
     """Trains the model and predicts on the test data set."""
     net = get_net()
     _ = train(net, X_train, y_train, epochs, verbose_epoch, learning_rate,
-                 weight_decay, batch_size)
+              weight_decay, batch_size)
     preds = net(X_test).asnumpy()
     test['SalePrice'] = pd.Series(preds.reshape(1, -1)[0])
     submission = pd.concat([test['Id'], test['SalePrice']], axis=1)
     submission.to_csv('submission.csv', index=False)
+
 
 learn(epochs, verbose_epoch, X_train, y_train, test, learning_rate,
       weight_decay, batch_size)

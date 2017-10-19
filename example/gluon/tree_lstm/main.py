@@ -18,6 +18,7 @@
 # This example is inspired by https://github.com/dasguptar/treelstm.pytorch
 import argparse, cPickle, math, os, random
 import logging
+
 logging.basicConfig(level=logging.INFO)
 import numpy as np
 from tqdm import tqdm
@@ -72,7 +73,7 @@ if os.path.exists('dataset.cPickle'):
 else:
     root_dir = opt.data
     segments = ['train', 'dev', 'test']
-    token_files = [os.path.join(root_dir, seg, '%s.toks'%tok)
+    token_files = [os.path.join(root_dir, seg, '%s.toks' % tok)
                    for tok in ['a', 'b']
                    for seg in segments]
 
@@ -94,20 +95,23 @@ net = SimilarityTreeLSTM(sim_hidden_size, rnn_hidden_size, vocab.size, vocab.emb
 # use pearson correlation and mean-square error for evaluation
 metric = mx.metric.create(['pearsonr', 'mse'])
 
+
 def to_target(x):
     target = np.zeros((1, num_classes))
     ceil = int(math.ceil(x))
     floor = int(math.floor(x))
-    if ceil==floor:
-        target[0][floor-1] = 1
+    if ceil == floor:
+        target[0][floor - 1] = 1
     else:
-        target[0][floor-1] = ceil - x
-        target[0][ceil-1] = x - floor
+        target[0][floor - 1] = ceil - x
+        target[0][ceil - 1] = x - floor
     return mx.nd.array(target)
+
 
 def to_score(x):
     levels = mx.nd.arange(1, 6, ctx=x.context)
-    return [mx.nd.sum(levels*mx.nd.exp(x), axis=1).reshape((-1,1))]
+    return [mx.nd.sum(levels * mx.nd.exp(x), axis=1).reshape((-1, 1))]
+
 
 # when evaluating in validation mode, check and see if pearson-r is improved
 # if so, checkpoint and run evaluation on test dataset
@@ -116,7 +120,7 @@ def test(ctx, data_iter, best, mode='validation', num_iter=-1):
     batches = len(data_iter)
     data_iter.set_context(ctx[0])
     preds = []
-    labels = [mx.nd.array(data_iter.labels, ctx=ctx[0]).reshape((-1,1))]
+    labels = [mx.nd.array(data_iter.labels, ctx=ctx[0]).reshape((-1, 1))]
     for _ in tqdm(range(batches), desc='Testing in {} mode'.format(mode)):
         l_tree, l_sent, r_tree, r_sent, label = data_iter.next()
         z = net(mx.nd, l_sent, r_sent, l_tree, r_tree)
@@ -127,7 +131,7 @@ def test(ctx, data_iter, best, mode='validation', num_iter=-1):
     names, values = metric.get()
     metric.reset()
     for name, acc in zip(names, values):
-        logging.info(mode+' acc: %s=%f'%(name, acc))
+        logging.info(mode + ' acc: %s=%f' % (name, acc))
         if name == 'pearsonr':
             test_r = acc
     if mode == 'validation' and num_iter >= 0:
@@ -140,7 +144,6 @@ def test(ctx, data_iter, best, mode='validation', num_iter=-1):
 
 
 def train(epoch, ctx, train_data, dev_data):
-
     # initialization with context
     if isinstance(ctx, mx.Context):
         ctx = [ctx]
@@ -159,7 +162,7 @@ def train(epoch, ctx, train_data, dev_data):
         num_batches = len(train_data)
         # collect predictions and labels for evaluation metrics
         preds = []
-        labels = [mx.nd.array(train_data.labels, ctx=ctx[0]).reshape((-1,1))]
+        labels = [mx.nd.array(train_data.labels, ctx=ctx[0]).reshape((-1, 1))]
         for j in tqdm(range(num_batches), desc='Training epoch {}'.format(i)):
             # get next batch
             l_tree, l_sent, r_tree, r_sent, label = train_data.next()
@@ -173,7 +176,7 @@ def train(epoch, ctx, train_data, dev_data):
                 loss.backward()
                 preds.append(z)
             # update weight after every batch_size samples
-            if (j+1) % batch_size == 0:
+            if (j + 1) % batch_size == 0:
                 trainer.step(batch_size)
 
         # translate log-probability to scores, and evaluate
@@ -182,7 +185,8 @@ def train(epoch, ctx, train_data, dev_data):
         names, values = metric.get()
         metric.reset()
         for name, acc in zip(names, values):
-            logging.info('training acc at epoch %d: %s=%f'%(i, name, acc))
+            logging.info('training acc at epoch %d: %s=%f' % (i, name, acc))
         best_r = test(ctx, dev_data, best_r, num_iter=i)
+
 
 train(opt.epochs, context, train_iter, dev_iter)

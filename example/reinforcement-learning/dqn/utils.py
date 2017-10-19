@@ -28,6 +28,7 @@ import ast
 import inspect
 import collections
 import numbers
+
 try:
     import cPickle as pickle
 except:
@@ -36,7 +37,6 @@ from collections import namedtuple, OrderedDict
 import time
 import mxnet as mx
 import mxnet.ndarray as nd
-
 
 _ctx = mx.cpu()
 _numpy_rng = numpy.random.RandomState(123456)
@@ -67,14 +67,14 @@ def logging_config(name=None, level=logging.DEBUG, console_level=logging.DEBUG):
     if not os.path.exists(folder):
         os.makedirs(folder)
     logpath = os.path.join(folder, name + ".log")
-    print("All Logs will be saved to %s"  %logpath)
+    print("All Logs will be saved to %s" % logpath)
     logging.root.setLevel(level)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logfile = logging.FileHandler(logpath)
     logfile.setLevel(level)
     logfile.setFormatter(formatter)
     logging.root.addHandler(logfile)
-    #TODO Update logging patterns in other files
+    # TODO Update logging patterns in other files
     logconsole = logging.StreamHandler()
     logconsole.setLevel(console_level)
     logconsole.setFormatter(formatter)
@@ -120,7 +120,7 @@ def safe_eval(expr):
 
 def norm_clipping(params_grad, threshold):
     assert isinstance(params_grad, dict)
-    norm_val = numpy.sqrt(sum([nd.norm(grad).asnumpy()[0]**2 for grad in params_grad.values()]))
+    norm_val = numpy.sqrt(sum([nd.norm(grad).asnumpy()[0] ** 2 for grad in params_grad.values()]))
     # print('grad norm: %g' % norm_val)
     ratio = 1.0
     if norm_val > threshold:
@@ -210,7 +210,7 @@ def npy_softmax(x, axis=1):
 
 
 def npy_sigmoid(x):
-    return 1/(1 + numpy.exp(-x))
+    return 1 / (1 + numpy.exp(-x))
 
 
 def npy_onehot(x, num):
@@ -218,6 +218,7 @@ def npy_onehot(x, num):
     ret[numpy.arange(x.size), x.ravel()] = 1
     ret = ret.reshape(x.shape + (num,))
     return ret
+
 
 def npy_binary_entropy(prediction, target):
     assert prediction.shape == target.shape
@@ -309,9 +310,9 @@ def get_sym_list(syms, default_names=None, default_shapes=None):
     if isinstance(syms, (list, tuple)):
         if default_names is not None and len(syms) != len(default_names):
             raise ValueError("Size of symbols do not match expectation. Received %d, Expected %d. "
-                             "syms=%s, names=%s" %(len(syms), len(default_names),
-                                                   str(list(sym.name for sym in syms)),
-                                                   str(default_names)))
+                             "syms=%s, names=%s" % (len(syms), len(default_names),
+                                                    str(list(sym.name for sym in syms)),
+                                                    str(default_names)))
         return list(syms)
     else:
         if default_names is not None and len(default_names) != 1:
@@ -334,10 +335,10 @@ def get_numeric_list(values, typ, expected_len=None):
             ret = [typ(value) for value in values]
             return ret
         except(ValueError):
-            print("Need iterable with numeric elements, received: %s" %str(values))
+            print("Need iterable with numeric elements, received: %s" % str(values))
             sys.exit(1)
     else:
-        raise ValueError("Unaccepted value type, values=%s" %str(values))
+        raise ValueError("Unaccepted value type, values=%s" % str(values))
 
 
 def get_int_list(values, expected_len=None):

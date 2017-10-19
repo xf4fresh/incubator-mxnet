@@ -24,7 +24,6 @@ import mxnet as mx
 
 from bucket_io import BucketSentenceIter, default_build_vocab
 
-
 data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 
@@ -60,6 +59,7 @@ if __name__ == '__main__':
                                     vocab, buckets, batch_size, init_states)
     data_val = BucketSentenceIter(os.path.join(data_dir, 'ptb.valid.txt'),
                                   vocab, buckets, batch_size, init_states)
+
 
     def sym_gen(seq_len):
         data = mx.sym.Variable('data')
@@ -133,6 +133,7 @@ if __name__ == '__main__':
 
         return (sm, data_names, label_names)
 
+
     if len(buckets) == 1:
         mod = mx.mod.Module(*sym_gen(buckets[0]), context=contexts)
     else:
@@ -140,6 +141,7 @@ if __name__ == '__main__':
                                      context=contexts)
 
     import logging
+
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
 

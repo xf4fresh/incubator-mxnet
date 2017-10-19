@@ -28,24 +28,25 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+
 # In[2]:
 
 def get_lenet():
     """ A lenet style net, takes difference of each frame as input.
     """
     source = mx.sym.Variable("data")
-    source = (source - 128) * (1.0/128)
+    source = (source - 128) * (1.0 / 128)
     frames = mx.sym.SliceChannel(source, num_outputs=30)
-    diffs = [frames[i+1] - frames[i] for i in range(29)]
+    diffs = [frames[i + 1] - frames[i] for i in range(29)]
     source = mx.sym.Concat(*diffs)
     net = mx.sym.Convolution(source, kernel=(5, 5), num_filter=40)
     net = mx.sym.BatchNorm(net, fix_gamma=True)
     net = mx.sym.Activation(net, act_type="relu")
-    net = mx.sym.Pooling(net, pool_type="max", kernel=(2,2), stride=(2,2))
+    net = mx.sym.Pooling(net, pool_type="max", kernel=(2, 2), stride=(2, 2))
     net = mx.sym.Convolution(net, kernel=(3, 3), num_filter=40)
     net = mx.sym.BatchNorm(net, fix_gamma=True)
     net = mx.sym.Activation(net, act_type="relu")
-    net = mx.sym.Pooling(net, pool_type="max", kernel=(2,2), stride=(2,2))
+    net = mx.sym.Pooling(net, pool_type="max", kernel=(2, 2), stride=(2, 2))
     # first fullc
     flatten = mx.symbol.Flatten(net)
     flatten = mx.symbol.Dropout(flatten)
@@ -53,6 +54,7 @@ def get_lenet():
     # Name the final layer as softmax so it auto matches the naming of data iterator
     # Otherwise we can also change the provide_data in the data iter
     return mx.symbol.LogisticRegressionOutput(data=fc1, name='softmax')
+
 
 def CRPS(label, pred):
     """ Custom evaluation metric on CRPS.
@@ -72,23 +74,24 @@ def encode_label(label_data):
     systole = label_data[:, 1]
     diastole = label_data[:, 2]
     systole_encode = np.array([
-            (x < np.arange(600)) for x in systole
-        ], dtype=np.uint8)
+        (x < np.arange(600)) for x in systole
+    ], dtype=np.uint8)
     diastole_encode = np.array([
-            (x < np.arange(600)) for x in diastole
-        ], dtype=np.uint8)
+        (x < np.arange(600)) for x in diastole
+    ], dtype=np.uint8)
     return systole_encode, diastole_encode
+
 
 def encode_csv(label_csv, systole_csv, diastole_csv):
     systole_encode, diastole_encode = encode_label(np.loadtxt(label_csv, delimiter=","))
     np.savetxt(systole_csv, systole_encode, delimiter=",", fmt="%g")
     np.savetxt(diastole_csv, diastole_encode, delimiter=",", fmt="%g")
 
+
 # Write encoded label into the target csv
 # We use CSV so that not all data need to sit into memory
 # You can also use inmemory numpy array if your machine is large enough
 encode_csv("./train-label.csv", "./train-systole.csv", "./train-diastole.csv")
-
 
 # # Training the systole net
 
@@ -105,21 +108,19 @@ data_validate = mx.io.CSVIter(data_csv="./validate-64x64-data.csv", data_shape=(
                               batch_size=1)
 
 systole_model = mx.model.FeedForward(ctx=devs,
-        symbol             = network,
-        num_epoch          = 65,
-        learning_rate      = 0.001,
-        wd                 = 0.00001,
-        momentum           = 0.9)
+                                     symbol=network,
+                                     num_epoch=65,
+                                     learning_rate=0.001,
+                                     wd=0.00001,
+                                     momentum=0.9)
 
-systole_model.fit(X=data_train, eval_metric = mx.metric.np(CRPS))
-
+systole_model.fit(X=data_train, eval_metric=mx.metric.np(CRPS))
 
 # # Predict systole
 
 # In[5]:
 
 systole_prob = systole_model.predict(data_validate)
-
 
 # # Training the diastole net
 
@@ -133,14 +134,13 @@ data_train = mx.io.CSVIter(data_csv="./train-64x64-data.csv", data_shape=(30, 64
                            batch_size=batch_size)
 
 diastole_model = mx.model.FeedForward(ctx=devs,
-        symbol             = network,
-        num_epoch          = 65,
-        learning_rate      = 0.001,
-        wd                 = 0.00001,
-        momentum           = 0.9)
+                                      symbol=network,
+                                      num_epoch=65,
+                                      learning_rate=0.001,
+                                      wd=0.00001,
+                                      momentum=0.9)
 
-diastole_model.fit(X=data_train, eval_metric = mx.metric.np(CRPS))
-
+diastole_model.fit(X=data_train, eval_metric=mx.metric.np(CRPS))
 
 # # Predict diastole
 
@@ -159,7 +159,7 @@ def accumulate_result(validate_lst, prob):
     size = prob.shape[0]
     fi = csv.reader(open(validate_lst))
     for i in range(size):
-        line = fi.__next__() # Python2: line = fi.next()
+        line = fi.__next__()  # Python2: line = fi.next()
         idx = int(line[0])
         if idx not in cnt_result:
             cnt_result[idx] = 0.
@@ -186,6 +186,8 @@ def doHist(data):
         h[j:] += 1
     h /= len(data)
     return h
+
+
 train_csv = np.genfromtxt("./train-label.csv", delimiter=',')
 hSystole = doHist(train_csv[:, 1])
 hDiastole = doHist(train_csv[:, 2])
@@ -207,13 +209,12 @@ def submission_helper(pred):
     return p
 
 
-
 # In[12]:
 
 fi = csv.reader(open("data/sample_submission_validate.csv"))
 f = open("submission.csv", "w")
 fo = csv.writer(f, lineterminator='\n')
-fo.writerow(fi.__next__()) # Python2: fo.writerow(fi.next())
+fo.writerow(fi.__next__())  # Python2: fo.writerow(fi.next())
 for line in fi:
     idx = line[0]
     key, target = idx.split('_')

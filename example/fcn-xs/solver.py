@@ -27,6 +27,8 @@ from mxnet import metric
 
 # Parameter to pass to batch_end_callback
 BatchEndParam = namedtuple('BatchEndParams', ['epoch', 'nbatch', 'eval_metric'])
+
+
 class Solver(object):
     def __init__(self, symbol, ctx=None,
                  begin_epoch=0, num_epoch=None,
@@ -63,11 +65,11 @@ class Solver(object):
         else:
             self.grad_params = None
         aux_names = self.symbol.list_auxiliary_states()
-        self.aux_params = {k : nd.zeros(s) for k, s in zip(aux_names, aux_shapes)}
+        self.aux_params = {k: nd.zeros(s) for k, s in zip(aux_names, aux_shapes)}
         data_name = train_data.data_name
         label_name = train_data.label_name
         input_names = [data_name, label_name]
-        self.optimizer = opt.create(self.optimizer, rescale_grad=(1.0/train_data.get_batch_size()), **(self.kwargs))
+        self.optimizer = opt.create(self.optimizer, rescale_grad=(1.0 / train_data.get_batch_size()), **(self.kwargs))
         self.updater = get_updater(self.optimizer)
         eval_metric = metric.create(eval_metric)
         # begin training
@@ -80,15 +82,16 @@ class Solver(object):
                 label_shape = data[label_name].shape
                 self.arg_params[data_name] = mx.nd.array(data[data_name], self.ctx)
                 self.arg_params[label_name] = mx.nd.array(data[label_name].reshape(label_shape[0], \
-                    label_shape[1]*label_shape[2]), self.ctx)
+                                                                                   label_shape[1] * label_shape[2]),
+                                                          self.ctx)
                 output_names = self.symbol.list_outputs()
                 self.exector = self.symbol.bind(self.ctx, self.arg_params,
-                                args_grad=self.grad_params,
-                                grad_req=grad_req,
-                                aux_states=self.aux_params)
+                                                args_grad=self.grad_params,
+                                                grad_req=grad_req,
+                                                aux_states=self.aux_params)
                 assert len(self.symbol.list_arguments()) == len(self.exector.grad_arrays)
                 update_dict = {name: nd for name, nd in zip(self.symbol.list_arguments(), \
-                    self.exector.grad_arrays) if nd is not None}
+                                                            self.exector.grad_arrays) if nd is not None}
                 output_dict = {}
                 output_buff = {}
                 for key, arr in zip(self.symbol.list_outputs(), self.exector.outputs):
@@ -102,9 +105,10 @@ class Solver(object):
                     if key != "bigscore_weight":
                         self.updater(key, arr, self.arg_params[key])
                 pred_shape = self.exector.outputs[0].shape
-                label = mx.nd.array(data[label_name].reshape(label_shape[0], label_shape[1]*label_shape[2]))
+                label = mx.nd.array(data[label_name].reshape(label_shape[0], label_shape[1] * label_shape[2]))
                 pred = mx.nd.array(output_buff["softmax_output"].asnumpy().reshape(pred_shape[0], \
-                    pred_shape[1], pred_shape[2]*pred_shape[3]))
+                                                                                   pred_shape[1],
+                                                                                   pred_shape[2] * pred_shape[3]))
                 eval_metric.update([label], [pred])
                 self.exector.outputs[0].wait_to_read()
                 batch_end_params = BatchEndParam(epoch=epoch, nbatch=nbatch, eval_metric=eval_metric)
@@ -124,19 +128,20 @@ class Solver(object):
                     label_shape = data[label_name].shape
                     self.arg_params[data_name] = mx.nd.array(data[data_name], self.ctx)
                     self.arg_params[label_name] = mx.nd.array(data[label_name].reshape(label_shape[0], \
-                        label_shape[1]*label_shape[2]), self.ctx)
+                                                                                       label_shape[1] * label_shape[2]),
+                                                              self.ctx)
                     exector = self.symbol.bind(self.ctx, self.arg_params,
-                                    args_grad=self.grad_params,
-                                    grad_req=grad_req,
-                                    aux_states=self.aux_params)
+                                               args_grad=self.grad_params,
+                                               grad_req=grad_req,
+                                               aux_states=self.aux_params)
                     cpu_output_array = mx.nd.zeros(exector.outputs[0].shape)
                     exector.forward(is_train=False)
                     exector.outputs[0].copyto(cpu_output_array)
                     pred_shape = cpu_output_array.shape
                     label = mx.nd.array(data[label_name].reshape(label_shape[0], \
-                        label_shape[1]*label_shape[2]))
+                                                                 label_shape[1] * label_shape[2]))
                     pred = mx.nd.array(cpu_output_array.asnumpy().reshape(pred_shape[0], \
-                        pred_shape[1], pred_shape[2]*pred_shape[3]))
+                                                                          pred_shape[1], pred_shape[2] * pred_shape[3]))
                     eval_metric.update([label], [pred])
                     exector.outputs[0].wait_to_read()
             name, value = eval_metric.get()

@@ -22,6 +22,7 @@ import cv2
 from scipy.stats import entropy
 from utils import *
 
+
 class DQNOutput(mx.operator.CustomOp):
     def __init__(self):
         super(DQNOutput, self).__init__()

@@ -21,6 +21,7 @@ import logging
 
 log = 'Sparsity Update:\t'
 
+
 @register
 class SparseSGD(SGD):
     """The SGD optimizer with weight pruning.
@@ -67,6 +68,7 @@ class SparseSGD(SGD):
         The number of batches in each epoch.
         (The ceiling integer value of number_of_examples / batch_size)
     """
+
     def __init__(self, pruning_switch_epoch, batches_per_epoch,
                  weight_sparsity=None, bias_sparsity=None,
                  weight_threshold=None, bias_threshold=None, **kwargs):
@@ -97,7 +99,7 @@ class SparseSGD(SGD):
                 'pruning_switch_epoch and weight_sparsity_threshold should have same length'
 
         # either percentages or thresholds must be given
-        assert weight_sparsity is not None or weight_threshold is not None,\
+        assert weight_sparsity is not None or weight_threshold is not None, \
             'weight_sparsity or weight_sparsity_threshold should be given'
 
     def update_masks(self, index, weight):
@@ -134,20 +136,24 @@ class SparseSGD(SGD):
             if epoch == 1:
                 self.masks_updated = False
                 if self.weight_sparsity is not None:
-                    logging.info(log + 'bias-sparsity={}, weight-sparsity={}'.format(self.bias_sparsity[0], self.weight_sparsity[0]))
+                    logging.info(log + 'bias-sparsity={}, weight-sparsity={}'.format(self.bias_sparsity[0],
+                                                                                     self.weight_sparsity[0]))
                 else:
-                    logging.info(log + 'bias-threshold={}, weight-threshold={}'.format(self.bias_threshold[0], self.weight_threshold[0]))
+                    logging.info(log + 'bias-threshold={}, weight-threshold={}'.format(self.bias_threshold[0],
+                                                                                       self.weight_threshold[0]))
             if self.pruning_switch_epoch[0] + 1 == epoch:
                 self.masks_updated = False
                 self.pruning_switch_epoch.pop(0)
                 if self.weight_sparsity is not None:
                     self.weight_sparsity.pop(0)
                     self.bias_sparsity.pop(0)
-                    logging.info(log + 'bias-sparsity={}, weight-sparsity={}'.format(self.bias_sparsity[0], self.weight_sparsity[0]))
+                    logging.info(log + 'bias-sparsity={}, weight-sparsity={}'.format(self.bias_sparsity[0],
+                                                                                     self.weight_sparsity[0]))
                 else:
                     self.weight_threshold.pop(0)
                     self.bias_threshold.pop(0)
-                    logging.info(log + 'bias-threshold={}, weight-threshold={}'.format(self.bias_threshold[0], self.weight_threshold[0]))
+                    logging.info(log + 'bias-threshold={}, weight-threshold={}'.format(self.bias_threshold[0],
+                                                                                       self.weight_threshold[0]))
 
         # update masks if needed
         if not self.masks_updated:
@@ -174,8 +180,8 @@ class SparseSGD(SGD):
         return not self.masks_updated
 
     def update(self, index, weight, grad, state):
-        assert(isinstance(weight, NDArray))
-        assert(isinstance(grad, NDArray))
+        assert (isinstance(weight, NDArray))
+        assert (isinstance(grad, NDArray))
 
         # preprocessing for pruning
         if self.update_masks(index, weight):

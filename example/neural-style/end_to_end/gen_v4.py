@@ -21,8 +21,8 @@
 # In[1]:
 
 import sys
-sys.path.insert(0, "../mxnet/python")
 
+sys.path.insert(0, "../mxnet/python")
 
 # In[2]:
 
@@ -45,6 +45,7 @@ def Deconv(data, num_filter, kernel=(6, 6), pad=(2, 2), stride=(2, 2), out=False
     else:
         sym = mx.sym.Activation(sym, act_type="tanh")
     return sym
+
 
 # In[70]:
 
@@ -86,6 +87,7 @@ def get_generator(prefix, im_hw):
     norm_out = 0.4 * mx.sym.Concat(*[r_ch, g_ch, b_ch]) + 0.6 * data
     return norm_out
 
+
 def get_module(prefix, dshape, ctx, is_train=True):
     sym = get_generator(prefix, dshape[-2:])
     mod = mx.mod.Module(symbol=sym,
@@ -98,6 +100,3 @@ def get_module(prefix, dshape, ctx, is_train=True):
         mod.bind(data_shapes=[("%s_data" % prefix, dshape)], for_training=False, inputs_need_grad=False)
     mod.init_params(initializer=mx.init.Xavier(magnitude=2.))
     return mod
-
-
-

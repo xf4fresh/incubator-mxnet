@@ -21,8 +21,10 @@ import datetime
 
 from . import info
 
+
 def getRunDir():
     return os.path.dirname(os.path.realpath(sys.argv[0]))
+
 
 def setup_logger(logging_ini):
     if logging_ini is not None:
@@ -40,6 +42,7 @@ def setup_logger(logging_ini):
     logger.info("Cmd:    " + str(sys.argv))
     logger.info("**************************************************")
 
+
 def to_bool(obj):
     if str(obj).lower() in ["true", "1"]:
         return True
@@ -48,9 +51,11 @@ def to_bool(obj):
     else:
         raise Exception("to_bool: cannot convert to bool")
 
+
 def line_with_arg(line):
     line = line.strip()
     return line is not "" and not line.startswith("#")
+
 
 def parse_conv_spec(conv_spec, batch_size):
     # "1x29x29:100,5x5,p2x2:200,4x4,p2x2,f"
@@ -74,7 +79,7 @@ def parse_conv_spec(conv_spec, batch_size):
         filter_xy = elements[1].split('x')
         filter_size_x = int(filter_xy[0])
         filter_size_y = int(filter_xy[1])
-        pool_xy = elements[2].replace('p','').replace('P','').split('x')
+        pool_xy = elements[2].replace('p', '').replace('P', '').split('x')
         pool_size_x = int(pool_xy[0])
         pool_size_y = int(pool_xy[1])
         output_dim_x = (prev_feat_dim_x - filter_size_x + 1) / pool_size_x
@@ -92,14 +97,18 @@ def parse_conv_spec(conv_spec, batch_size):
         conv_layer_configs.append(config)
     return conv_layer_configs
 
+
 def _relu(x):
     return x * (x > 0)
+
 
 def _capped_relu(x):
     return T.minimum(x * (x > 0), 6)
 
+
 def _linear(x):
     return x * 1.0
+
 
 def parse_activation(act_str):
     print("***", act_str)
@@ -115,16 +124,19 @@ def parse_activation(act_str):
         return _linear
     return T.nnet.sigmoid
 
+
 def activation_to_txt(act_func):
     if act_func == T.nnet.sigmoid:
         return 'sigmoid'
     if act_func == T.tanh:
         return 'tanh'
 
+
 def parse_two_integers(argument_str):
     elements = argument_str.split(":")
     int_strs = elements[1].split(",")
     return int(int_strs[0]), int(int_strs[1])
+
 
 """
 Usage:
@@ -132,6 +144,8 @@ Usage:
     for line in run_command(command):
         print(line)
 """
+
+
 def run_command(command):
     fnull = open(os.devnull, 'w')
     p = subprocess.Popen(command,
@@ -139,6 +153,7 @@ def run_command(command):
                          stderr=fnull,
                          shell=True)
     return p, iter(p.stdout.readline, b'')
+
 
 def pickle_load(filename):
     f = open(filename, "rb")
@@ -152,15 +167,18 @@ def pickle_load(filename):
     f.close()
     return obj
 
+
 def pickle_save(obj, filename):
     f = open(filename + ".new", "wb")
     pickle.dump(obj, f)
     f.close()
     os.rename(filename + ".new", filename)
 
+
 def makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
 
 def kahan_add(total, carry, inc):
     cs = T.add_no_assoc(carry, inc)

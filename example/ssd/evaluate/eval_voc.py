@@ -21,6 +21,7 @@ given a pascal voc imdb, compute mAP
 from __future__ import print_function
 import numpy as np
 import os
+
 try:
     import cPickle as pickle
 except ImportError:

@@ -33,7 +33,7 @@ class Config(object):
         self.hidden_size = 200
         self.gamma = 0.99
         self.lambda_ = 1.0
-        self.vf_wt = 0.5        # Weight of value function term in the loss
+        self.vf_wt = 0.5  # Weight of value function term in the loss
         self.entropy_wt = 0.01  # Weight of entropy term in the loss
 
         self.num_envs = 16

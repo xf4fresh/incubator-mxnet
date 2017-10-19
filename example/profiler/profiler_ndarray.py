@@ -40,7 +40,7 @@ def _np_reduce(dat, axis, keepdims, numpy_reduce_func):
 def reldiff(a, b):
     diff = np.abs(a - b)
     norm = np.abs(a)
-    reldiff = np.max(diff  / (norm + 1e-7))
+    reldiff = np.max(diff / (norm + 1e-7))
     return reldiff
 
 
@@ -52,7 +52,7 @@ def check_with_uniform(uf, arg_shapes, dim=None, npuf=None, rmin=-10, type_list=
     """check function consistency with uniform random numbers"""
     if isinstance(arg_shapes, int):
         assert dim
-        shape = tuple(np.random.randint(1, int(1000**(1.0/dim)), size=dim))
+        shape = tuple(np.random.randint(1, int(1000 ** (1.0 / dim)), size=dim))
         arg_shapes = [shape] * arg_shapes
     for dtype in type_list:
         ndarray_arg = []
@@ -78,9 +78,10 @@ def check_with_uniform(uf, arg_shapes, dim=None, npuf=None, rmin=-10, type_list=
 
 
 def random_ndarray(dim):
-    shape = tuple(np.random.randint(1, int(1000**(1.0/dim)), size=dim))
+    shape = tuple(np.random.randint(1, int(1000 ** (1.0 / dim)), size=dim))
     data = mx.nd.array(np.random.uniform(-10, 10, shape))
     return data
+
 
 def test_ndarray_elementwise():
     np.random.seed(0)
@@ -99,8 +100,9 @@ def test_ndarray_elementwise():
             check_with_uniform(mx.nd.square, 1, dim, np.square, rmin=0)
             check_with_uniform(lambda x: mx.nd.norm(x).asscalar(), 1, dim, np.linalg.norm)
 
+
 def test_ndarray_negate():
-    npy = np.random.uniform(-10, 10, (2,3,4))
+    npy = np.random.uniform(-10, 10, (2, 3, 4))
     arr = mx.nd.array(npy)
     assert reldiff(npy, arr.asnumpy()) < 1e-6
     assert reldiff(-npy, (-arr).asnumpy()) < 1e-6
@@ -157,18 +159,19 @@ def test_ndarray_copy():
 
 
 def test_ndarray_scalar():
-    c = mx.nd.empty((10,10))
-    d = mx.nd.empty((10,10))
+    c = mx.nd.empty((10, 10))
+    d = mx.nd.empty((10, 10))
     c[:] = 0.5
     d[:] = 1.0
     d -= c * 2 / 3 * 6.0
     c += 0.5
-    assert(np.sum(c.asnumpy()) - 100 < 1e-5)
-    assert(np.sum(d.asnumpy()) + 100 < 1e-5)
+    assert (np.sum(c.asnumpy()) - 100 < 1e-5)
+    assert (np.sum(d.asnumpy()) + 100 < 1e-5)
     c[:] = 2
-    assert(np.sum(c.asnumpy()) - 200 < 1e-5)
+    assert (np.sum(c.asnumpy()) - 200 < 1e-5)
     d = -c + 2
-    assert(np.sum(d.asnumpy()) < 1e-5)
+    assert (np.sum(d.asnumpy()) < 1e-5)
+
 
 def test_ndarray_pickle():
     np.random.seed(0)
@@ -200,7 +203,7 @@ def test_ndarray_saveload():
         assert len(data) == len(data2)
         for x, y in zip(data, data2):
             assert np.sum(x.asnumpy() != y.asnumpy()) == 0
-        dmap = {'ndarray xx %s' % i : x for i, x in enumerate(data)}
+        dmap = {'ndarray xx %s' % i: x for i, x in enumerate(data)}
         mx.nd.save(fname, dmap)
         dmap2 = mx.nd.load(fname)
         assert len(dmap2) == len(dmap)
@@ -242,6 +245,7 @@ def test_clip():
         assert B1[i] >= -2
         assert B1[i] <= 2
 
+
 def test_dot():
     a = np.random.uniform(-3, 3, (3, 4))
     b = np.random.uniform(-3, 3, (4, 5))
@@ -251,8 +255,10 @@ def test_dot():
     C = mx.nd.dot(A, B)
     assert reldiff(c, C.asnumpy()) < 1e-5
 
+
 def test_reduce():
     sample_num = 200
+
     def test_reduce_inner(numpy_reduce_func, nd_reduce_func):
         for i in range(sample_num):
             ndim = np.random.randint(1, 6)
@@ -275,18 +281,21 @@ def test_reduce():
                 ndarray_ret = ndarray_ret.asnumpy()
             assert (ndarray_ret.shape == numpy_ret.shape) or \
                    (ndarray_ret.shape == (1,) and numpy_ret.shape == ()), "nd:%s, numpy:%s" \
-                                                         %(ndarray_ret.shape, numpy_ret.shape)
+                                                                          % (ndarray_ret.shape, numpy_ret.shape)
             err = np.square(ndarray_ret - numpy_ret).mean()
             assert err < 1E-4
-    test_reduce_inner(lambda data, axis, keepdims:_np_reduce(data, axis, keepdims, np.sum),
+
+    test_reduce_inner(lambda data, axis, keepdims: _np_reduce(data, axis, keepdims, np.sum),
                       mx.nd.sum)
-    test_reduce_inner(lambda data, axis, keepdims:_np_reduce(data, axis, keepdims, np.max),
+    test_reduce_inner(lambda data, axis, keepdims: _np_reduce(data, axis, keepdims, np.max),
                       mx.nd.max)
-    test_reduce_inner(lambda data, axis, keepdims:_np_reduce(data, axis, keepdims, np.min),
+    test_reduce_inner(lambda data, axis, keepdims: _np_reduce(data, axis, keepdims, np.min),
                       mx.nd.min)
+
 
 def test_broadcast():
     sample_num = 1000
+
     def test_broadcast_to():
         for i in range(sample_num):
             ndim = np.random.randint(1, 6)
@@ -305,7 +314,9 @@ def test_broadcast():
             assert (ndarray_ret.shape == target_shape).all()
             err = np.square(ndarray_ret - numpy_ret).mean()
             assert err < 1E-8
+
     test_broadcast_to()
+
 
 if __name__ == '__main__':
     mx.profiler.profiler_set_config(mode='all', filename='profile_ndarray.json')

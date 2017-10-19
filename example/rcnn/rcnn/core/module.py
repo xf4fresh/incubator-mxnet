@@ -27,6 +27,7 @@ from mxnet.initializer import Uniform
 from mxnet.module.base_module import BaseModule
 from mxnet.module.module import Module
 
+
 class MutableModule(BaseModule):
     """A mutable module is a module that supports variable input data.
 
@@ -42,6 +43,7 @@ class MutableModule(BaseModule):
     max_label_shapes : list of (name, shape) tuple, designating inputs whose shape vary
     fixed_param_prefix : list of str, indicating fixed parameters
     """
+
     def __init__(self, symbol, data_names, label_names,
                  logger=logging, context=ctx.cpu(), work_load_list=None,
                  max_data_shapes=None, max_label_shapes=None, fixed_param_prefix=None):

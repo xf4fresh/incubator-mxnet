@@ -19,6 +19,7 @@ import subprocess
 import os
 import errno
 
+
 def download_file(url, local_fname=None, force_write=False):
     # requests is not default installed
     import requests
@@ -31,7 +32,7 @@ def download_file(url, local_fname=None, force_write=False):
 
     if dir_name != "":
         if not os.path.exists(dir_name):
-            try: # try to create the directory if it doesn't exists
+            try:  # try to create the directory if it doesn't exists
                 os.makedirs(dir_name)
             except OSError as exc:
                 if exc.errno != errno.EEXIST:
@@ -41,9 +42,10 @@ def download_file(url, local_fname=None, force_write=False):
     assert r.status_code == 200, "failed to open %s" % url
     with open(local_fname, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024):
-            if chunk: # filter out keep-alive new chunks
+            if chunk:  # filter out keep-alive new chunks
                 f.write(chunk)
     return local_fname
+
 
 def get_gpus():
     """

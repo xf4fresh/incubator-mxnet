@@ -27,8 +27,8 @@ from utils import to_bool
 from .feat_readers.common import *
 from .feat_readers import stats
 
-class DataReadStream(object):
 
+class DataReadStream(object):
     SCHEMA = {
         "type": "object",
         "properties": {
@@ -42,7 +42,7 @@ class DataReadStream(object):
             "train_stat": {"type": "string", "required": False},
             "offset_labels": {"type": ["string", "integer", "boolean"], "required": False},
 
-            #"XXXchunk": {"type": ["string", "integer"], "required": False},
+            # "XXXchunk": {"type": ["string", "integer"], "required": False},
             "max_feats": {"type": ["string", "integer"], "required": False},
             "shuffle": {"type": ["string", "integer", "boolean"], "required": False},
 
@@ -55,6 +55,7 @@ class DataReadStream(object):
     END_OF_DATA = -1
     END_OF_PARTITION = -2
     END_OF_SEQ = (None, None, None)
+
     def __init__(self, dataset_args, n_ins):
 
         # stats
@@ -84,7 +85,7 @@ class DataReadStream(object):
 
         # parse it, file_lst is a list of (featureFile, labelFile) pairs in the input set
         lines = [ln.strip() for ln in file_read]
-        lines = [ln for ln in lines if ln != "" ]
+        lines = [ln for ln in lines if ln != ""]
 
         if self.has_labels:
             if separate_lines:
@@ -93,14 +94,15 @@ class DataReadStream(object):
                     sys.exit(1)
                 self.orig_file_lst = []
                 for i in xrange(0, len(lines), 2):
-                    self.orig_file_lst.append((lines[i], lines[i+1]))
+                    self.orig_file_lst.append((lines[i], lines[i + 1]))
             else:
                 self.orig_file_lst = []
                 for i in xrange(len(lines)):
                     pair = re.compile("\s+").split(lines[i])
                     if len(pair) != 2:
                         print(lines[i])
-                        print("Each line in the train and eval lists must contain feature file and label file separated by space character")
+                        print(
+                            "Each line in the train and eval lists must contain feature file and label file separated by space character")
                         sys.exit(1)
                     self.orig_file_lst.append(pair)
         else:
@@ -157,18 +159,17 @@ class DataReadStream(object):
             self.y = None
         self.numpy_rng = numpy.random.RandomState(self.seed)
 
-        #self.make_shared()
+        # self.make_shared()
         self.initialize_read()
 
     def read_by_part(self):
         if self.file_format in ["kaldi"]:
             self.read_by_matrix()
-        else:   # htk
+        else:  # htk
             self.split_parts = True
 
     def read_by_matrix(self):
         self.by_matrix = True
-
 
     def get_shared(self):
         return self.shared_x, self.shared_y
@@ -197,7 +198,7 @@ class DataReadStream(object):
         num_queued = self.queued_feats.shape[0]
         at_most = min(at_most, num_queued)
 
-        if at_most == num_queued:   # no leftover after the split
+        if at_most == num_queued:  # no leftover after the split
             feats, tgts = self.queued_feats, self.queued_tgts
             self.queued_feats = None
             self.queued_tgts = None
@@ -211,7 +212,7 @@ class DataReadStream(object):
         return feats, tgts
 
     def _queue_excess(self, at_most, feats, tgts):
-        assert(self.queued_feats is None)
+        assert (self.queued_feats is None)
         num_supplied = feats.shape[0]
 
         if num_supplied > at_most:
@@ -235,14 +236,14 @@ class DataReadStream(object):
         if self.reader.IsDone():
             self.fileIndex += 1
             self.reader.Cleanup()
-            self.reader = None # cleanup
+            self.reader = None  # cleanup
             return None
 
         tup = self.reader.Read()
         if tup is None:
             self.fileIndex += 1
             self.reader.Cleanup()
-            self.reader = None # cleanup
+            self.reader = None  # cleanup
             return None
 
         feats, tgts = tup
@@ -260,7 +261,8 @@ class DataReadStream(object):
 
         if self.has_labels and tgts is not None:
             if feats.shape[0] != tgts.shape[0]:
-                errMs = "Number of frames in feature ({}) and label ({}) files does not match".format(self.featureFile, self.labelFile)
+                errMs = "Number of frames in feature ({}) and label ({}) files does not match".format(self.featureFile,
+                                                                                                      self.labelFile)
                 raise FeatureException(errMsg)
 
             if self.offsetLabels:
@@ -271,7 +273,7 @@ class DataReadStream(object):
         return feats, tgts
 
     def current_utt_id(self):
-        assert(self.by_matrix or self.split_parts)
+        assert (self.by_matrix or self.split_parts)
         return self.utt_id
 
     def load_next_seq(self):
@@ -289,12 +291,11 @@ class DataReadStream(object):
 
         self.utt_id = None
 
-        tup  = self._load_fn(self.chunk_size)
+        tup = self._load_fn(self.chunk_size)
         if tup is None:
             return DataReadStream.END_OF_SEQ
         (loaded_feats, loaded_tgts) = tup
         return loaded_feats, loaded_tgts, self.utt_id
-
 
     def load_next_block(self):
         # if anything left...
@@ -302,14 +303,14 @@ class DataReadStream(object):
 
         if self.crossed_part:
             self.crossed_part = False
-            if not self.by_matrix: #    <--- THERE IS A BUG IN THIS
+            if not self.by_matrix:  # <--- THERE IS A BUG IN THIS
                 return DataReadStream.END_OF_PARTITION
         if self.done:
             return DataReadStream.END_OF_DATA
         if self._end_of_data():
             if self.reader is not None:
                 self.reader.Cleanup()
-            self.reader = None # cleanup
+            self.reader = None  # cleanup
             self.done = True
             return DataReadStream.END_OF_DATA
 
@@ -348,7 +349,7 @@ class DataReadStream(object):
                 if self.has_labels:
                     loaded_label = loaded_label[0:allowed]
                 numFrames = allowed
-                assert(numFrames == loaded_feat.shape[0])
+                assert (numFrames == loaded_feat.shape[0])
 
             self.totalFrames += numFrames
             new_num_feats = num_feats + numFrames
@@ -392,13 +393,13 @@ class DataReadStream(object):
                     self.numpy_rng.shuffle(y)
                     self.y[0:num_feats] = y
 
-            assert(self.x.shape == (self.chunk_size, self.n_ins))
-            self.shared_x.set_value(self.x, borrow = True)
+            assert (self.x.shape == (self.chunk_size, self.n_ins))
+            self.shared_x.set_value(self.x, borrow=True)
             if self.has_labels:
-                self.shared_y.set_value(self.y, borrow = True)
+                self.shared_y.set_value(self.y, borrow=True)
 
-            #import hashlib
-            #print self.totalFrames, self.x.sum(), hashlib.sha1(self.x.view(numpy.float32)).hexdigest()
+            # import hashlib
+            # print self.totalFrames, self.x.sum(), hashlib.sha1(self.x.view(numpy.float32)).hexdigest()
 
             if self.by_matrix:
                 self.crossed_part = True

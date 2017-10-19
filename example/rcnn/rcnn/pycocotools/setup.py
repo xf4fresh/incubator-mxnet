@@ -34,4 +34,4 @@ ext_modules = [
 
 setup(name='pycocotools',
       ext_modules=cythonize(ext_modules)
-)
+      )

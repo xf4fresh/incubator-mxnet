@@ -57,10 +57,11 @@ def remove_blank(l):
 
 def gen_rand():
     buf = ""
-    max_len = random.randint(3,4)
+    max_len = random.randint(3, 4)
     for i in range(max_len):
-        buf += str(random.randint(0,9))
+        buf += str(random.randint(0, 9))
     return buf
+
 
 if __name__ == '__main__':
     num_hidden = 100
@@ -97,7 +98,7 @@ if __name__ == '__main__':
                                num_hidden=num_hidden,
                                num_label=num_label,
                                arg_params=arg_params,
-                               data_size = n_channel * 30 * 80,
+                               data_size=n_channel * 30 * 80,
                                ctx=contexts[0])
 
     prob = model.forward(mx.nd.array(img))
@@ -114,5 +115,3 @@ if __name__ == '__main__':
         pred += str((int(c) - 1))
 
     print('Predicted number: ' + pred)
-
-

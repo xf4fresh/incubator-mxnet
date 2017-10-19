@@ -20,12 +20,14 @@ from skimage import io, transform
 from skimage.restoration import denoise_tv_chambolle
 import logging
 import random
+
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 
+
 def PreprocessContentImage(path, short_edge, dshape=None):
     img = io.imread(path)
-    #logging.info("load the content image, size = %s", img.shape[:2])
+    # logging.info("load the content image, size = %s", img.shape[:2])
     factor = float(short_edge) / min(img.shape[:2])
     new_size = (int(img.shape[0] * factor), int(img.shape[1] * factor))
     resized_img = transform.resize(img, new_size)
@@ -47,8 +49,9 @@ def PreprocessContentImage(path, short_edge, dshape=None):
     sample[0, :] -= 123.68
     sample[1, :] -= 116.779
     sample[2, :] -= 103.939
-    #logging.info("resize the content image to %s", sample.shape)
+    # logging.info("resize the content image to %s", sample.shape)
     return np.resize(sample, (1, 3, sample.shape[1], sample.shape[2]))
+
 
 def PreprocessStyleImage(path, shape):
     img = io.imread(path)
@@ -62,6 +65,7 @@ def PreprocessStyleImage(path, shape):
     sample[2, :] -= 103.939
     return np.resize(sample, (1, 3, sample.shape[1], sample.shape[2]))
 
+
 def PostprocessImage(img):
     img = np.resize(img, (3, img.shape[2], img.shape[3]))
     img[0, :] += 123.68
@@ -72,13 +76,10 @@ def PostprocessImage(img):
     img = np.clip(img, 0, 255)
     return img.astype('uint8')
 
+
 def SaveImage(img, filename, remove_noise=0.02):
     logging.info('save output to %s', filename)
     out = PostprocessImage(img)
     if remove_noise != 0.0:
         out = denoise_tv_chambolle(out, weight=remove_noise, multichannel=True)
     io.imsave(filename, out)
-
-
-
-

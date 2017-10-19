@@ -28,7 +28,6 @@ from mxnet import gluon
 from mxnet.gluon import nn
 from mxnet import autograd
 
-
 parser = argparse.ArgumentParser(description='MXNet actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
                     help='discount factor (default: 0.99)')
@@ -39,7 +38,6 @@ parser.add_argument('--render', action='store_true',
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='interval between training status logs (default: 10)')
 args = parser.parse_args()
-
 
 env = gym.make('CartPole-v0')
 env.seed(args.seed)
@@ -58,6 +56,7 @@ class Policy(gluon.Block):
         probs = self.action_pred(x)
         values = self.value_pred(x)
         return F.softmax(probs), values
+
 
 net = Policy()
 net.initialize(mx.init.Uniform(0.02))
@@ -90,7 +89,7 @@ for epoch in count(1):
         # reverse accumulate and normalize rewards
         running_reward = running_reward * 0.99 + t * 0.01
         R = 0
-        for i in range(len(rewards)-1, -1, -1):
+        for i in range(len(rewards) - 1, -1, -1):
             R = rewards[i] + args.gamma * R
             rewards[i] = R
         rewards = np.array(rewards)
@@ -101,12 +100,12 @@ for epoch in count(1):
         L = sum([loss(value, mx.nd.array([r])) for r, value in zip(rewards, values)])
         final_nodes = [L]
         for logp, r, v in zip(heads, rewards, values):
-            reward = r - v.asnumpy()[0,0]
+            reward = r - v.asnumpy()[0, 0]
             # Here we differentiate the stochastic graph, corresponds to the
             # first term of equation (6) in https://arxiv.org/pdf/1506.05254.pdf
             # Optimizer minimizes the loss but we want to maximizing the reward,
             # so use we use -reward here.
-            final_nodes.append(logp*(-reward))
+            final_nodes.append(logp * (-reward))
         autograd.backward(final_nodes)
 
     trainer.step(t)

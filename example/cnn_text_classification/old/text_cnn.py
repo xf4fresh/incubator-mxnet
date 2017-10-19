@@ -19,7 +19,7 @@
 
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import sys,os
+import sys, os
 import mxnet as mx
 import numpy as np
 import time
@@ -28,19 +28,20 @@ import data_helpers
 from collections import namedtuple
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__) # get a logger to accuracies are printed
+logger = logging.getLogger(__name__)  # get a logger to accuracies are printed
 
 logs = sys.stderr
 
 CNNModel = namedtuple("CNNModel", ['cnn_exec', 'symbol', 'data', 'label', 'param_blocks'])
 
-def make_text_cnn(sentence_size, num_embed, batch_size, vocab_size,
-        num_label=2, filter_list=[3, 4, 5], num_filter=100,
-        dropout=0., with_embedding=True):
 
-    input_x = mx.sym.Variable('data') # placeholder for input
-    input_y = mx.sym.Variable('softmax_label') # placeholder for output
+def make_text_cnn(sentence_size, num_embed, batch_size, vocab_size,
+                  num_label=2, filter_list=[3, 4, 5], num_filter=100,
+                  dropout=0., with_embedding=True):
+    input_x = mx.sym.Variable('data')  # placeholder for input
+    input_y = mx.sym.Variable('softmax_label')  # placeholder for output
 
     # embedding layer
     if not with_embedding:
@@ -54,7 +55,7 @@ def make_text_cnn(sentence_size, num_embed, batch_size, vocab_size,
     for i, filter_size in enumerate(filter_list):
         convi = mx.sym.Convolution(data=conv_input, kernel=(filter_size, num_embed), num_filter=num_filter)
         relui = mx.sym.Activation(data=convi, act_type='relu')
-        pooli = mx.sym.Pooling(data=relui, pool_type='max', kernel=(sentence_size - filter_size + 1, 1), stride=(1,1))
+        pooli = mx.sym.Pooling(data=relui, pool_type='max', kernel=(sentence_size - filter_size + 1, 1), stride=(1, 1))
         pooled_outputs.append(pooli)
 
     # combine all pooled outputs
@@ -81,10 +82,9 @@ def make_text_cnn(sentence_size, num_embed, batch_size, vocab_size,
 
 
 def setup_cnn_model(ctx, batch_size, sentence_size, num_embed, vocab_size,
-        dropout=0.5, initializer=mx.initializer.Uniform(0.1), with_embedding=True):
-
+                    dropout=0.5, initializer=mx.initializer.Uniform(0.1), with_embedding=True):
     cnn = make_text_cnn(sentence_size, num_embed, batch_size=batch_size,
-            vocab_size=vocab_size, dropout=dropout, with_embedding=with_embedding)
+                        vocab_size=vocab_size, dropout=dropout, with_embedding=with_embedding)
     arg_names = cnn.list_arguments()
 
     input_shapes = {}
@@ -97,7 +97,7 @@ def setup_cnn_model(ctx, batch_size, sentence_size, num_embed, vocab_size,
     arg_arrays = [mx.nd.zeros(s, ctx) for s in arg_shape]
     args_grad = {}
     for shape, name in zip(arg_shape, arg_names):
-        if name in ['softmax_label', 'data']: # input, output
+        if name in ['softmax_label', 'data']:  # input, output
             continue
         args_grad[name] = mx.nd.zeros(shape, ctx)
 
@@ -106,11 +106,11 @@ def setup_cnn_model(ctx, batch_size, sentence_size, num_embed, vocab_size,
     param_blocks = []
     arg_dict = dict(zip(arg_names, cnn_exec.arg_arrays))
     for i, name in enumerate(arg_names):
-        if name in ['softmax_label', 'data']: # input, output
+        if name in ['softmax_label', 'data']:  # input, output
             continue
         initializer(name, arg_dict[name])
 
-        param_blocks.append( (i, arg_dict[name], args_grad[name], name) )
+        param_blocks.append((i, arg_dict[name], args_grad[name], name))
 
     out_dict = dict(zip(cnn.list_outputs(), cnn_exec.outputs))
 
@@ -121,7 +121,7 @@ def setup_cnn_model(ctx, batch_size, sentence_size, num_embed, vocab_size,
 
 
 def train_cnn(model, X_train_batch, y_train_batch, X_dev_batch, y_dev_batch, batch_size,
-        optimizer='rmsprop', max_grad_norm=5.0, learning_rate=0.0005, epoch=200):
+              optimizer='rmsprop', max_grad_norm=5.0, learning_rate=0.0005, epoch=200):
     m = model
     # create optimizer
     opt = mx.optimizer.create(optimizer)
@@ -134,8 +134,8 @@ def train_cnn(model, X_train_batch, y_train_batch, X_dev_batch, y_dev_batch, bat
         num_correct = 0
         num_total = 0
         for begin in range(0, X_train_batch.shape[0], batch_size):
-            batchX = X_train_batch[begin:begin+batch_size]
-            batchY = y_train_batch[begin:begin+batch_size]
+            batchX = X_train_batch[begin:begin + batch_size]
+            batchY = y_train_batch[begin:begin + batch_size]
             if batchX.shape[0] != batch_size:
                 continue
 
@@ -172,7 +172,7 @@ def train_cnn(model, X_train_batch, y_train_batch, X_dev_batch, y_dev_batch, bat
         # decay learning rate
         if iteration % 50 == 0 and iteration > 0:
             opt.lr *= 0.5
-            print('reset learning rate to %g' % opt.lr,file=logs)
+            print('reset learning rate to %g' % opt.lr, file=logs)
 
         # end of training loop
         toc = time.time()
@@ -183,19 +183,18 @@ def train_cnn(model, X_train_batch, y_train_batch, X_dev_batch, y_dev_batch, bat
         if (iteration + 1) % 10 == 0:
             prefix = 'cnn'
             m.symbol.save('checkpoint/%s-symbol.json' % prefix)
-            save_dict = {('arg:%s' % k) :v  for k, v in m.cnn_exec.arg_dict.items()}
-            save_dict.update({('aux:%s' % k) : v for k, v in m.cnn_exec.aux_dict.items()})
+            save_dict = {('arg:%s' % k): v for k, v in m.cnn_exec.arg_dict.items()}
+            save_dict.update({('aux:%s' % k): v for k, v in m.cnn_exec.aux_dict.items()})
             param_name = 'checkpoint/%s-%04d.params' % (prefix, iteration)
             mx.nd.save(param_name, save_dict)
-            print('Saved checkpoint to %s' % param_name,file=logs)
-
+            print('Saved checkpoint to %s' % param_name, file=logs)
 
         # evaluate on dev set
         num_correct = 0
         num_total = 0
         for begin in range(0, X_dev_batch.shape[0], batch_size):
-            batchX = X_dev_batch[begin:begin+batch_size]
-            batchY = y_dev_batch[begin:begin+batch_size]
+            batchX = X_dev_batch[begin:begin + batch_size]
+            batchY = y_dev_batch[begin:begin + batch_size]
 
             if batchX.shape[0] != batch_size:
                 continue
@@ -243,6 +242,7 @@ def main():
     cnn_model = setup_cnn_model(mx.gpu(1), batch_size, sentence_size, num_embed, dropout=0.5)
     train_cnn(cnn_model, x_train, y_train, x_dev, y_dev, batch_size)
 
+
 def train_without_pretrained_embedding():
     x, y, vocab, vocab_inv = data_helpers.load_data()
     vocab_size = len(vocab)
@@ -269,7 +269,8 @@ def train_without_pretrained_embedding():
     print('sentence max words', sentence_size)
     print('embedding size', num_embed)
 
-    cnn_model = setup_cnn_model(mx.gpu(0), batch_size, sentence_size, num_embed, vocab_size, dropout=0.5, with_embedding=False)
+    cnn_model = setup_cnn_model(mx.gpu(0), batch_size, sentence_size, num_embed, vocab_size, dropout=0.5,
+                                with_embedding=False)
     train_cnn(cnn_model, x_train, y_train, x_dev, y_dev, batch_size)
 
 

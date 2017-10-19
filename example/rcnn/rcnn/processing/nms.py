@@ -17,6 +17,7 @@
 
 import numpy as np
 from ..cython.cpu_nms import cpu_nms
+
 try:
     from ..cython.gpu_nms import gpu_nms
 except ImportError:
@@ -26,18 +27,21 @@ except ImportError:
 def py_nms_wrapper(thresh):
     def _nms(dets):
         return nms(dets, thresh)
+
     return _nms
 
 
 def cpu_nms_wrapper(thresh):
     def _nms(dets):
         return cpu_nms(dets, thresh)
+
     return _nms
 
 
 def gpu_nms_wrapper(thresh, device_id):
     def _nms(dets):
         return gpu_nms(dets, thresh, device_id)
+
     if gpu_nms is not None:
         return _nms
     else:

@@ -17,12 +17,14 @@
 
 import os
 import logging
+
 logging.basicConfig(level=logging.INFO)
 import numpy as np
 import random
 from tqdm import tqdm
 
 import mxnet as mx
+
 
 class Vocab(object):
     # constants for special tokens: padding, unknown, and beginning/end of sentence.
@@ -34,6 +36,7 @@ class Vocab(object):
     UNK_WORD = '<unk>'
     BOS_WORD = '<s>'
     EOS_WORD = '</s>'
+
     def __init__(self, filepaths=[], embedpath=None, include_unseen=False, lower=False):
         self.idx2tok = []
         self.tok2idx = {}
@@ -48,11 +51,11 @@ class Vocab(object):
         self.embed = None
 
         for filename in filepaths:
-            logging.info('loading %s'%filename)
+            logging.info('loading %s' % filename)
             with open(filename, 'r') as f:
                 self.load_file(f)
         if embedpath is not None:
-            logging.info('loading %s'%embedpath)
+            logging.info('loading %s' % embedpath)
             with open(embedpath, 'r') as f:
                 self.load_embedding(f, reset=set([Vocab.PAD_WORD, Vocab.UNK_WORD, Vocab.BOS_WORD,
                                                   Vocab.EOS_WORD]))
@@ -112,15 +115,18 @@ class Vocab(object):
             if word in self.tok2idx:
                 vectors[word] = [float(x) for x in tokens[1:]]
         dim = len(vectors.values()[0])
+
         def to_vector(tok):
             if tok in vectors and tok not in reset:
                 return vectors[tok]
             elif tok not in vectors:
                 return np.random.normal(-0.05, 0.05, size=dim)
             else:
-                return [0.0]*dim
+                return [0.0] * dim
+
         self.embed = mx.nd.array([vectors[tok] if tok in vectors and tok not in reset
-                                  else [0.0]*dim for tok in self.idx2tok])
+                                  else [0.0] * dim for tok in self.idx2tok])
+
 
 class Tree(object):
     def __init__(self, idx):
@@ -133,17 +139,18 @@ class Tree(object):
         else:
             return str(self.idx)
 
+
 # Dataset class for SICK dataset
 class SICKDataIter(object):
     def __init__(self, path, vocab, num_classes, shuffle=True):
         super(SICKDataIter, self).__init__()
         self.vocab = vocab
         self.num_classes = num_classes
-        self.l_sentences = self.read_sentences(os.path.join(path,'a.toks'))
-        self.r_sentences = self.read_sentences(os.path.join(path,'b.toks'))
-        self.l_trees = self.read_trees(os.path.join(path,'a.parents'))
-        self.r_trees = self.read_trees(os.path.join(path,'b.parents'))
-        self.labels = self.read_labels(os.path.join(path,'sim.txt'))
+        self.l_sentences = self.read_sentences(os.path.join(path, 'a.toks'))
+        self.r_sentences = self.read_sentences(os.path.join(path, 'b.toks'))
+        self.l_trees = self.read_trees(os.path.join(path, 'a.parents'))
+        self.r_trees = self.read_trees(os.path.join(path, 'b.parents'))
+        self.labels = self.read_labels(os.path.join(path, 'sim.txt'))
         self.size = len(self.labels)
         self.shuffle = shuffle
         self.reset()
@@ -177,14 +184,14 @@ class SICKDataIter(object):
         l_sent = self.l_sentences[index]
         r_sent = self.r_sentences[index]
         label = self.labels[index]
-        return (l_tree,l_sent,r_tree,r_sent,label)
+        return (l_tree, l_sent, r_tree, r_sent, label)
 
     def read_sentence(self, line):
         indices = self.vocab.to_indices(line.split())
         return mx.nd.array(indices)
 
     def read_sentences(self, filename):
-        with open(filename,'r') as f:
+        with open(filename, 'r') as f:
             sentences = [self.read_sentence(line) for line in f.readlines()]
         return sentences
 
@@ -192,23 +199,23 @@ class SICKDataIter(object):
         parents = [int(x) for x in line.split()]
         nodes = {}
         root = None
-        for i in range(1,len(parents)+1):
-            if i-1 not in nodes and parents[i-1]!=-1:
+        for i in range(1, len(parents) + 1):
+            if i - 1 not in nodes and parents[i - 1] != -1:
                 idx = i
                 prev = None
                 while True:
-                    parent = parents[idx-1]
+                    parent = parents[idx - 1]
                     if parent == -1:
                         break
                     tree = Tree(idx)
                     if prev is not None:
                         tree.children.append(prev)
-                    nodes[idx-1] = tree
-                    tree.idx = idx-1
-                    if parent-1 in nodes:
-                        nodes[parent-1].children.append(tree)
+                    nodes[idx - 1] = tree
+                    tree.idx = idx - 1
+                    if parent - 1 in nodes:
+                        nodes[parent - 1].children.append(tree)
                         break
-                    elif parent==0:
+                    elif parent == 0:
                         root = tree
                         break
                     else:
@@ -217,11 +224,11 @@ class SICKDataIter(object):
         return root
 
     def read_trees(self, filename):
-        with open(filename,'r') as f:
+        with open(filename, 'r') as f:
             trees = [self.read_tree(line) for line in tqdm(f.readlines(), 'Parsing trees')]
         return trees
 
     def read_labels(self, filename):
-        with open(filename,'r') as f:
+        with open(filename, 'r') as f:
             labels = [float(x) for x in f.readlines()]
         return labels

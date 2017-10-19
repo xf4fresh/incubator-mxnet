@@ -90,7 +90,8 @@ def load_data(args):
         datagen.load_validation_data(val_json, max_duration=max_duration)
 
         if is_bi_graphemes:
-            if not os.path.isfile("resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
+            if not os.path.isfile(
+                    "resources/unicodemap_en_baidu_bi_graphemes.csv") or overwrite_bi_graphemes_dictionary:
                 load_labelutil(labelUtil=labelUtil, is_bi_graphemes=False, language=language)
                 generate_bi_graphemes_dictionary(datagen.train_texts + datagen.val_texts)
         load_labelutil(labelUtil=labelUtil, is_bi_graphemes=is_bi_graphemes, language=language)

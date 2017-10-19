@@ -26,9 +26,9 @@ from optparse import OptionParser
 from collections import Counter
 
 import logging
+
 head = head = '%(asctime)-15s %(message)s'
 logging.basicConfig(level=logging.INFO, format=head)
-
 
 # ----------------------------------------------------------------------------------------
 EMBEDDING_SIZE = 100
@@ -36,7 +36,7 @@ BATCH_SIZE = 256
 NUM_LABEL = 5
 NUM_EPOCH = 20
 MIN_COUNT = 5  # only works when doing nagative sampling, keep it same as nce-loss
-GRAMS = 3      # here we use triple-letter representation
+GRAMS = 3  # here we use triple-letter representation
 MAX_SUBWORDS = 10
 PADDING_CHAR = '</s>'
 
@@ -99,7 +99,7 @@ def get_subword_representation(wid, vocab_inv, units_vocab, max_len):
 
 def prepare_subword_units(tks):
     # statistics on units
-    units_vocab = {PADDING_CHAR:1}
+    units_vocab = {PADDING_CHAR: 1}
     max_len = 0
     unit_set = set()
     logging.info('grams: %d', GRAMS)

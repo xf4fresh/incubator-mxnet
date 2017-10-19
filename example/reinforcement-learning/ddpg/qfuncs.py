@@ -25,11 +25,9 @@ class QFunc(object):
     """
 
     def __init__(self, env_spec):
-
         self.env_spec = env_spec
 
     def get_qvals(self, obs, act):
-
         raise NotImplementedError
 
 
@@ -40,8 +38,8 @@ class ContinuousMLPQ(QFunc):
     """
 
     def __init__(
-        self,
-        env_spec):
+            self,
+            env_spec):
 
         super(ContinuousMLPQ, self).__init__(env_spec)
 
@@ -65,7 +63,7 @@ class ContinuousMLPQ(QFunc):
         self.loss = mx.symbol.Group([self.loss, mx.symbol.BlockGrad(self.qval)])
 
     def define_exe(self, ctx, init, updater, input_shapes=None, args=None,
-                    grad_req=None):
+                   grad_req=None):
 
         # define an executor, initializer and updater for batch version loss
         self.exe = self.loss.simple_bind(ctx=ctx, **input_shapes)
@@ -99,5 +97,3 @@ class ContinuousMLPQ(QFunc):
         self.exe.forward(is_train=False)
 
         return self.exe.outputs[1].asnumpy()
-
-

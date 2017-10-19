@@ -17,6 +17,7 @@
 
 import mxnet as mx
 
+
 def get_symbol_atari(act_dim):
     net = mx.symbol.Variable('data')
     net = mx.symbol.Cast(data=net, dtype='float32')

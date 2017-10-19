@@ -23,10 +23,9 @@ import re
 import argparse
 
 parser = argparse.ArgumentParser(description='Parses log file and generates train/val curves')
-parser.add_argument('--log-file', type=str,default="log_tr_va",
+parser.add_argument('--log-file', type=str, default="log_tr_va",
                     help='the path of log file')
 args = parser.parse_args()
-
 
 TR_RE = re.compile('.*?]\sTrain-accuracy=([\d\.]+)')
 VA_RE = re.compile('.*?]\sValidation-accuracy=([\d\.]+)')
@@ -47,7 +46,7 @@ plt.plot(idx, log_va, 'o', linestyle='-', color="b",
          label="Validation accuracy")
 
 plt.legend(loc="best")
-plt.xticks(np.arange(min(idx), max(idx)+1, 5))
+plt.xticks(np.arange(min(idx), max(idx) + 1, 5))
 plt.yticks(np.arange(0, 1, 0.2))
-plt.ylim([0,1])
+plt.ylim([0, 1])
 plt.show()

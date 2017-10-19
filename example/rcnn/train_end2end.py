@@ -64,7 +64,8 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
                               anchor_ratios=config.ANCHOR_RATIOS, aspect_grouping=config.TRAIN.ASPECT_GROUPING)
 
     # infer max shape
-    max_data_shape = [('data', (input_batch_size, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES])))]
+    max_data_shape = [
+        ('data', (input_batch_size, 3, max([v[0] for v in config.SCALES]), max([v[1] for v in config.SCALES])))]
     max_data_shape, max_label_shape = train_data.infer_shape(max_data_shape)
     max_data_shape.append(('gt_boxes', (input_batch_size, 100, 5)))
     logger.info('providing maximum shape %s %s' % (max_data_shape, max_label_shape))
@@ -99,11 +100,13 @@ def train_net(args, ctx, pretrained, epoch, prefix, begin_epoch, end_epoch,
             continue
         assert k in arg_params, k + ' not initialized'
         assert arg_params[k].shape == arg_shape_dict[k], \
-            'shape inconsistent for ' + k + ' inferred ' + str(arg_shape_dict[k]) + ' provided ' + str(arg_params[k].shape)
+            'shape inconsistent for ' + k + ' inferred ' + str(arg_shape_dict[k]) + ' provided ' + str(
+                arg_params[k].shape)
     for k in sym.list_auxiliary_states():
         assert k in aux_params, k + ' not initialized'
         assert aux_params[k].shape == aux_shape_dict[k], \
-            'shape inconsistent for ' + k + ' inferred ' + str(aux_shape_dict[k]) + ' provided ' + str(aux_params[k].shape)
+            'shape inconsistent for ' + k + ' inferred ' + str(aux_shape_dict[k]) + ' provided ' + str(
+                aux_params[k].shape)
 
     # create solver
     fixed_param_prefix = config.FIXED_PARAMS
@@ -190,6 +193,7 @@ def main():
     ctx = [mx.gpu(int(i)) for i in args.gpus.split(',')]
     train_net(args, ctx, args.pretrained, args.pretrained_epoch, args.prefix, args.begin_epoch, args.end_epoch,
               lr=args.lr, lr_step=args.lr_step)
+
 
 if __name__ == '__main__':
     main()

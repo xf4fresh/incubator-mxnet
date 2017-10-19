@@ -39,20 +39,23 @@ import json
 import utils.utils as utils
 from model_io import string_2_array
 
+
 # Various functions to convert models into Kaldi formats
-def _nnet2kaldi(nnet_spec, set_layer_num = -1, filein='nnet.in',
-               fileout='nnet.out', activation='sigmoid', withfinal=True):
+def _nnet2kaldi(nnet_spec, set_layer_num=-1, filein='nnet.in',
+                fileout='nnet.out', activation='sigmoid', withfinal=True):
     _nnet2kaldi_main(nnet_spec, set_layer_num=set_layer_num, filein=filein,
-                    fileout=fileout, activation=activation, withfinal=withfinal, maxout=False)
+                     fileout=fileout, activation=activation, withfinal=withfinal, maxout=False)
 
-def _nnet2kaldi_maxout(nnet_spec, pool_size = 1, set_layer_num = -1,
-                      filein='nnet.in', fileout='nnet.out', activation='sigmoid', withfinal=True):
+
+def _nnet2kaldi_maxout(nnet_spec, pool_size=1, set_layer_num=-1,
+                       filein='nnet.in', fileout='nnet.out', activation='sigmoid', withfinal=True):
     _nnet2kaldi_main(nnet_spec, set_layer_num=set_layer_num, filein=filein,
-                    fileout=fileout, activation=activation, withfinal=withfinal,
-                    pool_size = 1, maxout=True)
+                     fileout=fileout, activation=activation, withfinal=withfinal,
+                     pool_size=1, maxout=True)
 
-def _nnet2kaldi_main(nnet_spec, set_layer_num = -1, filein='nnet.in',
-               fileout='nnet.out', activation='sigmoid', withfinal=True, maxout=False):
+
+def _nnet2kaldi_main(nnet_spec, set_layer_num=-1, filein='nnet.in',
+                     fileout='nnet.out', activation='sigmoid', withfinal=True, maxout=False):
     elements = nnet_spec.split(':')
     layers = []
     for x in elements:
@@ -112,7 +115,6 @@ def _nnet2kaldi_main(nnet_spec, set_layer_num = -1, filein='nnet.in',
         for x in xrange(input_size):
             for t in xrange(output_size):
                 W_layer[t] = W_layer[t] + str(matrix[x][t]) + ' '
-
 
         dict_key = 'logreg b'
         vector = string_2_array(nnet_dict[dict_key])

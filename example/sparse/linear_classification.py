@@ -22,8 +22,7 @@ from linear_model import *
 import argparse
 import os
 
-parser = argparse.ArgumentParser(description="Run sparse linear classification " \
-                                             "with distributed kvstore",
+parser = argparse.ArgumentParser(description="Run sparse linear classification with distributed kvstore",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--num-epoch', type=int, default=5,
                     help='number of epochs to train')
@@ -46,6 +45,7 @@ AVAZU = {
 
 if __name__ == '__main__':
     import logging
+
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.INFO, format=head)
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     mod = mx.mod.Module(symbol=model, data_names=['data'], label_names=['softmax_label'])
     mod.bind(data_shapes=train_data.provide_data, label_shapes=train_data.provide_label)
     mod.init_params()
-    optim = mx.optimizer.create(optimizer, learning_rate=0.01, rescale_grad=1.0/batch_size/num_worker)
+    optim = mx.optimizer.create(optimizer, learning_rate=0.01, rescale_grad=1.0 / batch_size / num_worker)
     mod.init_optimizer(optimizer=optim, kvstore=kv)
     # use accuracy as the metric
     metric = mx.metric.create(['nll_loss'])
@@ -108,8 +108,7 @@ if __name__ == '__main__':
             # for distributed training, we need to manually pull sparse weights from kvstore
             if kv:
                 row_ids = batch.data[0].indices
-                kv.row_sparse_pull('weight', weight_param, row_ids=[row_ids],
-                                   priority=-weight_index)
+                kv.row_sparse_pull('weight', weight_param, row_ids=[row_ids], priority=-weight_index)
             mod.forward_backward(batch)
             # update all parameters (including the weight parameter)
             mod.update()

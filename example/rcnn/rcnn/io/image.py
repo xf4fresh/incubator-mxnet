@@ -142,16 +142,16 @@ def tensor_vstack(tensor_list, pad=0):
         all_tensor = np.full(tuple(dimensions), pad, dtype=dtype)
     if ndim == 1:
         for ind, tensor in enumerate(tensor_list):
-            all_tensor[ind*islice:(ind+1)*islice] = tensor
+            all_tensor[ind * islice:(ind + 1) * islice] = tensor
     elif ndim == 2:
         for ind, tensor in enumerate(tensor_list):
-            all_tensor[ind*islice:(ind+1)*islice, :tensor.shape[1]] = tensor
+            all_tensor[ind * islice:(ind + 1) * islice, :tensor.shape[1]] = tensor
     elif ndim == 3:
         for ind, tensor in enumerate(tensor_list):
-            all_tensor[ind*islice:(ind+1)*islice, :tensor.shape[1], :tensor.shape[2]] = tensor
+            all_tensor[ind * islice:(ind + 1) * islice, :tensor.shape[1], :tensor.shape[2]] = tensor
     elif ndim == 4:
         for ind, tensor in enumerate(tensor_list):
-            all_tensor[ind*islice:(ind+1)*islice, :tensor.shape[1], :tensor.shape[2], :tensor.shape[3]] = tensor
+            all_tensor[ind * islice:(ind + 1) * islice, :tensor.shape[1], :tensor.shape[2], :tensor.shape[3]] = tensor
     else:
         raise Exception('Sorry, unimplemented.')
     return all_tensor

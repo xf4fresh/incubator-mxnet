@@ -17,12 +17,14 @@
 
 # pylint:skip-file
 import sys
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
 from collections import namedtuple
 import time
 import math
+
 LSTMState = namedtuple("LSTMState", ["c", "h"])
 LSTMParam = namedtuple("LSTMParam", ["i2h_weight", "i2h_bias",
                                      "h2h_weight", "h2h_bias"])
@@ -30,6 +32,7 @@ LSTMModel = namedtuple("LSTMModel", ["rnn_exec", "symbol",
                                      "init_states", "last_states",
                                      "seq_data", "seq_labels", "seq_outputs",
                                      "param_blocks"])
+
 
 def lstm(num_hidden, indata, prev_state, param, seqidx, layeridx, dropout=0.):
     """LSTM Cell symbol"""
@@ -63,7 +66,7 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
     """unrolled lstm network"""
     # initialize the parameter symbols
     with mx.AttrScope(ctx_group='embed'):
-        embed_weight=mx.sym.Variable("embed_weight")
+        embed_weight = mx.sym.Variable("embed_weight")
 
     with mx.AttrScope(ctx_group='decode'):
         cls_weight = mx.sym.Variable("cls_weight")
@@ -73,14 +76,14 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
     last_states = []
     for i in range(num_lstm_layer):
         with mx.AttrScope(ctx_group='layer%d' % i):
-            param_cells.append(LSTMParam(i2h_weight = mx.sym.Variable("l%d_i2h_weight" % i),
-                                         i2h_bias = mx.sym.Variable("l%d_i2h_bias" % i),
-                                         h2h_weight = mx.sym.Variable("l%d_h2h_weight" % i),
-                                         h2h_bias = mx.sym.Variable("l%d_h2h_bias" % i)))
+            param_cells.append(LSTMParam(i2h_weight=mx.sym.Variable("l%d_i2h_weight" % i),
+                                         i2h_bias=mx.sym.Variable("l%d_i2h_bias" % i),
+                                         h2h_weight=mx.sym.Variable("l%d_h2h_weight" % i),
+                                         h2h_bias=mx.sym.Variable("l%d_h2h_bias" % i)))
             state = LSTMState(c=mx.sym.Variable("l%d_init_c" % i),
                               h=mx.sym.Variable("l%d_init_h" % i))
         last_states.append(state)
-    assert(len(last_states) == num_lstm_layer)
+    assert (len(last_states) == num_lstm_layer)
 
     last_hidden = []
     for seqidx in range(seq_len):
@@ -93,8 +96,8 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
                                       name="t%d_embed" % seqidx)
         # stack LSTM
         for i in range(num_lstm_layer):
-            if i==0:
-                dp=0.
+            if i == 0:
+                dp = 0.
             else:
                 dp = dropout
             with mx.AttrScope(ctx_group='layer%d' % i):
@@ -127,7 +130,7 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
                 out_prob.append(sm)
     else:
         with mx.AttrScope(ctx_group='decode'):
-            concat = mx.sym.Concat(*last_hidden, dim = 0)
+            concat = mx.sym.Concat(*last_hidden, dim=0)
             fc = mx.sym.FullyConnected(data=concat,
                                        weight=cls_weight,
                                        bias=cls_bias,
@@ -152,8 +155,8 @@ def lstm_unroll(num_lstm_layer, seq_len, input_size,
 
 
 def is_param_name(name):
-    return name.endswith("weight") or name.endswith("bias") or\
-        name.endswith("gamma") or name.endswith("beta")
+    return name.endswith("weight") or name.endswith("bias") or \
+           name.endswith("gamma") or name.endswith("beta")
 
 
 def setup_rnn_model(default_ctx,
@@ -171,14 +174,14 @@ def setup_rnn_model(default_ctx,
     for bucket_key in buckets:
         # bind max_len first
         rnn_sym = lstm_unroll(num_lstm_layer=num_lstm_layer,
-                          num_hidden=num_hidden,
-                          seq_len=seq_len,
-                          input_size=input_size,
-                          num_embed=num_embed,
-                          num_label=num_label,
-                          dropout=dropout,
-                          concat_decode=concat_decode,
-                          use_loss=use_loss)
+                              num_hidden=num_hidden,
+                              seq_len=seq_len,
+                              input_size=input_size,
+                              num_embed=num_embed,
+                              num_label=num_label,
+                              dropout=dropout,
+                              concat_decode=concat_decode,
+                              use_loss=use_loss)
         arg_names = rnn_sym.list_arguments()
         internals = rnn_sym.get_internals()
 
@@ -187,11 +190,11 @@ def setup_rnn_model(default_ctx,
             if name.endswith("init_c") or name.endswith("init_h"):
                 input_shapes[name] = (batch_size, num_hidden)
             elif name.endswith("data"):
-                input_shapes[name] = (batch_size, )
+                input_shapes[name] = (batch_size,)
             elif name == "label":
-                input_shapes[name] = (batch_size * seq_len, )
+                input_shapes[name] = (batch_size * seq_len,)
             elif name.endswith("label"):
-                input_shapes[name] = (batch_size, )
+                input_shapes[name] = (batch_size,)
             else:
                 pass
 
@@ -208,19 +211,19 @@ def setup_rnn_model(default_ctx,
             if not name.startswith("t"):
                 print("%s group=%s, ctx=%s" % (name, group, str(ctx)))
 
-        #bind with shared executor
+        # bind with shared executor
         rnn_exec = None
         if max_len == bucket_key:
-              rnn_exec = rnn_sym.bind(default_ctx, args=arg_arrays,
-                                args_grad=args_grad,
-                                grad_req="add", group2ctx=group2ctx)
-              max_rnn_exec = rnn_exec
+            rnn_exec = rnn_sym.bind(default_ctx, args=arg_arrays,
+                                    args_grad=args_grad,
+                                    grad_req="add", group2ctx=group2ctx)
+            max_rnn_exec = rnn_exec
         else:
-              assert max_rnn_exec is not None
-              rnn_exec = rnn_sym.bind(default_ctx, args=arg_arrays,
-                            args_grad=args_grad,
-                            grad_req="add", group2ctx=group2ctx,
-                            shared_exec = max_rnn_exec)
+            assert max_rnn_exec is not None
+            rnn_exec = rnn_sym.bind(default_ctx, args=arg_arrays,
+                                    args_grad=args_grad,
+                                    grad_req="add", group2ctx=group2ctx,
+                                    shared_exec=max_rnn_exec)
 
         param_blocks = []
         arg_dict = dict(zip(arg_names, rnn_exec.arg_arrays))
@@ -234,7 +237,7 @@ def setup_rnn_model(default_ctx,
         out_dict = dict(zip(rnn_sym.list_outputs(), rnn_exec.outputs))
 
         init_states = [LSTMState(c=arg_dict["l%d_init_c" % i],
-                             h=arg_dict["l%d_init_h" % i]) for i in range(num_lstm_layer)]
+                                 h=arg_dict["l%d_init_h" % i]) for i in range(num_lstm_layer)]
 
         seq_data = [rnn_exec.arg_dict["t%d_data" % i] for i in range(seq_len)]
         # we don't need to store the last state
@@ -248,9 +251,9 @@ def setup_rnn_model(default_ctx,
             seq_labels = [rnn_exec.arg_dict["t%d_label" % i] for i in range(seq_len)]
 
         model = LSTMModel(rnn_exec=rnn_exec, symbol=rnn_sym,
-                     init_states=init_states, last_states=last_states,
-                     seq_data=seq_data, seq_labels=seq_labels, seq_outputs=seq_outputs,
-                     param_blocks=param_blocks)
+                          init_states=init_states, last_states=last_states,
+                          seq_data=seq_data, seq_labels=seq_labels, seq_outputs=seq_outputs,
+                          param_blocks=param_blocks)
         models[bucket_key] = model
     buckets.reverse()
     return models
@@ -266,45 +269,47 @@ def set_rnn_inputs(m, X, begin):
         y = X[next_idx, :]
         mx.nd.array(x).copyto(m.seq_data[seqidx])
         if len(m.seq_labels) == 1:
-            m.seq_labels[0][seqidx*batch_size : seqidx*batch_size+batch_size] = y
+            m.seq_labels[0][seqidx * batch_size: seqidx * batch_size + batch_size] = y
         else:
             m.seq_labels[seqidx][:] = y
 
+
 def set_rnn_inputs_from_batch(m, batch, batch_seq_length, batch_size):
-  X = batch.data
-  for seqidx in range(batch_seq_length):
-    idx = seqidx
-    next_idx = (seqidx + 1) % batch_seq_length
-    x = X[idx, :]
-    y = X[next_idx, :]
-    mx.nd.array(x).copyto(m.seq_data[seqidx])
-    if len(m.seq_labels) == 1:
-      m.seq_labels[0][seqidx*batch_size : seqidx*batch_size+batch_size] = y
-    else:
-      m.seq_labels[seqidx][:] = y
+    X = batch.data
+    for seqidx in range(batch_seq_length):
+        idx = seqidx
+        next_idx = (seqidx + 1) % batch_seq_length
+        x = X[idx, :]
+        y = X[next_idx, :]
+        mx.nd.array(x).copyto(m.seq_data[seqidx])
+        if len(m.seq_labels) == 1:
+            m.seq_labels[0][seqidx * batch_size: seqidx * batch_size + batch_size] = y
+        else:
+            m.seq_labels[seqidx][:] = y
+
 
 def calc_nll_concat(seq_label_probs, batch_size):
-  return -np.sum(np.log(seq_label_probs.asnumpy())) / batch_size
+    return -np.sum(np.log(seq_label_probs.asnumpy())) / batch_size
 
 
 def calc_nll(seq_label_probs, batch_size, seq_len):
-  eps = 1e-10
-  nll = 0.
-  for seqidx in range(seq_len):
-    py = seq_label_probs[seqidx].asnumpy()
-    nll += -np.sum(np.log(np.maximum(py, eps))) / batch_size
-    return nll
+    eps = 1e-10
+    nll = 0.
+    for seqidx in range(seq_len):
+        py = seq_label_probs[seqidx].asnumpy()
+        nll += -np.sum(np.log(np.maximum(py, eps))) / batch_size
+        return nll
 
 
 def train_lstm(model, X_train_batch, X_val_batch,
                num_round, update_period, concat_decode, batch_size, use_loss,
-               optimizer='sgd', half_life=2,max_grad_norm = 5.0, **kwargs):
+               optimizer='sgd', half_life=2, max_grad_norm=5.0, **kwargs):
     opt = mx.optimizer.create(optimizer,
                               **kwargs)
 
     updater = mx.optimizer.get_updater(opt)
     epoch_counter = 0
-    #log_period = max(1000 / seq_len, 1)
+    # log_period = max(1000 / seq_len, 1)
     log_period = 28
     last_perp = 10000000.0
 
@@ -317,13 +322,13 @@ def train_lstm(model, X_train_batch, X_val_batch,
             m = model[batch_seq_length]
             # reset init state
             for state in m.init_states:
-              state.c[:] = 0.0
-              state.h[:] = 0.0
+                state.c[:] = 0.0
+                state.h[:] = 0.0
 
             head_grad = []
             if use_loss:
-              ctx = m.seq_outputs[0].context
-              head_grad = [mx.nd.ones((1,), ctx) for x in m.seq_outputs]
+                ctx = m.seq_outputs[0].context
+                head_grad = [mx.nd.ones((1,), ctx) for x in m.seq_outputs]
 
             set_rnn_inputs_from_batch(m, data_batch, batch_seq_length, batch_size)
 
@@ -349,7 +354,7 @@ def train_lstm(model, X_train_batch, X_val_batch,
                 for idx, weight, grad, name in m.param_blocks:
                     grad /= batch_size
                     l2_norm = mx.nd.norm(grad).asscalar()
-                    norm += l2_norm*l2_norm
+                    norm += l2_norm * l2_norm
                 norm = math.sqrt(norm)
                 for idx, weight, grad, name in m.param_blocks:
                     if norm > max_grad_norm:
@@ -418,6 +423,7 @@ def train_lstm(model, X_train_batch, X_val_batch,
         X_val_batch.reset()
         X_train_batch.reset()
 
+
 # is this function being used?
 def setup_rnn_sample_model(ctx,
                            params,
@@ -437,7 +443,7 @@ def setup_rnn_sample_model(ctx,
         if name.endswith("init_c") or name.endswith("init_h"):
             input_shapes[name] = (batch_size, num_hidden)
         elif name.endswith("data"):
-            input_shapes[name] = (batch_size, )
+            input_shapes[name] = (batch_size,)
         else:
             pass
     arg_shape, out_shape, aux_shape = rnn_sym.infer_shape(**input_shapes)
@@ -470,10 +476,12 @@ def setup_rnn_sample_model(ctx,
                      seq_data=seq_data, seq_labels=seq_labels, seq_outputs=seq_outputs,
                      param_blocks=param_blocks)
 
+
 # Python3 np.random.choice is too strict in eval float probability so we use an alternative
 import random
 import bisect
 import collections
+
 
 def _cdf(weights):
     total = sum(weights)
@@ -484,12 +492,14 @@ def _cdf(weights):
         result.append(cumsum / total)
     return result
 
+
 def _choice(population, weights):
     assert len(population) == len(weights)
     cdf_vals = _cdf(weights)
     x = random.random()
     idx = bisect.bisect(cdf_vals, x)
     return population[idx]
+
 
 def sample_lstm(model, X_input_batch, seq_len, temperature=1., sample=True):
     m = model

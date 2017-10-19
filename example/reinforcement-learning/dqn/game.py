@@ -18,6 +18,7 @@
 
 DEFAULT_MAX_EPISODE_STEP = 1000000
 
+
 class Game(object):
     def __init__(self):
         self.total_reward = 0

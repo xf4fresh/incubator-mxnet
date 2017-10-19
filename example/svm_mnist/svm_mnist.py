@@ -34,11 +34,11 @@ logger.setLevel(logging.DEBUG)
 # on the article, but feel free to play with the number of nodes
 # and with the activation function
 data = mx.symbol.Variable('data')
-fc1  = mx.symbol.FullyConnected(data = data, name='fc1', num_hidden=512)
-act1 = mx.symbol.Activation(data = fc1, name='relu1', act_type="relu")
-fc2  = mx.symbol.FullyConnected(data = act1, name = 'fc2', num_hidden = 512)
-act2 = mx.symbol.Activation(data = fc2, name='relu2', act_type="relu")
-fc3  = mx.symbol.FullyConnected(data = act2, name='fc3', num_hidden=10)
+fc1 = mx.symbol.FullyConnected(data=data, name='fc1', num_hidden=512)
+act1 = mx.symbol.Activation(data=fc1, name='relu1', act_type="relu")
+fc2 = mx.symbol.FullyConnected(data=act1, name='fc2', num_hidden=512)
+act2 = mx.symbol.Activation(data=fc2, name='relu2', act_type="relu")
+fc3 = mx.symbol.FullyConnected(data=act2, name='fc3', num_hidden=10)
 
 # Here we add the ultimate layer based on L2-SVM objective
 mlp = mx.symbol.SVMOutput(data=fc3, name='svm')
@@ -52,14 +52,14 @@ mnist = fetch_mldata('MNIST original')
 mnist_pca = PCA(n_components=70).fit_transform(mnist.data)
 noise = np.random.normal(size=mnist_pca.shape)
 mnist_pca += noise
-np.random.seed(1234) # set seed for deterministic ordering
+np.random.seed(1234)  # set seed for deterministic ordering
 p = np.random.permutation(mnist_pca.shape[0])
 X = mnist_pca[p]
 Y = mnist.target[p]
 X_show = mnist.data[p]
 
 # This is just to normalize the input and separate train set and test set
-X = X.astype(np.float32)/255
+X = X.astype(np.float32) / 255
 X_train = X[:60000]
 X_test = X[60000:]
 X_show = X_show[60000:]
@@ -75,19 +75,19 @@ test_iter = mx.io.NDArrayIter(X_test, Y_test, batch_size=batch_size, label_name=
 # The article actually suggests using 400 epochs,
 # But I reduced to 10, for convinience
 mod = mx.mod.Module(
-    context = mx.cpu(0),  # Run on CPU 0
-    symbol = mlp,         # Use the network we just defined
-    label_names = ['svm_label'],
+    context=mx.cpu(0),  # Run on CPU 0
+    symbol=mlp,  # Use the network we just defined
+    label_names=['svm_label'],
 )
 mod.fit(
     train_data=train_iter,
     eval_data=test_iter,  # Testing data set. MXNet computes scores on test set every epoch
-    batch_end_callback = mx.callback.Speedometer(batch_size, 200),  # Logging module to print out progress
-    num_epoch = 10,       # Train for 10 epochs
-    optimizer_params = {
+    batch_end_callback=mx.callback.Speedometer(batch_size, 200),  # Logging module to print out progress
+    num_epoch=10,  # Train for 10 epochs
+    optimizer_params={
         'learning_rate': 0.1,  # Learning rate
-        'momentum': 0.9,       # Momentum for SGD with momentum
-        'wd': 0.00001,         # Weight decay for regularization
+        'momentum': 0.9,  # Momentum for SGD with momentum
+        'wd': 0.00001,  # Weight decay for regularization
     },
 )
 
@@ -97,4 +97,4 @@ mod.fit(
 # print 'Result:', model.predict(X_test[0:1])[0].argmax()
 
 # Now it prints how good did the network did for this configuration
-print('Accuracy:', mod.score(test_iter, mx.metric.Accuracy())[0][1]*100, '%')
+print('Accuracy:', mod.score(test_iter, mx.metric.Accuracy())[0][1] * 100, '%')

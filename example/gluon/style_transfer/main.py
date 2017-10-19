@@ -20,6 +20,7 @@ import random
 import os
 import mxnet as mx
 import numpy as np
+
 np.set_printoptions(precision=2)
 from PIL import Image
 
@@ -31,6 +32,7 @@ import net
 import utils
 from option import Options
 import data
+
 
 def train(args):
     np.random.seed(args.seed)
@@ -46,7 +48,7 @@ def train(args):
     train_dataset = data.ImageFolder(args.dataset, transform)
     train_loader = gluon.data.DataLoader(train_dataset, batch_size=args.batch_size, last_batch='discard')
     style_loader = utils.StyleLoader(args.style_folder, args.style_size, ctx=ctx)
-    print('len(style_loader):',style_loader.size())
+    print('len(style_loader):', style_loader.size())
     # models
     vgg = net.Vgg16()
     utils.init_vgg_params(vgg, 'models', ctx=ctx)
@@ -55,7 +57,7 @@ def train(args):
     if args.resume is not None:
         print('Resuming, initializing using weight from {}.'.format(args.resume))
         style_model.collect_params().load(args.resume, ctx=ctx)
-    print('style_model:',style_model)
+    print('style_model:', style_model)
     # optimizer and loss
     trainer = gluon.Trainer(style_model.collect_params(), 'adam',
                             {'learning_rate': args.lr})
@@ -96,7 +98,7 @@ def train(args):
 
                 total_loss = content_loss + style_loss
                 total_loss.backward()
-                
+
             trainer.step(args.batch_size)
             mx.nd.waitall()
 
@@ -106,16 +108,16 @@ def train(args):
             if (batch_id + 1) % args.log_interval == 0:
                 mesg = "{}\tEpoch {}:\t[{}/{}]\tcontent: {:.3f}\tstyle: {:.3f}\ttotal: {:.3f}".format(
                     time.ctime(), e + 1, count, len(train_dataset),
-                                agg_content_loss.asnumpy()[0] / (batch_id + 1),
-                                agg_style_loss.asnumpy()[0] / (batch_id + 1),
-                                (agg_content_loss + agg_style_loss).asnumpy()[0] / (batch_id + 1)
+                                  agg_content_loss.asnumpy()[0] / (batch_id + 1),
+                                  agg_style_loss.asnumpy()[0] / (batch_id + 1),
+                                  (agg_content_loss + agg_style_loss).asnumpy()[0] / (batch_id + 1)
                 )
                 print(mesg)
 
-            
             if (batch_id + 1) % (4 * args.log_interval) == 0:
                 # save model
-                save_model_filename = "Epoch_" + str(e) + "iters_" + str(count) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
+                save_model_filename = "Epoch_" + str(e) + "iters_" + str(count) + "_" + str(time.ctime()).replace(' ',
+                                                                                                                  '_') + "_" + str(
                     args.content_weight) + "_" + str(args.style_weight) + ".params"
                 save_model_path = os.path.join(args.save_model_dir, save_model_filename)
                 style_model.collect_params().save(save_model_path)
@@ -135,7 +137,7 @@ def evaluate(args):
     else:
         ctx = mx.cpu(0)
     # images
-    content_image = utils.tensor_load_rgbimage(args.content_image,ctx, size=args.content_size, keep_asp=True)
+    content_image = utils.tensor_load_rgbimage(args.content_image, ctx, size=args.content_size, keep_asp=True)
     style_image = utils.tensor_load_rgbimage(args.style_image, ctx, size=args.style_size)
     style_image = utils.preprocess_batch(style_image)
     # model
@@ -156,7 +158,7 @@ def optimize(args):
     else:
         ctx = mx.cpu(0)
     # load the content and style target
-    content_image = utils.tensor_load_rgbimage(args.content_image,ctx, size=args.content_size, keep_asp=True)
+    content_image = utils.tensor_load_rgbimage(args.content_image, ctx, size=args.content_size, keep_asp=True)
     content_image = utils.subtract_imagenet_mean_preprocess_batch(content_image)
     style_image = utils.tensor_load_rgbimage(args.style_image, ctx, size=args.style_size)
     style_image = utils.subtract_imagenet_mean_preprocess_batch(style_image)
@@ -195,7 +197,7 @@ def optimize(args):
         trainer.step(1)
         if (e + 1) % args.log_interval == 0:
             print('loss:{:.2f}'.format(total_loss.asnumpy()[0]))
-        
+
     # save the image
     output = utils.add_imagenet_mean_batch(output.data())
     utils.tensor_save_bgrimage(output[0], args.output_image, args.cuda)
@@ -225,4 +227,4 @@ def main():
 
 
 if __name__ == "__main__":
-   main()
+    main()

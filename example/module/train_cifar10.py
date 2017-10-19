@@ -20,6 +20,7 @@ Demonstrates using the Module class.
 """
 import logging
 import os, sys
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "image-classification")))
 
 import find_mxnet
@@ -32,9 +33,9 @@ import platform
 
 def command_line_args(defaults=False):
     parser = argparse.ArgumentParser(description=__doc__,
-                    formatter_class=argparse.RawTextHelpFormatter)
+                                     formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('--network', type=str, default='inception-bn-28-small',
-                        help = 'which CNN style to use')
+                        help='which CNN style to use')
     my_dir = os.path.dirname(__file__)
     default_data_dir = os.path.abspath(os.path.join(my_dir, '..', 'image-classification', 'cifar10')) + '/'
     parser.add_argument('--data-dir', type=str, default=default_data_dir,
@@ -74,7 +75,7 @@ def _download(data_dir):
     cwd = os.path.abspath(os.getcwd())
     os.chdir(data_dir)
     if (not os.path.exists('train.rec')) or \
-       (not os.path.exists('test.rec')) :
+            (not os.path.exists('test.rec')):
         import urllib, zipfile, glob
         dirname = os.getcwd()
         zippath = os.path.join(dirname, "cifar10.zip")
@@ -89,6 +90,7 @@ def _download(data_dir):
         os.rmdir(os.path.join(dirname, "cifar"))
     os.chdir(cwd)
 
+
 # data
 def get_iterator(args, kv):
     data_shape = (3, 28, 28)
@@ -99,24 +101,24 @@ def get_iterator(args, kv):
         _download(data_dir)
 
     train = mx.io.ImageRecordIter(
-        path_imgrec = data_dir + "train.rec",
-        mean_img    = data_dir + "mean.bin",
-        data_shape  = data_shape,
-        batch_size  = args.batch_size,
-        rand_crop   = True,
-        rand_mirror = True,
-        num_parts   = kv.num_workers,
-        part_index  = kv.rank)
+        path_imgrec=data_dir + "train.rec",
+        mean_img=data_dir + "mean.bin",
+        data_shape=data_shape,
+        batch_size=args.batch_size,
+        rand_crop=True,
+        rand_mirror=True,
+        num_parts=kv.num_workers,
+        part_index=kv.rank)
 
     val = mx.io.ImageRecordIter(
-        path_imgrec = data_dir + "test.rec",
-        mean_img    = data_dir + "mean.bin",
-        rand_crop   = False,
-        rand_mirror = False,
-        data_shape  = data_shape,
-        batch_size  = args.batch_size,
-        num_parts   = kv.num_workers,
-        part_index  = kv.rank)
+        path_imgrec=data_dir + "test.rec",
+        mean_img=data_dir + "mean.bin",
+        rand_crop=False,
+        rand_mirror=False,
+        data_shape=data_shape,
+        batch_size=args.batch_size,
+        num_parts=kv.num_workers,
+        part_index=kv.rank)
 
     return (train, val)
 
@@ -130,7 +132,6 @@ def do_train(args, callback_args=None):
         args.model_prefix = os.path.abspath(os.path.join(my_dir, args.model_prefix))
     if args.save_model_prefix is not None:
         args.save_model_prefix = os.path.abspath(os.path.join(my_dir, args.save_model_prefix))
-
 
     ################################################################################
     # train
@@ -178,8 +179,8 @@ def do_train(args, callback_args=None):
     optim_args = {'learning_rate': args.lr, 'wd': 0.00001, 'momentum': 0.9}
     if 'lr_factor' in args and args.lr_factor < 1:
         optim_args['lr_scheduler'] = mx.lr_scheduler.FactorScheduler(
-            step = max(int(epoch_size * args.lr_factor_epoch), 1),
-            factor = args.lr_factor)
+            step=max(int(epoch_size * args.lr_factor_epoch), 1),
+            factor=args.lr_factor)
 
     if 'clip_gradient' in args and args.clip_gradient is not None:
         optim_args['clip_gradient'] = args.clip_gradient
@@ -187,10 +188,10 @@ def do_train(args, callback_args=None):
     eval_metrics = ['accuracy']
     ## TopKAccuracy only allows top_k > 1
     for top_k in [5, 10, 20]:
-        eval_metrics.append(mx.metric.create('top_k_accuracy', top_k = top_k))
+        eval_metrics.append(mx.metric.create('top_k_accuracy', top_k=top_k))
 
     if args.load_epoch:
-        begin_epoch = args.load_epoch+1
+        begin_epoch = args.load_epoch + 1
     else:
         begin_epoch = 0
 
@@ -201,7 +202,7 @@ def do_train(args, callback_args=None):
         }
     else:
         pass
-        #TODO: add checkpoint back in
+        # TODO: add checkpoint back in
 
     logging.info('start training for %d epochs...', args.num_epochs)
     mod.fit(train, eval_data=val, optimizer_params=optim_args,
@@ -209,7 +210,7 @@ def do_train(args, callback_args=None):
             arg_params=arg_params, aux_params=aux_params, begin_epoch=begin_epoch,
             **callback_args)
 
+
 if __name__ == "__main__":
     args = command_line_args()
     do_train(args)
-

@@ -22,6 +22,7 @@ import os, sys
 import time
 import numpy as np
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Set network parameters for benchmark test.')
     parser.add_argument('--profile_filename', type=str, default='profile_matmul_20iter.json')
@@ -30,12 +31,12 @@ def parse_args():
     parser.add_argument('--end_profiling_iter', type=int, default=70)
     return parser.parse_args()
 
+
 args = parse_args()
 
 if __name__ == '__main__':
     mx.profiler.profiler_set_config(mode='symbolic', filename=args.profile_filename)
     print('profile file save to {0}'.format(args.profile_filename))
-
 
     A = mx.sym.Variable('A')
     B = mx.sym.Variable('B')
@@ -64,4 +65,4 @@ if __name__ == '__main__':
     print("execution end")
     duration = t1 - t0
     print('duration: {0}s'.format(duration))
-    print('          {0}ms/operator'.format(duration*1000/args.iter_num))
+    print('          {0}ms/operator'.format(duration * 1000 / args.iter_num))

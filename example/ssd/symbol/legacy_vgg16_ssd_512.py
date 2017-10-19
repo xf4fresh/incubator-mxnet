@@ -19,6 +19,7 @@ import mxnet as mx
 from common import legacy_conv_act_layer
 from common import multibox_layer
 
+
 def get_symbol_train(num_classes=20, nms_thresh=0.5, force_suppress=False, nms_topk=400):
     """
     Single-shot multi-box detection with VGG 16 layers ConvNet
@@ -99,7 +100,7 @@ def get_symbol_train(num_classes=20, nms_thresh=0.5, force_suppress=False, nms_t
     relu5_3 = mx.symbol.Activation(data=conv5_3, act_type="relu", name="relu5_3")
     pool5 = mx.symbol.Pooling(
         data=relu5_3, pool_type="max", kernel=(3, 3), stride=(1, 1),
-        pad=(1,1), name="pool5")
+        pad=(1, 1), name="pool5")
     # group 6
     conv6 = mx.symbol.Convolution(
         data=pool5, kernel=(3, 3), pad=(6, 6), dilate=(6, 6),
@@ -113,40 +114,42 @@ def get_symbol_train(num_classes=20, nms_thresh=0.5, force_suppress=False, nms_t
     # drop7 = mx.symbol.Dropout(data=relu7, p=0.5, name="drop7")
 
     ### ssd extra layers ###
-    conv8_1, relu8_1 = legacy_conv_act_layer(relu7, "8_1", 256, kernel=(1,1), pad=(0,0), \
-        stride=(1,1), act_type="relu", use_batchnorm=False)
-    conv8_2, relu8_2 = legacy_conv_act_layer(relu8_1, "8_2", 512, kernel=(3,3), pad=(1,1), \
-        stride=(2,2), act_type="relu", use_batchnorm=False)
-    conv9_1, relu9_1 = legacy_conv_act_layer(relu8_2, "9_1", 128, kernel=(1,1), pad=(0,0), \
-        stride=(1,1), act_type="relu", use_batchnorm=False)
-    conv9_2, relu9_2 = legacy_conv_act_layer(relu9_1, "9_2", 256, kernel=(3,3), pad=(1,1), \
-        stride=(2,2), act_type="relu", use_batchnorm=False)
-    conv10_1, relu10_1 = legacy_conv_act_layer(relu9_2, "10_1", 128, kernel=(1,1), pad=(0,0), \
-        stride=(1,1), act_type="relu", use_batchnorm=False)
-    conv10_2, relu10_2 = legacy_conv_act_layer(relu10_1, "10_2", 256, kernel=(3,3), pad=(1,1), \
-        stride=(2,2), act_type="relu", use_batchnorm=False)
-    conv11_1, relu11_1 = legacy_conv_act_layer(relu10_2, "11_1", 128, kernel=(1,1), pad=(0,0), \
-        stride=(1,1), act_type="relu", use_batchnorm=False)
-    conv11_2, relu11_2 = legacy_conv_act_layer(relu11_1, "11_2", 256, kernel=(3,3), pad=(1,1), \
-        stride=(2,2), act_type="relu", use_batchnorm=False)
-    conv12_1, relu12_1 = legacy_conv_act_layer(relu11_2, "12_1", 128, kernel=(1,1), pad=(0,0), \
-        stride=(1,1), act_type="relu", use_batchnorm=False)
-    conv12_2, relu12_2 = legacy_conv_act_layer(relu12_1, "12_2", 256, kernel=(4,4), pad=(1,1), \
-        stride=(1,1), act_type="relu", use_batchnorm=False)
+    conv8_1, relu8_1 = legacy_conv_act_layer(relu7, "8_1", 256, kernel=(1, 1), pad=(0, 0), \
+                                             stride=(1, 1), act_type="relu", use_batchnorm=False)
+    conv8_2, relu8_2 = legacy_conv_act_layer(relu8_1, "8_2", 512, kernel=(3, 3), pad=(1, 1), \
+                                             stride=(2, 2), act_type="relu", use_batchnorm=False)
+    conv9_1, relu9_1 = legacy_conv_act_layer(relu8_2, "9_1", 128, kernel=(1, 1), pad=(0, 0), \
+                                             stride=(1, 1), act_type="relu", use_batchnorm=False)
+    conv9_2, relu9_2 = legacy_conv_act_layer(relu9_1, "9_2", 256, kernel=(3, 3), pad=(1, 1), \
+                                             stride=(2, 2), act_type="relu", use_batchnorm=False)
+    conv10_1, relu10_1 = legacy_conv_act_layer(relu9_2, "10_1", 128, kernel=(1, 1), pad=(0, 0), \
+                                               stride=(1, 1), act_type="relu", use_batchnorm=False)
+    conv10_2, relu10_2 = legacy_conv_act_layer(relu10_1, "10_2", 256, kernel=(3, 3), pad=(1, 1), \
+                                               stride=(2, 2), act_type="relu", use_batchnorm=False)
+    conv11_1, relu11_1 = legacy_conv_act_layer(relu10_2, "11_1", 128, kernel=(1, 1), pad=(0, 0), \
+                                               stride=(1, 1), act_type="relu", use_batchnorm=False)
+    conv11_2, relu11_2 = legacy_conv_act_layer(relu11_1, "11_2", 256, kernel=(3, 3), pad=(1, 1), \
+                                               stride=(2, 2), act_type="relu", use_batchnorm=False)
+    conv12_1, relu12_1 = legacy_conv_act_layer(relu11_2, "12_1", 128, kernel=(1, 1), pad=(0, 0), \
+                                               stride=(1, 1), act_type="relu", use_batchnorm=False)
+    conv12_2, relu12_2 = legacy_conv_act_layer(relu12_1, "12_2", 256, kernel=(4, 4), pad=(1, 1), \
+                                               stride=(1, 1), act_type="relu", use_batchnorm=False)
 
     # specific parameters for VGG16 network
     from_layers = [relu4_3, relu7, relu8_2, relu9_2, relu10_2, relu11_2, relu12_2]
-    sizes = [[.07, .1025], [.15,.2121], [.3, .3674], [.45, .5196], [.6, .6708], \
-        [.75, .8216], [.9, .9721]]
-    ratios = [[1,2,.5], [1,2,.5,3,1./3], [1,2,.5,3,1./3], [1,2,.5,3,1./3], \
-        [1,2,.5,3,1./3], [1,2,.5], [1,2,.5]]
+    sizes = [[.07, .1025], [.15, .2121], [.3, .3674], [.45, .5196], [.6, .6708], \
+             [.75, .8216], [.9, .9721]]
+    ratios = [[1, 2, .5], [1, 2, .5, 3, 1. / 3], [1, 2, .5, 3, 1. / 3], [1, 2, .5, 3, 1. / 3], \
+              [1, 2, .5, 3, 1. / 3], [1, 2, .5], [1, 2, .5]]
     normalizations = [20, -1, -1, -1, -1, -1, -1]
-    steps = [ x / 512.0 for x in [8, 16, 32, 64, 128, 256, 512]]
+    steps = [x / 512.0 for x in [8, 16, 32, 64, 128, 256, 512]]
     num_channels = [512]
 
     loc_preds, cls_preds, anchor_boxes = multibox_layer(from_layers, \
-        num_classes, sizes=sizes, ratios=ratios, normalization=normalizations, \
-        num_channels=num_channels, clip=False, interm_layer=0, steps=steps)
+                                                        num_classes, sizes=sizes, ratios=ratios,
+                                                        normalization=normalizations, \
+                                                        num_channels=num_channels, clip=False, interm_layer=0,
+                                                        steps=steps)
 
     tmp = mx.symbol.contrib.MultiBoxTarget(
         *[anchor_boxes, label, cls_preds], overlap_threshold=.5, \
@@ -158,23 +161,24 @@ def get_symbol_train(num_classes=20, nms_thresh=0.5, force_suppress=False, nms_t
     cls_target = tmp[2]
 
     cls_prob = mx.symbol.SoftmaxOutput(data=cls_preds, label=cls_target, \
-        ignore_label=-1, use_ignore=True, grad_scale=1., multi_output=True, \
-        normalization='valid', name="cls_prob")
+                                       ignore_label=-1, use_ignore=True, grad_scale=1., multi_output=True, \
+                                       normalization='valid', name="cls_prob")
     loc_loss_ = mx.symbol.smooth_l1(name="loc_loss_", \
-        data=loc_target_mask * (loc_preds - loc_target), scalar=1.0)
+                                    data=loc_target_mask * (loc_preds - loc_target), scalar=1.0)
     loc_loss = mx.symbol.MakeLoss(loc_loss_, grad_scale=1., \
-        normalization='valid', name="loc_loss")
+                                  normalization='valid', name="loc_loss")
 
     # monitoring training status
     cls_label = mx.symbol.MakeLoss(data=cls_target, grad_scale=0, name="cls_label")
     det = mx.symbol.contrib.MultiBoxDetection(*[cls_prob, loc_preds, anchor_boxes], \
-        name="detection", nms_threshold=nms_thresh, force_suppress=force_suppress,
-        variances=(0.1, 0.1, 0.2, 0.2), nms_topk=nms_topk)
+                                              name="detection", nms_threshold=nms_thresh, force_suppress=force_suppress,
+                                              variances=(0.1, 0.1, 0.2, 0.2), nms_topk=nms_topk)
     det = mx.symbol.MakeLoss(data=det, grad_scale=0, name="det_out")
 
     # group output
     out = mx.symbol.Group([cls_prob, loc_loss, cls_label, det])
     return out
+
 
 def get_symbol(num_classes=20, nms_thresh=0.5, force_suppress=False, nms_topk=400):
     """
@@ -204,8 +208,8 @@ def get_symbol(num_classes=20, nms_thresh=0.5, force_suppress=False, nms_topk=40
     anchor_boxes = net.get_internals()["multibox_anchors_output"]
 
     cls_prob = mx.symbol.SoftmaxActivation(data=cls_preds, mode='channel', \
-        name='cls_prob')
+                                           name='cls_prob')
     out = mx.symbol.contrib.MultiBoxDetection(*[cls_prob, loc_preds, anchor_boxes], \
-        name="detection", nms_threshold=nms_thresh, force_suppress=force_suppress,
-        variances=(0.1, 0.1, 0.2, 0.2), nms_topk=nms_topk)
+                                              name="detection", nms_threshold=nms_thresh, force_suppress=force_suppress,
+                                              variances=(0.1, 0.1, 0.2, 0.2), nms_topk=nms_topk)
     return out

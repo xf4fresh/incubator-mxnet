@@ -44,6 +44,7 @@ class YoloFormat(Imdb):
         whether to shuffle the initial order when loading this dataset,
         default is True
     """
+
     def __init__(self, name, classes, list_file, image_dir, label_dir, \
                  extension='.jpg', label_extension='.txt', shuffle=True):
         if isinstance(classes, list) or isinstance(classes, tuple):
@@ -67,7 +68,6 @@ class YoloFormat(Imdb):
         self.image_set_index = self._load_image_set_index(shuffle)
         self.num_images = len(self.image_set_index)
         self.labels = self._load_image_labels()
-
 
     def _load_image_set_index(self, shuffle):
         """

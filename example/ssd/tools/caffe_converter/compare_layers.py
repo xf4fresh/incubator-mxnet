@@ -50,13 +50,13 @@ def read_image(img_path, image_dims=None, mean=None):
 
     if image_dims is not None:
         img = cv2.resize(img, image_dims)  # resize to image_dims to fit model
-    img = np.rollaxis(img, 2) # change to (c, h, w) order
+    img = np.rollaxis(img, 2)  # change to (c, h, w) order
     img = img[np.newaxis, :]  # extend to (n, c, h, w)
     if mean is not None:
         mean = np.array(mean)
         if mean.shape == (3,):
             mean = mean[np.newaxis, :, np.newaxis, np.newaxis]  # extend to (n, c, 1, 1)
-        img = img.astype(np.float32) - mean # subtract mean
+        img = img.astype(np.float32) - mean  # subtract mean
 
     return img
 
@@ -359,6 +359,7 @@ def main():
     convert_and_compare_caffe_to_mxnet(args.image_url, args.gpu, args.caffe_prototxt_path,
                                        args.caffe_model_path, args.caffe_mean,
                                        args.mean_diff_allowed, args.max_diff_allowed)
+
 
 if __name__ == '__main__':
     main()

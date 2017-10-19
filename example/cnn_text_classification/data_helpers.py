@@ -20,6 +20,8 @@ import re
 import itertools
 from collections import Counter
 import os
+
+
 # from gensim.models import word2vec
 
 def clean_str(string):
@@ -107,6 +109,7 @@ def build_input_data(sentences, labels, vocabulary):
     y = np.array(labels)
     return [x, y]
 
+
 def build_input_data_with_word2vec(sentences, labels, word2vec):
     """Map sentences and labels to vectors based on a pretrained word2vec"""
     x_vec = []
@@ -154,7 +157,7 @@ def batch_iter(data, batch_size, num_epochs):
     """
     data = np.array(data)
     data_size = len(data)
-    num_batches_per_epoch = int(len(data)/batch_size) + 1
+    num_batches_per_epoch = int(len(data) / batch_size) + 1
     for epoch in range(num_epochs):
         # Shuffle the data at each epoch
         shuffle_indices = np.random.permutation(np.arange(data_size))

@@ -39,9 +39,9 @@ def ale_load_from_rom(rom_path, display_screen):
         from ale_python_interface import ALEInterface
     except ImportError as e:
         raise ImportError('Unable to import the python package of Arcade Learning Environment. ' \
-                           'ALE may not have been installed correctly. Refer to ' \
-                           '`https://github.com/mgbellemare/Arcade-Learning-Environment` for some' \
-                           'installation guidance')
+                          'ALE may not have been installed correctly. Refer to ' \
+                          '`https://github.com/mgbellemare/Arcade-Learning-Environment` for some' \
+                          'installation guidance')
 
     ale = ALEInterface()
     ale.setInt('random_seed', rng.randint(1000))
@@ -50,7 +50,7 @@ def ale_load_from_rom(rom_path, display_screen):
         if sys.platform == 'darwin':
             import pygame
             pygame.init()
-            ale.setBool('sound', False) # Sound doesn't work on OSX
+            ale.setBool('sound', False)  # Sound doesn't work on OSX
         ale.setBool('display_screen', True)
     else:
         ale.setBool('display_screen', False)
@@ -108,7 +108,6 @@ class AtariGame(Game):
         self.start()
         self.replay_memory.clear()
 
-
     def begin_episode(self, max_episode_step=DEFAULT_MAX_EPISODE_STEP):
         """
             Begin an episode of a game instance. We can play the game for a maximum of
@@ -154,7 +153,7 @@ class AtariGame(Game):
                               interpolation=cv2.INTER_LINEAR)
 
     def play(self, a):
-        assert not self.episode_terminate,\
+        assert not self.episode_terminate, \
             "Warning, the episode seems to have terminated. " \
             "We need to call either game.begin_episode(max_episode_step) to continue a new " \
             "episode or game.start() to force restart."

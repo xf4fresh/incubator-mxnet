@@ -51,6 +51,7 @@ parser.add_argument('--beta', type=float, default=0.08)
 
 args = parser.parse_args()
 
+
 def log_config(log_dir=None, log_file=None, prefix=None, rank=0):
     reload(logging)
     head = '%(asctime)-15s Node[' + str(rank) + '] %(message)s'
@@ -72,6 +73,7 @@ def log_config(log_dir=None, log_file=None, prefix=None, rank=0):
     else:
         logging.basicConfig(level=logging.DEBUG, format=head)
         logging.info('start with arguments %s', args)
+
 
 def train():
     # kvstore
@@ -96,13 +98,14 @@ def train():
 
     # disable kvstore for single device
     if 'local' in kv.type and (
-            args.gpus is None or len(args.gpus.split(',')) is 1):
+                    args.gpus is None or len(args.gpus.split(',')) is 1):
         kv = None
 
     # module
     dataiter = rl_data.GymDataIter('Breakout-v0', args.batch_size, args.input_length, web_viz=True)
     net = sym.get_symbol_atari(dataiter.act_dim)
-    module = mx.mod.Module(net, data_names=[d[0] for d in dataiter.provide_data], label_names=('policy_label', 'value_label'), context=devs)
+    module = mx.mod.Module(net, data_names=[d[0] for d in dataiter.provide_data],
+                           label_names=('policy_label', 'value_label'), context=devs)
     module.bind(data_shapes=dataiter.provide_data,
                 label_shapes=[('policy_label', (args.batch_size,)), ('value_label', (args.batch_size, 1))],
                 grad_req='add')
@@ -136,10 +139,9 @@ def train():
     final_score = np.zeros((args.batch_size, 1))
     for epoch in range(args.num_epochs):
         if save_model_prefix:
-            module.save_params('%s-%04d.params'%(save_model_prefix, epoch))
+            module.save_params('%s-%04d.params' % (save_model_prefix, epoch))
 
-
-        for _ in range(epoch_size/args.t_max):
+        for _ in range(epoch_size / args.t_max):
             tic = time.time()
             # clear gradients
             for exe in module._exec_group.grad_arrays:
@@ -171,25 +173,27 @@ def train():
                 module.forward(batch, is_train=True)
 
                 pi = module.get_outputs()[1]
-                h = -args.beta*(mx.nd.log(pi+1e-7)*pi)
+                h = -args.beta * (mx.nd.log(pi + 1e-7) * pi)
                 out_acts = np.amax(pi.asnumpy(), 1)
-                out_acts=np.reshape(out_acts,(-1,1))
-                out_acts_tile=np.tile(-np.log(out_acts + 1e-7),(1, dataiter.act_dim))
-                module.backward([mx.nd.array(out_acts_tile*adv), h])
+                out_acts = np.reshape(out_acts, (-1, 1))
+                out_acts_tile = np.tile(-np.log(out_acts + 1e-7), (1, dataiter.act_dim))
+                module.backward([mx.nd.array(out_acts_tile * adv), h])
 
                 print('pi', pi[0].asnumpy())
                 print('h', h[0].asnumpy())
-                err += (adv**2).mean()
+                err += (adv ** 2).mean()
                 score += r[i]
-                final_score *= (1-D[i])
+                final_score *= (1 - D[i])
                 final_score += score * D[i]
-                score *= 1-D[i]
+                score *= 1 - D[i]
                 T += D[i].sum()
 
             module.update()
-            logging.info('fps: %f err: %f score: %f final: %f T: %f'%(args.batch_size/(time.time()-tic), err/args.t_max, score.mean(), final_score.mean(), T))
+            logging.info('fps: %f err: %f score: %f final: %f T: %f' % (
+            args.batch_size / (time.time() - tic), err / args.t_max, score.mean(), final_score.mean(), T))
             print(score.squeeze())
             print(final_score.squeeze())
+
 
 def test():
     log_config()
@@ -201,7 +205,8 @@ def test():
     dataiter = robo_data.RobosimsDataIter('scenes', args.batch_size, args.input_length, web_viz=True)
     print(dataiter.provide_data)
     net = sym.get_symbol_thor(dataiter.act_dim)
-    module = mx.mod.Module(net, data_names=[d[0] for d in dataiter.provide_data], label_names=('policy_label', 'value_label'), context=devs)
+    module = mx.mod.Module(net, data_names=[d[0] for d in dataiter.provide_data],
+                           label_names=('policy_label', 'value_label'), context=devs)
     module.bind(data_shapes=dataiter.provide_data,
                 label_shapes=[('policy_label', (args.batch_size,)), ('value_label', (args.batch_size, 1))],
                 for_training=False)
@@ -209,7 +214,7 @@ def test():
     # load model
     assert args.load_epoch is not None
     assert args.model_prefix is not None
-    module.load_params('%s-%04d.params'%(args.model_prefix, args.load_epoch))
+    module.load_params('%s-%04d.params' % (args.model_prefix, args.load_epoch))
 
     N = args.num_epochs * args.num_examples / args.batch_size
 
@@ -227,11 +232,11 @@ def test():
         _, reward, _, done = dataiter.history[0]
         T += done.sum()
         score += reward
-        R += (done*score).sum()
-        score *= (1-done)
+        R += (done * score).sum()
+        score *= (1 - done)
 
         if t % 100 == 0:
-            logging.info('n %d score: %f T: %f'%(t, R/T, T))
+            logging.info('n %d score: %f T: %f' % (t, R / T, T))
 
 
 if __name__ == '__main__':
@@ -239,5 +244,3 @@ if __name__ == '__main__':
         test()
     else:
         train()
-
-

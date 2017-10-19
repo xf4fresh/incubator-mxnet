@@ -21,6 +21,7 @@ import numpy as np
 
 class MultiBoxMetric(mx.metric.EvalMetric):
     """Calculate metrics for Multibox training """
+
     def __init__(self, eps=1e-8):
         super(MultiBoxMetric, self).__init__('MultiBox')
         self.eps = eps
@@ -77,7 +78,7 @@ class MultiBoxMetric(mx.metric.EvalMetric):
             else:
                 return (self.name, self.sum_metric / self.num_inst)
         else:
-            names = ['%s'%(self.name[i]) for i in range(self.num)]
+            names = ['%s' % (self.name[i]) for i in range(self.num)]
             values = [x / y if y != 0 else float('nan') \
-                for x, y in zip(self.sum_metric, self.num_inst)]
+                      for x, y in zip(self.sum_metric, self.num_inst)]
             return (names, values)

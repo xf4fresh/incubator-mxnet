@@ -56,7 +56,6 @@ parser.add_argument('--save', type=str, default='model.params',
                     help='path to save the final model')
 args = parser.parse_args()
 
-
 ###############################################################################
 # Load data
 ###############################################################################
@@ -69,6 +68,7 @@ else:
 
 corpus = data.Corpus(args.data)
 
+
 def batchify(data, batch_size):
     """Reshape data into (num_example, batch_size)"""
     nbatch = data.shape[0] // batch_size
@@ -76,10 +76,10 @@ def batchify(data, batch_size):
     data = data.reshape((batch_size, nbatch)).T
     return data
 
+
 train_data = batchify(corpus.train, args.batch_size).as_in_context(context)
 val_data = batchify(corpus.valid, args.batch_size).as_in_context(context)
 test_data = batchify(corpus.test, args.batch_size).as_in_context(context)
-
 
 ###############################################################################
 # Build the model
@@ -96,15 +96,17 @@ trainer = gluon.Trainer(model.collect_params(), 'sgd',
                          'wd': 0})
 loss = gluon.loss.SoftmaxCrossEntropyLoss()
 
+
 ###############################################################################
 # Training code
 ###############################################################################
 
 def get_batch(source, i):
     seq_len = min(args.bptt, source.shape[0] - 1 - i)
-    data = source[i:i+seq_len]
-    target = source[i+1:i+1+seq_len]
+    data = source[i:i + seq_len]
+    target = source[i + 1:i + 1 + seq_len]
     return data, target.reshape((-1,))
+
 
 def detach(hidden):
     if isinstance(hidden, (tuple, list)):
@@ -112,6 +114,7 @@ def detach(hidden):
     else:
         hidden = hidden.detach()
     return hidden
+
 
 def eval(data_source):
     total_L = 0.0
@@ -124,6 +127,7 @@ def eval(data_source):
         total_L += mx.nd.sum(L).asscalar()
         ntotal += L.size
     return total_L / ntotal
+
 
 def train():
     best_val = float("Inf")
@@ -149,30 +153,31 @@ def train():
 
             if ibatch % args.log_interval == 0 and ibatch > 0:
                 cur_L = total_L / args.bptt / args.batch_size / args.log_interval
-                print('[Epoch %d Batch %d] loss %.2f, ppl %.2f'%(
+                print('[Epoch %d Batch %d] loss %.2f, ppl %.2f' % (
                     epoch, ibatch, cur_L, math.exp(cur_L)))
                 total_L = 0.0
 
         val_L = eval(val_data)
 
-        print('[Epoch %d] time cost %.2fs, valid loss %.2f, valid ppl %.2f'%(
-            epoch, time.time()-start_time, val_L, math.exp(val_L)))
+        print('[Epoch %d] time cost %.2fs, valid loss %.2f, valid ppl %.2f' % (
+            epoch, time.time() - start_time, val_L, math.exp(val_L)))
 
         if val_L < best_val:
             best_val = val_L
             test_L = eval(test_data)
             model.collect_params().save(args.save)
-            print('test loss %.2f, test ppl %.2f'%(test_L, math.exp(test_L)))
+            print('test loss %.2f, test ppl %.2f' % (test_L, math.exp(test_L)))
         else:
-            args.lr = args.lr*0.25
+            args.lr = args.lr * 0.25
             trainer._init_optimizer('sgd',
                                     {'learning_rate': args.lr,
                                      'momentum': 0,
                                      'wd': 0})
             model.collect_params().load(args.save, context)
 
+
 if __name__ == '__main__':
     train()
     model.collect_params().load(args.save, context)
     test_L = eval(test_data)
-    print('Best test loss %.2f, test ppl %.2f'%(test_L, math.exp(test_L)))
+    print('Best test loss %.2f, test ppl %.2f' % (test_L, math.exp(test_L)))

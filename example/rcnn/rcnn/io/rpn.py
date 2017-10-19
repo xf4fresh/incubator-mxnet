@@ -100,6 +100,7 @@ def assign_anchor(feat_shape, gt_boxes, im_info, feat_stride=16,
     'bbox_inside_weight': *todo* mark the assigned anchors
     'bbox_outside_weight': used to normalize the bbox_loss, all weights sums to RPN_POSITIVE_WEIGHT
     """
+
     def _unmap(data, count, inds, fill=0):
         """" unmap a subset inds of data into original data of size count """
         if len(data.shape) == 1:
@@ -120,7 +121,7 @@ def assign_anchor(feat_shape, gt_boxes, im_info, feat_stride=16,
 
     logger.debug('anchors: %s' % base_anchors)
     logger.debug('anchor shapes: %s' % np.hstack((base_anchors[:, 2::4] - base_anchors[:, 0::4],
-                                                 base_anchors[:, 3::4] - base_anchors[:, 1::4])))
+                                                  base_anchors[:, 3::4] - base_anchors[:, 1::4])))
     logger.debug('im_info %s' % im_info)
     logger.debug('height %d width %d' % (feat_height, feat_width))
     logger.debug('gt_boxes shape %s' % np.array(gt_boxes.shape))

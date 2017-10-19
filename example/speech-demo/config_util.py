@@ -55,11 +55,11 @@ def parse_args():
             if hasattr(args, arg_name) and getattr(args, arg_name) is not None:
                 sys.stderr.write('!! CMDLine overwriting %s.%s:\n' % (sec, name))
                 sys.stderr.write("    '%s' => '%s'\n" % (default_cfg.get(sec, name),
-                                 getattr(args, arg_name)))
+                                                         getattr(args, arg_name)))
                 default_cfg.set(sec, name, getattr(args, arg_name))
 
     args.config = default_cfg
-    sys.stderr.write("="*80+"\n")
+    sys.stderr.write("=" * 80 + "\n")
     return args
 
 

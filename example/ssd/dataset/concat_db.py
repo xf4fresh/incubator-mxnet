@@ -18,6 +18,7 @@
 from dataset.imdb import Imdb
 import random
 
+
 class ConcatDB(Imdb):
     """
     ConcatDB is used to concatenate multiple imdbs to form a larger db.
@@ -29,6 +30,7 @@ class ConcatDB(Imdb):
     shuffle : bool
         whether to shuffle the initial list
     """
+
     def __init__(self, imdbs, shuffle):
         super(ConcatDB, self).__init__('concatdb')
         if not isinstance(imdbs, list):

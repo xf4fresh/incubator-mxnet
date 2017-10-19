@@ -16,12 +16,13 @@
 # under the License.
 
 import sys
+
 sys.path.insert(0, "../mxnet/python")
 
 import mxnet as mx
 import numpy as np
 
-#import basic
+# import basic
 import data_processing
 import gen_v3
 import gen_v4
@@ -30,8 +31,6 @@ dshape = (1, 3, 480, 640)
 clip_norm = 1.0 * np.prod(dshape)
 model_prefix = "./model/"
 ctx = mx.gpu(0)
-
-
 
 # generator
 gens = [gen_v4.get_module("g0", dshape, ctx),
@@ -49,7 +48,7 @@ for i in range(len(gens)):
     data.append(new_img.copyto(mx.cpu()))
     data_processing.SaveImage(new_img.asnumpy(), "out_%d.jpg" % i)
 
-
 import os
+
 os.system("rm -rf out.zip")
 os.system("zip out.zip out_*")

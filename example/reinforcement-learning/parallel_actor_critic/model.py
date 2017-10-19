@@ -91,7 +91,7 @@ class Agent(object):
         for i in xrange(len(env_vs)):
             # Compute advantages using Generalized Advantage Estimation;
             # see eqn. (16) of [Schulman 2016].
-            delta_t = (env_rs[i] + gamma*np.array(env_vs[i][1:]) -
+            delta_t = (env_rs[i] + gamma * np.array(env_vs[i][1:]) -
                        np.array(env_vs[i][:-1]))
             advs.extend(self._discount(delta_t, gamma * lambda_))
 

@@ -114,6 +114,7 @@ class LayerRecord(object):
     def _is_iterable(obj):
         return hasattr(obj, '__iter__')
 
+
 def read_network_dag(processed_deploy_prototxt):
     """
     Reads from the caffe prototxt the network structure
@@ -141,8 +142,7 @@ def read_network_dag(processed_deploy_prototxt):
     layer_name_to_record = OrderedDict()
     for layer_def in network_def.layer:
         if (len(layer_def.include) == 0) or \
-           (caffe_pb2.TEST in [item.phase for item in layer_def.include]):
-
+                (caffe_pb2.TEST in [item.phase for item in layer_def.include]):
             layer_name_to_record[layer_def.name] = LayerRecord(layer_def)
 
     top_to_layers = dict()
@@ -171,10 +171,10 @@ def read_network_dag(processed_deploy_prototxt):
     for layer_name in layer_name_to_record.keys():
         layer_def = layer_name_to_record[layer_name]
         if layer_def.type == 'Eltwise' and \
-           len(layer_def.parents) == 1 and \
-           layer_def.parents[0].type == 'Slice' and \
-           len(layer_def.parents[0].parents) == 1 and \
-           layer_def.parents[0].parents[0].type in ['Convolution', 'InnerProduct']:
+                        len(layer_def.parents) == 1 and \
+                        layer_def.parents[0].type == 'Slice' and \
+                        len(layer_def.parents[0].parents) == 1 and \
+                        layer_def.parents[0].parents[0].type in ['Convolution', 'InnerProduct']:
             layer_def.filter = layer_def.parents[0].parents[0].filter
             layer_def.stride = layer_def.parents[0].parents[0].stride
             layer_def.pad = layer_def.parents[0].parents[0].pad

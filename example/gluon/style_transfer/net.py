@@ -22,6 +22,7 @@ from mxnet.gluon import nn, autograd, Block, HybridBlock, Parameter
 from mxnet.base import numeric_types
 import mxnet.ndarray as F
 
+
 class InstanceNorm(HybridBlock):
     def __init__(self, axis=1, momentum=0.9, epsilon=1e-5, center=True, scale=False,
                  beta_initializer='zeros', gamma_initializer='ones',
@@ -39,7 +40,7 @@ class InstanceNorm(HybridBlock):
 
     def hybrid_forward(self, F, x, gamma, beta):
         return F.InstanceNorm(x, gamma, beta,
-                           name='fwd', **self._kwargs)
+                              name='fwd', **self._kwargs)
 
     def __repr__(self):
         s = '{name}({content}'
@@ -55,40 +56,41 @@ class ReflectancePadding(HybridBlock):
     def __init__(self, pad_width=None, **kwargs):
         super(ReflectancePadding, self).__init__(**kwargs)
         self.pad_width = pad_width
-        
+
     def forward(self, x):
         return F.pad(x, mode='reflect', pad_width=self.pad_width)
 
-    
+
 class Bottleneck(Block):
     """ Pre-activation residual block
     Identity Mapping in Deep Residual Networks
     ref https://arxiv.org/abs/1603.05027
     """
+
     def __init__(self, inplanes, planes, stride=1, downsample=None, norm_layer=InstanceNorm):
         super(Bottleneck, self).__init__()
         self.expansion = 4
         self.downsample = downsample
         if self.downsample is not None:
-            self.residual_layer = nn.Conv2D(in_channels=inplanes, 
+            self.residual_layer = nn.Conv2D(in_channels=inplanes,
                                             channels=planes * self.expansion,
                                             kernel_size=1, strides=(stride, stride))
         self.conv_block = nn.Sequential()
         with self.conv_block.name_scope():
             self.conv_block.add(norm_layer(in_channels=inplanes))
             self.conv_block.add(nn.Activation('relu'))
-            self.conv_block.add(nn.Conv2D(in_channels=inplanes, channels=planes, 
-                                 kernel_size=1))
+            self.conv_block.add(nn.Conv2D(in_channels=inplanes, channels=planes,
+                                          kernel_size=1))
             self.conv_block.add(norm_layer(in_channels=planes))
             self.conv_block.add(nn.Activation('relu'))
-            self.conv_block.add(ConvLayer(planes, planes, kernel_size=3, 
-                stride=stride))
+            self.conv_block.add(ConvLayer(planes, planes, kernel_size=3,
+                                          stride=stride))
             self.conv_block.add(norm_layer(in_channels=planes))
             self.conv_block.add(nn.Activation('relu'))
-            self.conv_block.add(nn.Conv2D(in_channels=planes, 
-                                 channels=planes * self.expansion, 
-                                 kernel_size=1))
-        
+            self.conv_block.add(nn.Conv2D(in_channels=planes,
+                                          channels=planes * self.expansion,
+                                          kernel_size=1))
+
     def forward(self, x):
         if self.downsample is not None:
             residual = self.residual_layer(x)
@@ -102,37 +104,38 @@ class UpBottleneck(Block):
     Enables passing identity all the way through the generator
     ref https://arxiv.org/abs/1703.06953
     """
+
     def __init__(self, inplanes, planes, stride=2, norm_layer=InstanceNorm):
         super(UpBottleneck, self).__init__()
         self.expansion = 4
         self.residual_layer = UpsampleConvLayer(inplanes, planes * self.expansion,
-                                                      kernel_size=1, stride=1, upsample=stride)
+                                                kernel_size=1, stride=1, upsample=stride)
         self.conv_block = nn.Sequential()
         with self.conv_block.name_scope():
             self.conv_block.add(norm_layer(in_channels=inplanes))
             self.conv_block.add(nn.Activation('relu'))
-            self.conv_block.add(nn.Conv2D(in_channels=inplanes, channels=planes, 
-                                kernel_size=1))
+            self.conv_block.add(nn.Conv2D(in_channels=inplanes, channels=planes,
+                                          kernel_size=1))
             self.conv_block.add(norm_layer(in_channels=planes))
             self.conv_block.add(nn.Activation('relu'))
             self.conv_block.add(UpsampleConvLayer(planes, planes, kernel_size=3, stride=1, upsample=stride))
             self.conv_block.add(norm_layer(in_channels=planes))
             self.conv_block.add(nn.Activation('relu'))
-            self.conv_block.add(nn.Conv2D(in_channels=planes, 
-                                channels=planes * self.expansion, 
-                                kernel_size=1))
+            self.conv_block.add(nn.Conv2D(in_channels=planes,
+                                          channels=planes * self.expansion,
+                                          kernel_size=1))
 
     def forward(self, x):
-        return  self.residual_layer(x) + self.conv_block(x)
+        return self.residual_layer(x) + self.conv_block(x)
 
 
 class ConvLayer(Block):
     def __init__(self, in_channels, out_channels, kernel_size, stride):
         super(ConvLayer, self).__init__()
         padding = int(np.floor(kernel_size / 2))
-        self.pad = ReflectancePadding(pad_width=(0,0,0,0,padding,padding,padding,padding))
-        self.conv2d = nn.Conv2D(in_channels=in_channels, channels=out_channels, 
-                                kernel_size=kernel_size, strides=(stride,stride),
+        self.pad = ReflectancePadding(pad_width=(0, 0, 0, 0, padding, padding, padding, padding))
+        self.conv2d = nn.Conv2D(in_channels=in_channels, channels=out_channels,
+                                kernel_size=kernel_size, strides=(stride, stride),
                                 padding=0)
 
     def forward(self, x):
@@ -148,8 +151,8 @@ class UpsampleConvLayer(Block):
     ref: http://distill.pub/2016/deconv-checkerboard/
     """
 
-    def __init__(self, in_channels, out_channels, kernel_size, 
-            stride, upsample=None):
+    def __init__(self, in_channels, out_channels, kernel_size,
+                 stride, upsample=None):
         super(UpsampleConvLayer, self).__init__()
         self.upsample = upsample
         """
@@ -157,9 +160,9 @@ class UpsampleConvLayer(Block):
             self.upsample_layer = torch.nn.UpsamplingNearest2d(scale_factor=upsample)
         """
         self.reflection_padding = int(np.floor(kernel_size / 2))
-        self.conv2d = nn.Conv2D(in_channels=in_channels, 
-                                channels=out_channels, 
-                                kernel_size=kernel_size, strides=(stride,stride),
+        self.conv2d = nn.Conv2D(in_channels=in_channels,
+                                channels=out_channels,
+                                kernel_size=kernel_size, strides=(stride, stride),
                                 padding=self.reflection_padding)
 
     def forward(self, x):
@@ -176,7 +179,7 @@ class UpsampleConvLayer(Block):
 def gram_matrix(y):
     (b, ch, h, w) = y.shape
     features = y.reshape((b, ch, w * h))
-    #features_t = F.SwapAxis(features,1, 2)
+    # features_t = F.SwapAxis(features,1, 2)
     gram = F.batch_dot(features, features, transpose_b=True) / (ch * h * w)
     return gram
 
@@ -186,8 +189,9 @@ class GramMatrix(Block):
         gram = gram_matrix(x)
         return gram
 
+
 class Net(Block):
-    def __init__(self, input_nc=3, output_nc=3, ngf=64, 
+    def __init__(self, input_nc=3, output_nc=3, ngf=64,
                  norm_layer=InstanceNorm, n_blocks=6, gpu_ids=[]):
         super(Net, self).__init__()
         self.gpu_ids = gpu_ids
@@ -199,28 +203,26 @@ class Net(Block):
 
         with self.name_scope():
             self.model1 = nn.Sequential()
-            self.ins = Inspiration(ngf*expansion)
+            self.ins = Inspiration(ngf * expansion)
             self.model = nn.Sequential()
 
             self.model1.add(ConvLayer(input_nc, 64, kernel_size=7, stride=1))
             self.model1.add(norm_layer(in_channels=64))
             self.model1.add(nn.Activation('relu'))
             self.model1.add(block(64, 32, 2, 1, norm_layer))
-            self.model1.add(block(32*expansion, ngf, 2, 1, norm_layer))
-
+            self.model1.add(block(32 * expansion, ngf, 2, 1, norm_layer))
 
             self.model.add(self.model1)
             self.model.add(self.ins)
 
             for i in range(n_blocks):
-                self.model.add(block(ngf*expansion, ngf, 1, None, norm_layer))
-        
-            self.model.add(upblock(ngf*expansion, 32, 2, norm_layer))
-            self.model.add(upblock(32*expansion, 16, 2, norm_layer))
-            self.model.add(norm_layer(in_channels=16*expansion))
-            self.model.add(nn.Activation('relu'))
-            self.model.add(ConvLayer(16*expansion, output_nc, kernel_size=7, stride=1))
+                self.model.add(block(ngf * expansion, ngf, 1, None, norm_layer))
 
+            self.model.add(upblock(ngf * expansion, 32, 2, norm_layer))
+            self.model.add(upblock(32 * expansion, 16, 2, norm_layer))
+            self.model.add(norm_layer(in_channels=16 * expansion))
+            self.model.add(nn.Activation('relu'))
+            self.model.add(ConvLayer(16 * expansion, output_nc, kernel_size=7, stride=1))
 
     def setTarget(self, Xs):
         F = self.model1(Xs)
@@ -236,14 +238,15 @@ class Inspiration(HybridBlock):
     tuning the featuremap with target Gram Matrix
     ref https://arxiv.org/abs/1703.06953
     """
+
     def __init__(self, C, B=1):
         super(Inspiration, self).__init__()
         # B is equal to 1 or input mini_batch
         self.C = C
-        self.weight = self.params.get('weight', shape=(1,C,C),
+        self.weight = self.params.get('weight', shape=(1, C, C),
                                       init=mx.initializer.Uniform(),
                                       allow_deferred_init=True)
-        self.gram = self.params.get('gram', shape=(B,C,C),
+        self.gram = self.params.get('gram', shape=(B, C, C),
                                     init=mx.initializer.Uniform(),
                                     allow_deferred_init=True,
                                     lr_mult=0)
@@ -254,11 +257,12 @@ class Inspiration(HybridBlock):
     def forward(self, X):
         # input X is a 3D feature map
         self.P = F.batch_dot(F.broadcast_to(self.weight.data(), shape=(self.gram.shape)), self.gram.data())
-        return F.batch_dot(F.SwapAxis(self.P,1,2).broadcast_to((X.shape[0], self.C, self.C)), X.reshape((0,0,X.shape[2]*X.shape[3]))).reshape(X.shape)
+        return F.batch_dot(F.SwapAxis(self.P, 1, 2).broadcast_to((X.shape[0], self.C, self.C)),
+                           X.reshape((0, 0, X.shape[2] * X.shape[3]))).reshape(X.shape)
 
     def __repr__(self):
         return self.__class__.__name__ + '(' \
-            + 'N x ' + str(self.C) + ')'
+               + 'N x ' + str(self.C) + ')'
 
 
 class Vgg16(Block):
@@ -311,20 +315,20 @@ def test_InstanceNorm():
     import torch
     from torch import nn as nn2
     from torch.autograd import Variable
-    tx = Variable(torch.Tensor(1, 2, 200, 300).uniform_(0,1))
+    tx = Variable(torch.Tensor(1, 2, 200, 300).uniform_(0, 1))
     tlayer = nn2.InstanceNorm2d(2)
     ty = tlayer(tx)
-    
+
     mlayer = InstanceNorm(2)
     ctx = mx.cpu(0)
     mlayer.initialize(ctx=ctx)
     mmx = (mx.nd.array(tx.data.numpy())).as_in_context(ctx)
     my = mlayer(mmx)
-    print('tx',tx)
-    print('mmx',mmx)
-    print('ty',ty)
-    print('my',my)
+    print('tx', tx)
+    print('mmx', mmx)
+    print('ty', ty)
+    print('my', my)
+
 
 if __name__ == "__main__":
     test_InstanceNorm()
-

@@ -23,6 +23,7 @@ import mxnet as mx
 import numpy as np
 from convert_symbol import convert_symbol
 
+
 def convert_model(prototxt_fname, caffemodel_fname, output_prefix=None):
     """Convert caffe model
 
@@ -63,9 +64,9 @@ def convert_model(prototxt_fname, caffemodel_fname, output_prefix=None):
     layers_proto = caffe_parser.get_layers(caffe_parser.read_prototxt(prototxt_fname))
 
     for layer_name, layer_type, layer_blobs in layer_iter:
-        if layer_type == 'Convolution' or layer_type == 'InnerProduct'  \
-           or layer_type == 4 or layer_type == 14 or layer_type == 'PReLU' \
-           or layer_type == 'Deconvolution' or layer_type == 39  or layer_type == 'Normalize':
+        if layer_type == 'Convolution' or layer_type == 'InnerProduct' \
+                or layer_type == 4 or layer_type == 14 or layer_type == 'PReLU' \
+                or layer_type == 'Deconvolution' or layer_type == 39 or layer_type == 'Normalize':
             if layer_type == 'PReLU':
                 assert (len(layer_blobs) == 1)
                 wmat = layer_blobs[0].data
@@ -97,13 +98,13 @@ def convert_model(prototxt_fname, caffemodel_fname, output_prefix=None):
                     # Swapping BGR of caffe into RGB in mxnet
                     wmat[:, [0, 2], :, :] = wmat[:, [2, 0], :, :]
 
-            assert(wmat.flags['C_CONTIGUOUS'] is True)
+            assert (wmat.flags['C_CONTIGUOUS'] is True)
             sys.stdout.write('converting layer {0}, wmat shape = {1}'.format(
                 layer_name, wmat.shape))
             if len(layer_blobs) == 2:
                 bias = np.array(layer_blobs[1].data)
                 bias = bias.reshape((bias.shape[0], 1))
-                assert(bias.flags['C_CONTIGUOUS'] is True)
+                assert (bias.flags['C_CONTIGUOUS'] is True)
                 bias_name = layer_name + "_bias"
 
                 if bias_name not in arg_shape_dic:
@@ -125,7 +126,6 @@ def convert_model(prototxt_fname, caffemodel_fname, output_prefix=None):
             wmat = wmat.reshape(arg_shape_dic[weight_name])
             arg_params[weight_name] = mx.nd.zeros(wmat.shape)
             arg_params[weight_name][:] = wmat
-
 
             if first_conv and (layer_type == 'Convolution' or layer_type == 4):
                 first_conv = False
@@ -184,7 +184,7 @@ def convert_model(prototxt_fname, caffemodel_fname, output_prefix=None):
             print('converting batchnorm layer, mean shape = {}, var shape = {}'.format(
                 mean.shape, var.shape))
 
-            fix_gamma = layers_proto[bn_index+1].type != 'Scale'
+            fix_gamma = layers_proto[bn_index + 1].type != 'Scale'
             if fix_gamma:
                 gamma_name = '{}_gamma'.format(bn_name)
                 gamma = np.array(np.ones(arg_shape_dic[gamma_name]))
@@ -209,6 +209,7 @@ def convert_model(prototxt_fname, caffemodel_fname, output_prefix=None):
 
     return sym, arg_params, aux_params, input_dim
 
+
 def main():
     parser = argparse.ArgumentParser(
         description='Caffe prototxt to mxnet model parameter converter.')
@@ -218,7 +219,8 @@ def main():
     args = parser.parse_args()
 
     convert_model(args.prototxt, args.caffemodel, args.save_model_name)
-    print ('Saved model successfully to {}'.format(args.save_model_name))
+    print('Saved model successfully to {}'.format(args.save_model_name))
+
 
 if __name__ == '__main__':
     main()

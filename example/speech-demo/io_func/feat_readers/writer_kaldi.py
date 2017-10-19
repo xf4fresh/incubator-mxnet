@@ -21,10 +21,10 @@ import struct
 import subprocess
 import os
 
+
 # Functions to read and write Kaldi binary-formatted .scp and .ark
 
 class KaldiWriteOut(object):
-
     def __init__(self, scp_path, ark_path):
 
         self.ark_path = ark_path
@@ -41,10 +41,11 @@ class KaldiWriteOut(object):
     def open_or_fd(self):
         offset = None
         if self.ark_path[0] == '|':
-            #self.out_ark = os.popen(sys.stdout, 'wb')
+            # self.out_ark = os.popen(sys.stdout, 'wb')
             self.out_ark = sys.stdout
         else:
             self.out_ark = open(self.ark_path, "w")
+
     def write(self, uttID, data):
         assert data.dtype == numpy.float32
 

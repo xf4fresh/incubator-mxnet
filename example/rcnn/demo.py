@@ -28,7 +28,6 @@ from rcnn.core.tester import Predictor, im_detect, im_proposal, vis_all_detectio
 from rcnn.utils.load_model import load_param
 from rcnn.processing.nms import py_nms_wrapper, cpu_nms_wrapper, gpu_nms_wrapper
 
-
 CLASSES = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
            'bottle', 'bus', 'car', 'cat', 'chair',
@@ -65,11 +64,13 @@ def get_net(symbol, prefix, epoch, ctx):
             continue
         assert k in arg_params, k + ' not initialized'
         assert arg_params[k].shape == arg_shape_dict[k], \
-            'shape inconsistent for ' + k + ' inferred ' + str(arg_shape_dict[k]) + ' provided ' + str(arg_params[k].shape)
+            'shape inconsistent for ' + k + ' inferred ' + str(arg_shape_dict[k]) + ' provided ' + str(
+                arg_params[k].shape)
     for k in symbol.list_auxiliary_states():
         assert k in aux_params, k + ' not initialized'
         assert aux_params[k].shape == aux_shape_dict[k], \
-            'shape inconsistent for ' + k + ' inferred ' + str(aux_shape_dict[k]) + ' provided ' + str(aux_params[k].shape)
+            'shape inconsistent for ' + k + ' inferred ' + str(aux_shape_dict[k]) + ' provided ' + str(
+                aux_params[k].shape)
 
     predictor = Predictor(symbol, DATA_NAMES, LABEL_NAMES, context=ctx,
                           provide_data=DATA_SHAPES, provide_label=LABEL_SHAPES,

@@ -22,6 +22,7 @@ import os
 import sys
 from train.train_net import train_net
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a Single-shot detection network')
     parser.add_argument('--train-path', dest='train_path', help='train record to use',
@@ -104,6 +105,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 def parse_class_names(args):
     """ parse # classes and class_names if applicable """
     num_class = args.num_class
@@ -120,6 +122,7 @@ def parse_class_names(args):
     else:
         class_names = None
     return class_names
+
 
 if __name__ == '__main__':
     args = parse_args()

@@ -100,7 +100,7 @@ class Base(object):
         if self.curr_bucket_key in self._buckets:
             if data_shapes is not None:
                 if tuple(data_shapes.items()) not in self._buckets[self.curr_bucket_key]['exe']:
-                    #TODO Optimize the reshaping functionality!
+                    # TODO Optimize the reshaping functionality!
                     self._buckets[self.curr_bucket_key]['exe'][tuple(data_shapes.items())] = \
                         self.exe.reshape(partial_shaping=True, allow_up_sizing=True, **data_shapes)
                     self._buckets[self.curr_bucket_key]['data_shapes'] = data_shapes
@@ -147,11 +147,11 @@ class Base(object):
             shared_exe = None
         self._buckets[self.curr_bucket_key] = {
             'exe': {tuple(data_shapes.items()):
-                    sym.bind(ctx=self.ctx,
-                             args=dict(self.params, **data_inputs),
-                             args_grad=dict(self.params_grad.items()),
-                             aux_states=self.aux_states,
-                             shared_exec=shared_exe)
+                        sym.bind(ctx=self.ctx,
+                                 args=dict(self.params, **data_inputs),
+                                 args_grad=dict(self.params_grad.items()),
+                                 aux_states=self.aux_states,
+                                 shared_exec=shared_exe)
                     },
             'data_shapes': data_shapes,
             'sym': sym
@@ -171,7 +171,7 @@ class Base(object):
         logging.info('Loading params from \"%s\" to %s' % (param_loading_path, self.name))
         for k, v in params.items():
             if k in self.params:
-                logging.debug('   Loading %s %s' %(k, str(v.shape)))
+                logging.debug('   Loading %s %s' % (k, str(v.shape)))
                 self.params[k][:] = v
             else:
                 logging.warn("Found unused param in the saved model file: %s" % k)
@@ -221,26 +221,26 @@ class Base(object):
         return exe.outputs[0]
 
     def forward(self, is_train=False, bucket_kwargs=None, **arg_dict):
-        #import time
-        #start = time.time()
+        # import time
+        # start = time.time()
         data_shapes = {k: v.shape for k, v in arg_dict.items()}
         for name in self.learn_init_keys:
             data_shapes[name] = self.learn_init_key_shapes[name]
         self.switch_bucket(bucket_kwargs=bucket_kwargs,
                            data_shapes=data_shapes)
-        #end = time.time()
-        #print 'Swith Bucket:', end - start
-        #start = time.time()
+        # end = time.time()
+        # print 'Swith Bucket:', end - start
+        # start = time.time()
         for k, v in arg_dict.items():
-            assert self.exe.arg_dict[k].shape == v.shape,\
+            assert self.exe.arg_dict[k].shape == v.shape, \
                 "Shape not match: key %s, need %s, received %s" \
-                %(k, str(self.exe.arg_dict[k].shape), str(v.shape))
+                % (k, str(self.exe.arg_dict[k].shape), str(v.shape))
             self.exe.arg_dict[k][:] = v
         self.exe.forward(is_train=is_train)
         for output in self.exe.outputs:
             output.wait_to_read()
-        #end = time.time()
-        #print 'Forward:', end - start
+        # end = time.time()
+        # print 'Forward:', end - start
         return self.exe.outputs
 
     def backward(self, out_grads=None, **arg_dict):

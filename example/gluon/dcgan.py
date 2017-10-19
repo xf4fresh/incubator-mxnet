@@ -16,6 +16,7 @@
 # under the License.
 
 import matplotlib as mpl
+
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 
@@ -30,24 +31,26 @@ from datetime import datetime
 import os
 import time
 
-def fill_buf(buf, i, img, shape):
-    n = buf.shape[0]//shape[1]
-    m = buf.shape[1]//shape[0]
 
-    sx = (i%m)*shape[0]
-    sy = (i//m)*shape[1]
-    buf[sy:sy+shape[1], sx:sx+shape[0], :] = img
+def fill_buf(buf, i, img, shape):
+    n = buf.shape[0] // shape[1]
+    m = buf.shape[1] // shape[0]
+
+    sx = (i % m) * shape[0]
+    sy = (i // m) * shape[1]
+    buf[sy:sy + shape[1], sx:sx + shape[0], :] = img
     return None
+
 
 def visual(title, X, name):
     assert len(X.shape) == 4
     X = X.transpose((0, 2, 3, 1))
-    X = np.clip((X - np.min(X))*(255.0/(np.max(X) - np.min(X))), 0, 255).astype(np.uint8)
+    X = np.clip((X - np.min(X)) * (255.0 / (np.max(X) - np.min(X))), 0, 255).astype(np.uint8)
     n = np.ceil(np.sqrt(X.shape[0]))
-    buff = np.zeros((int(n*X.shape[1]), int(n*X.shape[2]), int(X.shape[3])), dtype=np.uint8)
+    buff = np.zeros((int(n * X.shape[1]), int(n * X.shape[2]), int(X.shape[3])), dtype=np.uint8)
     for i, img in enumerate(X):
         fill_buf(buff, i, img, X.shape[1:3])
-    buff = buff[:,:,::-1]
+    buff = buff[:, :, ::-1]
     plt.imshow(buff)
     plt.title(title)
     plt.savefig(name)
@@ -93,13 +96,14 @@ def transformer(data, label):
     # resize to 64x64
     data = mx.image.imresize(data, 64, 64)
     # transpose from (64, 64, 3) to (3, 64, 64)
-    data = mx.nd.transpose(data, (2,0,1))
+    data = mx.nd.transpose(data, (2, 0, 1))
     # normalize to [-1, 1]
-    data = data.astype(np.float32)/128 - 1
+    data = data.astype(np.float32) / 128 - 1
     # if image is greyscale, repeat 3 times to get RGB image.
     if data.shape[0] == 1:
         data = mx.nd.tile(data, (3, 1, 1))
     return data, label
+
 
 train_data = gluon.data.DataLoader(
     gluon.data.vision.MNIST('./data', train=True, transform=transformer),
@@ -108,7 +112,6 @@ train_data = gluon.data.DataLoader(
 val_data = gluon.data.DataLoader(
     gluon.data.vision.MNIST('./data', train=False, transform=transformer),
     batch_size=opt.batch_size, shuffle=False)
-
 
 # build the generator
 netG = nn.Sequential()
@@ -172,7 +175,7 @@ fake_label = mx.nd.zeros((opt.batch_size,), ctx=ctx)
 
 metric = mx.metric.Accuracy()
 print('Training... ')
-stamp =  datetime.now().strftime('%Y_%m_%d-%H_%M')
+stamp = datetime.now().strftime('%Y_%m_%d-%H_%M')
 
 iter = 0
 for epoch in range(opt.nepoch):
@@ -190,7 +193,7 @@ for epoch in range(opt.nepoch):
             output = netD(data)
             output = output.reshape((opt.batch_size, 2))
             errD_real = loss(output, real_label)
-            metric.update([real_label,], [output,])
+            metric.update([real_label, ], [output, ])
 
             fake = netG(noise)
             output = netD(fake.detach())
@@ -198,7 +201,7 @@ for epoch in range(opt.nepoch):
             errD_fake = loss(output, fake_label)
             errD = errD_real + errD_fake
             errD.backward()
-            metric.update([fake_label,], [output,])
+            metric.update([fake_label, ], [output, ])
 
         trainerD.step(opt.batch_size)
 
@@ -215,10 +218,11 @@ for epoch in range(opt.nepoch):
 
         name, acc = metric.get()
         # logging.info('speed: {} samples/s'.format(opt.batch_size / (time.time() - btic)))
-        logging.info('discriminator loss = %f, generator loss = %f, binary training acc = %f at iter %d epoch %d' %(mx.nd.mean(errD).asscalar(), mx.nd.mean(errG).asscalar(), acc, iter, epoch))
+        logging.info('discriminator loss = %f, generator loss = %f, binary training acc = %f at iter %d epoch %d' % (
+        mx.nd.mean(errD).asscalar(), mx.nd.mean(errG).asscalar(), acc, iter, epoch))
         if iter % 1 == 0:
-            visual('gout', fake.asnumpy(), name=os.path.join(outf,'fake_img_iter_%d.png' %iter))
-            visual('data', data.asnumpy(), name=os.path.join(outf,'real_img_iter_%d.png' %iter))
+            visual('gout', fake.asnumpy(), name=os.path.join(outf, 'fake_img_iter_%d.png' % iter))
+            visual('data', data.asnumpy(), name=os.path.join(outf, 'real_img_iter_%d.png' % iter))
 
         iter = iter + 1
         btic = time.time()
@@ -229,8 +233,8 @@ for epoch in range(opt.nepoch):
     logging.info('time: %f' % (time.time() - tic))
 
     if check_point:
-        netG.save_params(os.path.join(outf,'generator_epoch_%d.params' %epoch))
-        netD.save_params(os.path.join(outf,'discriminator_epoch_%d.params' % epoch))
+        netG.save_params(os.path.join(outf, 'generator_epoch_%d.params' % epoch))
+        netD.save_params(os.path.join(outf, 'discriminator_epoch_%d.params' % epoch))
 
 netG.save_params(os.path.join(outf, 'generator.params'))
 netD.save_params(os.path.join(outf, 'discriminator.params'))

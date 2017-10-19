@@ -54,10 +54,12 @@ parser.add_argument('--disp-batches', type=int, default=50,
 parser.add_argument('--save-period', type=int, default=10,
                     help='save checkpoint for every n epochs')
 
+
 def save_model():
     if not os.path.exists("checkpoint"):
         os.mkdir("checkpoint")
     return mx.callback.do_checkpoint("checkpoint/checkpoint", args.save_period)
+
 
 def data_iter(batch_size, num_embed, pre_trained_word2vec=False):
     print('Loading data...')
@@ -98,6 +100,7 @@ def data_iter(batch_size, num_embed, pre_trained_word2vec=False):
 
     return (train, valid, sentence_size, embed_size, vocab_size)
 
+
 def sym_gen(batch_size, sentence_size, num_embed, vocab_size,
             num_label=2, filter_list=[3, 4, 5], num_filter=100,
             dropout=0.0, pre_trained_word2vec=False):
@@ -116,7 +119,7 @@ def sym_gen(batch_size, sentence_size, num_embed, vocab_size,
     for i, filter_size in enumerate(filter_list):
         convi = mx.sym.Convolution(data=conv_input, kernel=(filter_size, num_embed), num_filter=num_filter)
         relui = mx.sym.Activation(data=convi, act_type='relu')
-        pooli = mx.sym.Pooling(data=relui, pool_type='max', kernel=(sentence_size - filter_size + 1, 1), stride=(1,1))
+        pooli = mx.sym.Pooling(data=relui, pool_type='max', kernel=(sentence_size - filter_size + 1, 1), stride=(1, 1))
         pooled_outputs.append(pooli)
 
     # combine all pooled outputs
@@ -141,20 +144,22 @@ def sym_gen(batch_size, sentence_size, num_embed, vocab_size,
 
     return sm, ('data',), ('softmax_label',)
 
+
 def train(symbol, train_iter, valid_iter, data_names, label_names):
     devs = mx.cpu() if args.gpus is None or args.gpus is '' else [
         mx.gpu(int(i)) for i in args.gpus.split(',')]
     module = mx.mod.Module(symbol, data_names=data_names, label_names=label_names, context=devs)
-    module.fit(train_data = train_iter,
-            eval_data = valid_iter,
-            eval_metric = 'acc',
-            kvstore = args.kv_store,
-            optimizer = args.optimizer,
-            optimizer_params = { 'learning_rate': args.lr },
-            initializer = mx.initializer.Uniform(0.1),
-            num_epoch = args.num_epochs,
-            batch_end_callback = mx.callback.Speedometer(args.batch_size, args.disp_batches),
-            epoch_end_callback = save_model())
+    module.fit(train_data=train_iter,
+               eval_data=valid_iter,
+               eval_metric='acc',
+               kvstore=args.kv_store,
+               optimizer=args.optimizer,
+               optimizer_params={'learning_rate': args.lr},
+               initializer=mx.initializer.Uniform(0.1),
+               num_epoch=args.num_epochs,
+               batch_end_callback=mx.callback.Speedometer(args.batch_size, args.disp_batches),
+               epoch_end_callback=save_model())
+
 
 if __name__ == '__main__':
     # parse args
@@ -162,14 +167,14 @@ if __name__ == '__main__':
 
     # data iter
     train_iter, valid_iter, sentence_size, embed_size, vocab_size = data_iter(args.batch_size,
-                                                                args.num_embed,
-                                                                args.pretrained_embedding)
+                                                                              args.num_embed,
+                                                                              args.pretrained_embedding)
     # network symbol
     symbol, data_names, label_names = sym_gen(args.batch_size,
-                                            sentence_size,
-                                            embed_size,
-                                            vocab_size,
-                                            num_label=2, filter_list=[3, 4, 5], num_filter=100,
-                                            dropout=args.dropout, pre_trained_word2vec=args.pretrained_embedding)
+                                              sentence_size,
+                                              embed_size,
+                                              vocab_size,
+                                              num_label=2, filter_list=[3, 4, 5], num_filter=100,
+                                              dropout=args.dropout, pre_trained_word2vec=args.pretrained_embedding)
     # train cnn model
     train(symbol, train_iter, valid_iter, data_names, label_names)

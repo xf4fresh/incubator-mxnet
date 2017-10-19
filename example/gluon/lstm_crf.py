@@ -26,22 +26,27 @@ import sys
 
 mx.random.seed(1)
 
+
 # Helper functions to make the code more readable.
 def to_scalar(x):
     return int(x.asscalar())
+
 
 def argmax(vec):
     # return the argmax as a python int
     idx = nd.argmax(vec, axis=1)
     return to_scalar(idx)
 
+
 def prepare_sequence(seq, word2idx):
     return nd.array([word2idx[w] for w in seq])
+
 
 # Compute log sum exp is numerically more stable than multiplying probabilities
 def log_sum_exp(vec):
     max_score = nd.max(vec).asscalar()
     return nd.log(nd.sum(nd.exp(vec - max_score))) + max_score
+
 
 # Model
 class BiLSTM_CRF(Block):
@@ -112,9 +117,9 @@ class BiLSTM_CRF(Block):
         tags = nd.concat(nd.array([self.tag2idx[START_TAG]]), *tags, dim=0)
         for i, feat in enumerate(feats):
             score = score + \
-                self.transitions[to_scalar(tags[i+1]), to_scalar(tags[i])] + feat[to_scalar(tags[i+1])]
+                    self.transitions[to_scalar(tags[i + 1]), to_scalar(tags[i])] + feat[to_scalar(tags[i + 1])]
         score = score + self.transitions[self.tag2idx[STOP_TAG],
-                                         to_scalar(tags[int(tags.shape[0]-1)])]
+                                         to_scalar(tags[int(tags.shape[0] - 1)])]
         return score
 
     def _viterbi_decode(self, feats):
@@ -172,6 +177,7 @@ class BiLSTM_CRF(Block):
         # Find the best path, given the features.
         score, tag_seq = self._viterbi_decode(lstm_feats)
         return score, tag_seq
+
 
 # Run training
 START_TAG = "<START>"

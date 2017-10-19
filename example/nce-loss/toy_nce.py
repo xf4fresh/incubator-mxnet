@@ -18,26 +18,29 @@
 # pylint:skip-file
 import logging
 import sys, random, time
+
 sys.path.insert(0, "../../python")
 import mxnet as mx
 import numpy as np
 from collections import namedtuple
 from nce import *
 
+
 def get_net(vocab_size, num_label):
     data = mx.sym.Variable('data')
     label = mx.sym.Variable('label')
     label_weight = mx.sym.Variable('label_weight')
     embed_weight = mx.sym.Variable('embed_weight')
-    pred = mx.sym.FullyConnected(data = data, num_hidden = 100)
-    ret = nce_loss(data = pred,
-                    label = label,
-                    label_weight = label_weight,
-                    embed_weight = embed_weight,
-                    vocab_size = vocab_size,
-                    num_hidden = 100,
-                    num_label = num_label)
+    pred = mx.sym.FullyConnected(data=data, num_hidden=100)
+    ret = nce_loss(data=pred,
+                   label=label,
+                   label_weight=label_weight,
+                   embed_weight=embed_weight,
+                   vocab_size=vocab_size,
+                   num_hidden=100,
+                   num_label=num_label)
     return ret
+
 
 class SimpleBatch(object):
     def __init__(self, data_names, data, label_names, label):
@@ -77,7 +80,7 @@ class DataIter(mx.io.DataIter):
             ret[k] = 1.0
             s *= self.feature_size
             s += k
-        la = [s % self.vocab_size] +\
+        la = [s % self.vocab_size] + \
              [random.randint(0, self.vocab_size - 1) for _ in range(self.num_label - 1)]
         return ret, la
 
@@ -100,6 +103,7 @@ class DataIter(mx.io.DataIter):
     def reset(self):
         pass
 
+
 if __name__ == '__main__':
     head = '%(asctime)-15s %(message)s'
     logging.basicConfig(level=logging.DEBUG, format=head)
@@ -114,16 +118,15 @@ if __name__ == '__main__':
 
     network = get_net(vocab_size, num_label)
     devs = [mx.cpu()]
-    model = mx.model.FeedForward(ctx = devs,
-                                 symbol = network,
-                                 num_epoch = 20,
-                                 learning_rate = 0.03,
-                                 momentum = 0.9,
-                                 wd = 0.00001,
+    model = mx.model.FeedForward(ctx=devs,
+                                 symbol=network,
+                                 num_epoch=20,
+                                 learning_rate=0.03,
+                                 momentum=0.9,
+                                 wd=0.00001,
                                  initializer=mx.init.Xavier(factor_type="in", magnitude=2.34))
 
     metric = NceAccuracy()
-    model.fit(X = data_train, eval_data = data_test,
-              eval_metric = metric,
-              batch_end_callback = mx.callback.Speedometer(batch_size, 50),)
-
+    model.fit(X=data_train, eval_data=data_test,
+              eval_metric=metric,
+              batch_end_callback=mx.callback.Speedometer(batch_size, 50), )

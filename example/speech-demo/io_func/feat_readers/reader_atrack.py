@@ -20,17 +20,18 @@ import numpy as num
 import stats
 from common import *
 
+
 class atrackReader(BaseReader):
     def __init__(self, featureFile, labelFile, byteOrder=None):
         BaseReader.__init__(self, featureFile, labelFile, byteOrder)
 
     def checkHeader(self, header):
-        assert(header[0] == 0x56782)
-        assert(header[1] == header[6]) # and header[1] == frameSize)
-        assert(header[2] == header[5]) # and header[2] >= numSamples)
-        assert(header[3] == 0)
-        assert(header[4] == 24) # size of float + 20
-        assert(header[4])
+        assert (header[0] == 0x56782)
+        assert (header[1] == header[6])  # and header[1] == frameSize)
+        assert (header[2] == header[5])  # and header[2] >= numSamples)
+        assert (header[3] == 0)
+        assert (header[4] == 24)  # size of float + 20
+        assert (header[4])
 
     def Read(self):
         # flip both the header and data using >
@@ -55,7 +56,7 @@ class atrackReader(BaseReader):
         frameSize = header[1]
         numSamples = header[2]
 
-        a = num.fromfile(f, dtype=num.dtype('>f4'), count=numSamples*frameSize)
+        a = num.fromfile(f, dtype=num.dtype('>f4'), count=numSamples * frameSize)
         f.close()
 
         a = a.astype(num.float32)

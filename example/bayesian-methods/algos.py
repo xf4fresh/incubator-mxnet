@@ -324,13 +324,14 @@ def DistilledSGLD(teacher_sym, student_sym,
                     sample_test_acc(teacher_exe, X=X, Y=Y, label_num=10,
                                     minibatch_size=minibatch_size)
                 print("Student: Test ACC %d/%d=%f, Train ACC %d/%d=%f" % (test_correct, test_total,
-                                                    test_acc, train_correct, train_total, train_acc))
+                                                                          test_acc, train_correct, train_total,
+                                                                          train_acc))
                 print("Teacher: Test ACC %d/%d=%f, Train ACC %d/%d=%f" \
                       % (teacher_test_correct, teacher_test_total, teacher_test_acc,
                          teacher_train_correct, teacher_train_total, teacher_train_acc))
             else:
                 print("Current Iter Num: %d" % (i + 1), "Time Spent: %f" % (end - start), "MSE:",
-                       sample_test_regression(exe=student_exe, X=X_test, Y=Y_test,
+                      sample_test_regression(exe=student_exe, X=X_test, Y=Y_test,
                                              minibatch_size=minibatch_size,
                                              save_path='regression_DSGLD.txt'))
             start = time.time()

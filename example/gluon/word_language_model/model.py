@@ -19,6 +19,7 @@ import mxnet as mx
 from mxnet import gluon
 from mxnet.gluon import nn, rnn
 
+
 class RNNModel(gluon.Block):
     """A model with an encoder, recurrent layer, and a decoder."""
 
@@ -43,7 +44,7 @@ class RNNModel(gluon.Block):
                                    input_size=num_embed)
             else:
                 raise ValueError("Invalid mode %s. Options are rnn_relu, "
-                                 "rnn_tanh, lstm, and gru"%mode)
+                                 "rnn_tanh, lstm, and gru" % mode)
 
             if tie_weights:
                 self.decoder = nn.Dense(vocab_size, in_units=num_hidden,

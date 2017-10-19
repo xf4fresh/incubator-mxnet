@@ -29,6 +29,7 @@ import multiprocessing.pool
 from flask import Flask, render_template, Response
 import signal
 
+
 def make_web(queue):
     app = Flask(__name__)
 
@@ -53,24 +54,27 @@ def make_web(queue):
     except:
         print('unable to open port')
 
+
 def visual(X, show=True):
     X = X.transpose((0, 2, 3, 1))
     N = X.shape[0]
     n = int(math.ceil(math.sqrt(N)))
     h = X.shape[1]
     w = X.shape[2]
-    buf = np.zeros((h*n, w*n, X.shape[3]), dtype=np.uint8)
+    buf = np.zeros((h * n, w * n, X.shape[3]), dtype=np.uint8)
     for i in range(N):
-        x = i%n
-        y = i/n
-        buf[h*y:h*(y+1), w*x:w*(x+1), :] = X[i]
+        x = i % n
+        y = i / n
+        buf[h * y:h * (y + 1), w * x:w * (x + 1), :] = X[i]
     if show:
         cv2.imshow('a', buf)
         cv2.waitKey(1)
     return buf
 
+
 def env_step(args):
     return args[0].step(args[1])
+
 
 class RLDataIter(object):
     def __init__(self, batch_size, input_length, nthreads=6, web_viz=False):
@@ -117,14 +121,14 @@ class RLDataIter(object):
         reward = np.asarray([i[1] for i in new], dtype=np.float32)
         done = np.asarray([i[2] for i in new], dtype=np.float32)
 
-        channels = self.state_.shape[1]/self.input_length
+        channels = self.state_.shape[1] / self.input_length
         state = np.zeros_like(self.state_)
-        state[:,:-channels,:,:] = self.state_[:,channels:,:,:]
+        state[:, :-channels, :, :] = self.state_[:, channels:, :, :]
         for i, (ob, env) in enumerate(zip(new, self.env)):
             if ob[2]:
-                state[i,-channels:,:,:] = env.reset().transpose((2,0,1))
+                state[i, -channels:, :, :] = env.reset().transpose((2, 0, 1))
             else:
-                state[i,-channels:,:,:] = ob[0].transpose((2,0,1))
+                state[i, -channels:, :, :] = ob[0].transpose((2, 0, 1))
         self.state_ = state
 
         if self.web_viz:
@@ -151,8 +155,9 @@ class GymDataIter(RLDataIter):
         return gym.make(self.game)
 
     def visual(self):
-        data = self.state_[:4, -self.state_.shape[1]/self.input_length:, :, :]
+        data = self.state_[:4, -self.state_.shape[1] / self.input_length:, :, :]
         return visual(np.asarray(data, dtype=np.uint8), False)
+
 
 if __name__ == '__main__':
     batch_size = 64
@@ -160,13 +165,11 @@ if __name__ == '__main__':
     dataiter.reset()
     tic = time.time()
     for _ in range(10):
-        #data = dataiter.next().data[0].asnumpy().astype(np.uint8)
-        #visual(data[:,-data.shape[1]/dataiter.input_length:,:,:])
+        # data = dataiter.next().data[0].asnumpy().astype(np.uint8)
+        # visual(data[:,-data.shape[1]/dataiter.input_length:,:,:])
         for _ in range(100):
             dataiter.act([env.action_space.sample() for env in dataiter.env])
             dataiter.clear_history()
             dataiter.next()
-        print(batch_size*100/(time.time() - tic))
+        print(batch_size * 100 / (time.time() - tic))
         tic = time.time()
-
-

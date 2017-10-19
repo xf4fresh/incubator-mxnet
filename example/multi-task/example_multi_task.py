@@ -18,6 +18,7 @@
 # pylint: skip-file
 import sys
 import os
+
 sys.path.insert(0, "../../python/")
 curr_path = os.path.dirname(os.path.abspath(os.path.expanduser(__file__)))
 sys.path.append(os.path.join(curr_path, "../../tests/python/common"))
@@ -29,19 +30,21 @@ import time
 
 logging.basicConfig(level=logging.DEBUG)
 
+
 def build_network():
     data = mx.symbol.Variable('data')
-    fc1 = mx.symbol.FullyConnected(data = data, name='fc1', num_hidden=128)
-    act1 = mx.symbol.Activation(data = fc1, name='relu1', act_type="relu")
-    fc2 = mx.symbol.FullyConnected(data = act1, name = 'fc2', num_hidden = 64)
-    act2 = mx.symbol.Activation(data = fc2, name='relu2', act_type="relu")
-    fc3 = mx.symbol.FullyConnected(data = act2, name='fc3', num_hidden=10)
-    sm1 = mx.symbol.SoftmaxOutput(data = fc3, name = 'softmax1')
-    sm2 = mx.symbol.SoftmaxOutput(data = fc3, name = 'softmax2')
+    fc1 = mx.symbol.FullyConnected(data=data, name='fc1', num_hidden=128)
+    act1 = mx.symbol.Activation(data=fc1, name='relu1', act_type="relu")
+    fc2 = mx.symbol.FullyConnected(data=act1, name='fc2', num_hidden=64)
+    act2 = mx.symbol.Activation(data=fc2, name='relu2', act_type="relu")
+    fc3 = mx.symbol.FullyConnected(data=act2, name='fc3', num_hidden=10)
+    sm1 = mx.symbol.SoftmaxOutput(data=fc3, name='softmax1')
+    sm2 = mx.symbol.SoftmaxOutput(data=fc3, name='softmax2')
 
     softmax = mx.symbol.Group([sm1, sm2])
 
     return softmax
+
 
 class Multi_mnist_iterator(mx.io.DataIter):
     '''multi label mnist iterator'''
@@ -73,7 +76,8 @@ class Multi_mnist_iterator(mx.io.DataIter):
         label = batch.label[0]
 
         return mx.io.DataBatch(data=batch.data, label=[label, label], \
-                pad=batch.pad, index=batch.index)
+                               pad=batch.pad, index=batch.index)
+
 
 class Multi_Accuracy(mx.metric.EvalMetric):
     """Calculate accuracies of multi label"""
@@ -119,9 +123,9 @@ class Multi_Accuracy(mx.metric.EvalMetric):
         if self.num is None:
             return super(Multi_Accuracy, self).get()
         else:
-            return zip(*(('%s-task%d'%(self.name, i), float('nan') if self.num_inst[i] == 0
-                                                      else self.sum_metric[i] / self.num_inst[i])
-                       for i in range(self.num)))
+            return zip(*(('%s-task%d' % (self.name, i), float('nan') if self.num_inst[i] == 0
+            else self.sum_metric[i] / self.num_inst[i])
+                         for i in range(self.num)))
 
     def get_name_value(self):
         """Returns zipped name and value pairs.
@@ -137,29 +141,27 @@ class Multi_Accuracy(mx.metric.EvalMetric):
         return list(zip(name, value))
 
 
-batch_size=100
-num_epochs=100
+batch_size = 100
+num_epochs = 100
 device = mx.gpu(0)
 lr = 0.01
 
 network = build_network()
-train, val = MNISTIterator(batch_size=batch_size, input_shape = (784,))
+train, val = MNISTIterator(batch_size=batch_size, input_shape=(784,))
 train = Multi_mnist_iterator(train)
 val = Multi_mnist_iterator(val)
 
-
 model = mx.model.FeedForward(
-    ctx                = device,
-    symbol             = network,
-    num_epoch          = num_epochs,
-    learning_rate      = lr,
-    momentum           = 0.9,
-    wd                 = 0.00001,
-    initializer        = mx.init.Xavier(factor_type="in", magnitude=2.34))
+    ctx=device,
+    symbol=network,
+    num_epoch=num_epochs,
+    learning_rate=lr,
+    momentum=0.9,
+    wd=0.00001,
+    initializer=mx.init.Xavier(factor_type="in", magnitude=2.34))
 
 model.fit(
-    X                  = train,
-    eval_data          = val,
-    eval_metric        = Multi_Accuracy(num=2),
-    batch_end_callback = mx.callback.Speedometer(batch_size, 50))
-
+    X=train,
+    eval_data=val,
+    eval_metric=Multi_Accuracy(num=2),
+    batch_end_callback=mx.callback.Speedometer(batch_size, 50))

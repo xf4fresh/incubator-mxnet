@@ -17,6 +17,7 @@
 
 import re
 import sys
+
 sys.path.insert(0, "../../python")
 import time
 import logging
@@ -36,41 +37,42 @@ METHOD_BUCKETING = 'bucketing'
 METHOD_TBPTT = 'truncated-bptt'
 METHOD_SIMPLE = 'simple'
 
+
 def prepare_data(args):
     batch_size = args.config.getint('train', 'batch_size')
     num_hidden = args.config.getint('arch', 'num_hidden')
     num_hidden_proj = args.config.getint('arch', 'num_hidden_proj')
     num_lstm_layer = args.config.getint('arch', 'num_lstm_layer')
 
-    init_c = [('l%d_init_c'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+    init_c = [('l%d_init_c' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
     if num_hidden_proj > 0:
-        init_h = [('l%d_init_h'%l, (batch_size, num_hidden_proj)) for l in range(num_lstm_layer)]
+        init_h = [('l%d_init_h' % l, (batch_size, num_hidden_proj)) for l in range(num_lstm_layer)]
     else:
-        init_h = [('l%d_init_h'%l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
+        init_h = [('l%d_init_h' % l, (batch_size, num_hidden)) for l in range(num_lstm_layer)]
 
     init_states = init_c + init_h
 
     file_test = args.config.get('data', 'test')
-    file_label_mean =  args.config.get('data', 'label_mean')
+    file_label_mean = args.config.get('data', 'label_mean')
     file_format = args.config.get('data', 'format')
     feat_dim = args.config.getint('data', 'xdim')
     label_dim = args.config.getint('data', 'ydim')
 
     test_data_args = {
-            "gpu_chunk": 32768,
-            "lst_file": file_test,
-            "file_format": file_format,
-            "separate_lines":True,
-            "has_labels":False
-            }
+        "gpu_chunk": 32768,
+        "lst_file": file_test,
+        "file_format": file_format,
+        "separate_lines": True,
+        "has_labels": False
+    }
 
     label_mean_args = {
-            "gpu_chunk": 32768,
-            "lst_file": file_label_mean,
-            "file_format": file_format,
-            "separate_lines":True,
-            "has_labels":False
-            }
+        "gpu_chunk": 32768,
+        "lst_file": file_label_mean,
+        "file_format": file_format,
+        "separate_lines": True,
+        "has_labels": False
+    }
 
     test_sets = DataReadStream(test_data_args, feat_dim)
     label_mean_sets = DataReadStream(label_mean_args, label_dim)
@@ -104,7 +106,9 @@ if __name__ == '__main__':
     if decoding_method == METHOD_BUCKETING:
         buckets = args.config.get('train', 'buckets')
         buckets = list(map(int, re.split(r'\W+', buckets)))
-        data_test   = BucketSentenceIter(test_sets, buckets, batch_size, init_states, feat_dim=feat_dim, has_label=False)
+        data_test = BucketSentenceIter(test_sets, buckets, batch_size, init_states, feat_dim=feat_dim, has_label=False)
+
+
         def sym_gen(seq_len):
             sym = lstm_unroll(num_lstm_layer, seq_len, feat_dim, num_hidden=num_hidden,
                               num_label=label_dim, take_softmax=True, num_hidden_proj=num_hidden_proj)
@@ -112,12 +116,15 @@ if __name__ == '__main__':
             label_names = ['softmax_label']
             return (sym, data_names, label_names)
 
+
         module = mx.mod.BucketingModule(sym_gen,
-                            default_bucket_key=data_test.default_bucket_key,
-                            context=contexts)
+                                        default_bucket_key=data_test.default_bucket_key,
+                                        context=contexts)
     elif decoding_method == METHOD_SIMPLE:
         data_test = SimpleIter(test_sets, batch_size, init_states, feat_dim=feat_dim, label_dim=label_dim,
-                label_mean_sets=label_mean_sets, has_label=False)
+                               label_mean_sets=label_mean_sets, has_label=False)
+
+
         def sym_gen(seq_len):
             sym = lstm_unroll(num_lstm_layer, seq_len, feat_dim, num_hidden=num_hidden,
                               num_label=label_dim, take_softmax=False, num_hidden_proj=num_hidden_proj)
@@ -125,15 +132,16 @@ if __name__ == '__main__':
             label_names = []
             return (sym, data_names, label_names)
 
+
         module = mx.mod.BucketingModule(sym_gen,
-                            default_bucket_key=data_test.default_bucket_key,
-                            context=contexts)
+                                        default_bucket_key=data_test.default_bucket_key,
+                                        context=contexts)
 
     else:
-        truncate_len=20
+        truncate_len = 20
         data_test = TruncatedSentenceIter(test_sets, batch_size, init_states,
-                                         truncate_len, feat_dim=feat_dim,
-                                         do_shuffling=False, pad_zeros=True, has_label=True)
+                                          truncate_len, feat_dim=feat_dim,
+                                          do_shuffling=False, pad_zeros=True, has_label=True)
 
         sym = lstm_unroll(num_lstm_layer, truncate_len, feat_dim, num_hidden=num_hidden,
                           num_label=label_dim, output_states=True, num_hidden_proj=num_hidden_proj)
@@ -154,24 +162,22 @@ if __name__ == '__main__':
         if decoding_method == METHOD_BUCKETING:
             for (ind, utt) in enumerate(batch.utt_id):
                 if utt != "GAP_UTT":
-                    posteriors = np.log(posteriors[:label[0][0],1:] + 1e-20) - np.log(data_train.label_mean).T
+                    posteriors = np.log(posteriors[:label[0][0], 1:] + 1e-20) - np.log(data_train.label_mean).T
                     kaldiWriter.write(utt, posteriors)
         elif decoding_method == METHOD_SIMPLE:
             for (ind, utt) in enumerate(batch.utt_id):
                 if utt != "GAP_UTT":
-                    posteriors = posteriors[:batch.utt_len[0],1:] - np.log(data_test.label_mean[1:]).T
+                    posteriors = posteriors[:batch.utt_len[0], 1:] - np.log(data_test.label_mean[1:]).T
                     kaldiWriter.write(utt, posteriors)
         else:
             outputs = module.get_outputs()
             # outputs[0] is softmax, 1:end are states
             for i in range(1, len(outputs)):
-                outputs[i].copyto(data_test.init_state_arrays[i-1])
+                outputs[i].copyto(data_test.init_state_arrays[i - 1])
             for (ind, utt) in enumerate(batch.utt_id):
                 if utt != "GAP_UTT":
-                    posteriors = np.log(posteriors[:,1:])# - np.log(data_train.label_mean).T
+                    posteriors = np.log(posteriors[:, 1:])  # - np.log(data_train.label_mean).T
                     kaldiWriter.write(utt, posteriors)
-
 
     kaldiWriter.close()
     args.config.write(sys.stderr)
-

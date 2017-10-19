@@ -60,11 +60,13 @@ def test_rpn(network, dataset, image_set, root_path, dataset_path,
             continue
         assert k in arg_params, k + ' not initialized'
         assert arg_params[k].shape == arg_shape_dict[k], \
-            'shape inconsistent for ' + k + ' inferred ' + str(arg_shape_dict[k]) + ' provided ' + str(arg_params[k].shape)
+            'shape inconsistent for ' + k + ' inferred ' + str(arg_shape_dict[k]) + ' provided ' + str(
+                arg_params[k].shape)
     for k in sym.list_auxiliary_states():
         assert k in aux_params, k + ' not initialized'
         assert aux_params[k].shape == aux_shape_dict[k], \
-            'shape inconsistent for ' + k + ' inferred ' + str(aux_shape_dict[k]) + ' provided ' + str(aux_params[k].shape)
+            'shape inconsistent for ' + k + ' inferred ' + str(aux_shape_dict[k]) + ' provided ' + str(
+                aux_params[k].shape)
 
     # decide maximum shape
     data_names = [k[0] for k in test_data.provide_data]
@@ -111,6 +113,7 @@ def main():
     test_rpn(args.network, args.dataset, args.image_set, args.root_path, args.dataset_path,
              ctx, args.prefix, args.epoch,
              args.vis, args.shuffle, args.thresh)
+
 
 if __name__ == '__main__':
     main()

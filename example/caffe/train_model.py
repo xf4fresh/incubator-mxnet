@@ -19,6 +19,7 @@ import mxnet as mx
 import logging
 import os
 
+
 def fit(args, network, data_loader, eval_metrics=None, batch_end_callback=None):
     # kvstore
     kv = mx.kvstore.create(args.kv_store)
@@ -50,9 +51,9 @@ def fit(args, network, data_loader, eval_metrics=None, batch_end_callback=None):
     if args.load_epoch is not None:
         assert model_prefix is not None
         tmp = mx.model.FeedForward.load(model_prefix, args.load_epoch)
-        model_args = {'arg_params' : tmp.arg_params,
-                      'aux_params' : tmp.aux_params,
-                      'begin_epoch' : args.load_epoch}
+        model_args = {'arg_params': tmp.arg_params,
+                      'aux_params': tmp.aux_params,
+                      'begin_epoch': args.load_epoch}
     # save model
     save_model_prefix = args.save_model_prefix
     if save_model_prefix is None:
@@ -74,25 +75,25 @@ def fit(args, network, data_loader, eval_metrics=None, batch_end_callback=None):
 
     if 'lr_factor' in args and args.lr_factor < 1:
         model_args['lr_scheduler'] = mx.lr_scheduler.FactorScheduler(
-            step = max(int(epoch_size * args.lr_factor_epoch), 1),
-            factor = args.lr_factor)
+            step=max(int(epoch_size * args.lr_factor_epoch), 1),
+            factor=args.lr_factor)
 
     if 'clip_gradient' in args and args.clip_gradient is not None:
         model_args['clip_gradient'] = args.clip_gradient
 
     # disable kvstore for single device
     if 'local' in kv.type and (
-            args.gpus is None or len(args.gpus.split(',')) is 1):
+                    args.gpus is None or len(args.gpus.split(',')) is 1):
         kv = None
 
     model = mx.model.FeedForward(
-        ctx                = devs,
-        symbol             = network,
-        num_epoch          = args.num_epochs,
-        learning_rate      = args.lr,
-        momentum           = 0.9,
-        wd                 = 0.00001,
-        initializer        = mx.init.Xavier(factor_type="in", magnitude=2.34),
+        ctx=devs,
+        symbol=network,
+        num_epoch=args.num_epochs,
+        learning_rate=args.lr,
+        momentum=0.9,
+        wd=0.00001,
+        initializer=mx.init.Xavier(factor_type="in", magnitude=2.34),
         **model_args)
 
     if eval_metrics is None:
@@ -109,9 +110,9 @@ def fit(args, network, data_loader, eval_metrics=None, batch_end_callback=None):
     batch_end_callback.append(mx.callback.Speedometer(args.batch_size, 50))
 
     model.fit(
-       X                  = train,
-       eval_data          = val,
-       eval_metric        = eval_metrics,
-       kvstore            = kv,
-       batch_end_callback = batch_end_callback,
-       epoch_end_callback = checkpoint)
+        X=train,
+        eval_data=val,
+        eval_metric=eval_metrics,
+        kvstore=kv,
+        batch_end_callback=batch_end_callback,
+        epoch_end_callback=checkpoint)
